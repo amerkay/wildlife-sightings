@@ -1,14 +1,17 @@
 import { readFile } from "fs/promises";
 import Papa from "papaparse";
 import { defineEventHandler } from "h3";
+import { join } from "path";
 
 export default defineEventHandler(async () => {
-  // Resolve the path to the CSV in assets
-  const csvUrl = new URL(
-    "../../app/assets/gbif_barn_owl_GB_2022-2025.csv",
-    import.meta.url
+  // Use process.cwd() to get the project root and navigate to the CSV file
+  const csvPath = join(
+    process.cwd(),
+    "server",
+    "api",
+    "gbif_barn_owl_GB-IE_2010-2025.csv"
   );
-  const csvContent = await readFile(csvUrl, "utf-8");
+  const csvContent = await readFile(csvPath, "utf-8");
 
   // Parse CSV with header row into array of objects
   const { data } = Papa.parse<{ [key: string]: string }>(csvContent, {

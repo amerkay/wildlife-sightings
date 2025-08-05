@@ -11,7 +11,6 @@ import KeplerGl from "@kepler.gl/components";
 import keplerGlReducer, {
   enhanceReduxMiddleware,
   type KeplerGlState,
-  visStateUpdaters,
 } from "@kepler.gl/reducers";
 import { addDataToMap } from "@kepler.gl/actions";
 import { processRowObject } from "@kepler.gl/processors";
@@ -21,7 +20,10 @@ import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer";
 // 1. Setup Redux store with keplerGl
 const reducers = combineReducers({
   keplerGl: keplerGlReducer.initialState({
-    uiState: { readOnly: false, currentModal: null },
+    uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
+    mapStyle: {
+      styleType: "dark", // `voyager` or `dark`, TODO follow system
+    },
   }),
 });
 const middleWares = enhanceReduxMiddleware([]);
@@ -46,26 +48,34 @@ const App: React.FC<KeplerMapProps> = ({
       .then((data) => {
         dispatch(
           addDataToMap({
-            // Kepler.gl expects an array of datasets
             datasets: [
               {
                 info: { label: "Barn Owl Observations", id: "barn_owl_obs" },
                 data: processRowObject(data) ?? { fields: [], rows: [] },
               },
             ],
-            options: { centerMap: true, readOnly: false },
+            options: { centerMap: false },
             config: {
               visState: {
                 layers: [
                   {
-                    id: "barn_owl_heatmap",
-                    type: "heatmap",
+                    id: "barn_owls_layer",
+                    type: "point",
                     config: {
                       dataId: "barn_owl_obs",
-                      label: "Barn Owl Heatmap",
+                      label: "Barn Owls",
+                      color: [18, 147, 154],
                       columns: { lat: "lat", lng: "lng" },
                       isVisible: true,
-                      visConfig: { radius: 10 },
+                      visConfig: {
+                        radius: 10,
+                        fixedRadius: false,
+                        opacity: 0.8,
+                        outline: false,
+                        thickness: 2,
+                        filled: true,
+                        radiusRange: [0, 50],
+                      },
                     },
                   },
                 ],
@@ -75,20 +85,26 @@ const App: React.FC<KeplerMapProps> = ({
                     id: "filter_eventDate",
                     name: ["eventDate"],
                     type: "timeRange",
-                    value: [1659304800000, 1752962400000],
+                    value: [1600000000000, 1752962400000],
                     plotType: {
                       interval: "1-week",
                       defaultTimeFormat: "L",
                       type: "histogram",
                       aggregation: "sum",
                     },
-                    yAxis: null,
-                    animationWindow: "free",
                     view: "enlarged",
                     speed: 1,
-                    enabled: true,
                   },
                 ],
+              },
+              mapState: {
+                bearing: 0,
+                dragRotate: false,
+                latitude: 52.029347152354966,
+                longitude: -3.3639196875002217,
+                pitch: 0,
+                zoom: 4,
+                isSplit: false,
               },
             },
           })
