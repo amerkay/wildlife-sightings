@@ -1,4 +1,15 @@
 {
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "~/*": [
+        "./app/*"
+      ]
+    }
+  },
   // https://nuxt.com/docs/guide/concepts/typescript
   "files": [],
   "references": [
