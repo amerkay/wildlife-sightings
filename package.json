@@ -58,6 +58,7 @@
     "@eslint/js": "^9.25.0",
     "@types/lodash.uniq": "^4",
     "@types/node": "^22.15.21",
+    "@types/papaparse": "^5.3.16",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-virtualized": "^9.22.2",
