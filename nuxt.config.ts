@@ -14,7 +14,23 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ["shadcn-nuxt", "@nuxtjs/color-mode"],
+  modules: [
+    "shadcn-nuxt",
+    "@nuxtjs/color-mode",
+    // docs @ https://supabase.nuxtjs.org/getting-started/introduction
+    "@nuxtjs/supabase",
+  ],
+
+  // docs @ https://supabase.nuxtjs.org/getting-started/introduction
+  supabase: {
+    redirectOptions: {
+      login: "/auth/login",
+      callback: "/auth/confirm",
+      include: ["/my/(/*)?"],
+      // exclude: [],
+      saveRedirectToCookie: true,
+    },
+  },
 
   css: ["@/assets/css/tailwind.css"],
   components: [

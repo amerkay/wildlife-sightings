@@ -1,45 +1,109 @@
-<script lang="ts"></script>
+<script setup lang="ts">
+import { toast } from "vue-sonner";
+import { useForm } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
+import * as z from "zod";
+
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+
+watchEffect(() => {
+  if (user.value) {
+    return navigateTo("/my/");
+  }
+});
+
+const formSchema = toTypedSchema(
+  z.object({
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  })
+);
+
+const form = useForm({
+  validationSchema: formSchema,
+});
+
+const signIn = async (email: string, password: string) => {
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
+    displayError(error);
+    return false;
+  }
+  return true;
+};
+
+const displayError = (error: any) => {
+  toast.error(error.message);
+};
+
+const onSubmit = form.handleSubmit(async (values) => {
+  const success = await signIn(values.email, values.password);
+  if (success) {
+    toast.success("Successfully signed in!");
+  }
+});
+</script>
 
 <template>
   <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
     <div class="flex items-center justify-center py-12">
-      <div class="mx-auto grid w-[350px] gap-6">
-        <div class="grid gap-2 text-center">
-          <h1 class="text-3xl font-bold">Login</h1>
-          <p class="text-balance text-muted-foreground">
+      <Card class="mx-auto w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+          <CardDescription>
             Enter your email below to login to your account
-          </p>
-        </div>
-        <div class="grid gap-4">
-          <div class="grid gap-2">
-            <Label for="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              required
-            />
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form @submit="onSubmit" class="grid gap-4">
+            <FormField v-slot="{ componentField }" name="email">
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="m@example.com"
+                    v-bind="componentField"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+
+            <FormField v-slot="{ componentField }" name="password">
+              <FormItem>
+                <div class="flex items-center">
+                  <FormLabel>Password</FormLabel>
+                  <NuxtLink
+                    to="/auth/forgot-password"
+                    class="ml-auto inline-block text-sm underline"
+                  >
+                    Forgot your password?
+                  </NuxtLink>
+                </div>
+                <FormControl>
+                  <Input type="password" v-bind="componentField" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+
+            <Button type="submit" class="w-full">Login</Button>
+            <!-- <Button variant="outline" type="button" class="w-full">
+              Login with Google
+            </Button> -->
+          </form>
+
+          <div class="mt-4 text-center text-sm">
+            Don't have an account?
+            <NuxtLink to="/auth/signup" class="underline">Sign up</NuxtLink>
           </div>
-          <div class="grid gap-2">
-            <div class="flex items-center">
-              <Label for="password">Password</Label>
-              <a
-                href="/forgot-password"
-                class="ml-auto inline-block text-sm underline"
-              >
-                Forgot your password?
-              </a>
-            </div>
-            <Input id="password" type="password" required />
-          </div>
-          <Button type="submit" class="w-full"> Login </Button>
-          <Button variant="outline" class="w-full"> Login with Google </Button>
-        </div>
-        <div class="mt-4 text-center text-sm">
-          Don't have an account?
-          <a href="#" class="underline"> Sign up </a>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
     <div class="hidden bg-muted lg:block">
       <img

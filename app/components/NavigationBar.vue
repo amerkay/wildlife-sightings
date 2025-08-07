@@ -12,6 +12,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ChevronDownIcon,
+  UserIcon,
 } from "@heroicons/vue/24/outline";
 
 interface NavigationItem {
@@ -45,6 +46,14 @@ const isDark = computed(
     colorMode.preference === "dark" ||
     (colorMode.preference === "system" && colorMode.value === "dark")
 );
+
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+
+const signOut = async () => {
+  await supabase.auth.signOut();
+  await navigateTo("/");
+};
 </script>
 
 <template>
@@ -101,8 +110,6 @@ const isDark = computed(
         <div
           class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0"
         >
-          <SearchModal />
-
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
             <div class="flex space-x-1">
               <template
@@ -175,6 +182,107 @@ const isDark = computed(
                   </a>
                 </NuxtLink>
               </template>
+
+              <!-- Authentication Navigation -->
+              <template v-if="!user">
+                <NuxtLink
+                  to="/auth/login"
+                  custom
+                  v-slot="{ isActive, href, navigate }"
+                >
+                  <a
+                    :href="href"
+                    @click="navigate"
+                    :class="[
+                      isActive
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                      'rounded-md px-3 py-2 text-base font-medium',
+                    ]"
+                    :aria-current="isActive ? 'page' : undefined"
+                  >
+                    Login
+                  </a>
+                </NuxtLink>
+                <NuxtLink
+                  to="/auth/signup"
+                  custom
+                  v-slot="{ isActive, href, navigate }"
+                >
+                  <a
+                    :href="href"
+                    @click="navigate"
+                    :class="[
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-primary text-primary-foreground hover:bg-primary/90',
+                      'rounded-md px-3 py-2 text-base font-medium',
+                    ]"
+                    :aria-current="isActive ? 'page' : undefined"
+                  >
+                    Sign Up
+                  </a>
+                </NuxtLink>
+              </template>
+
+              <!-- User Menu when logged in -->
+              <Menu v-else as="div" class="relative">
+                <div>
+                  <MenuButton
+                    class="inline-flex items-center justify-center rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none"
+                  >
+                    <UserIcon class="size-5 mr-1" aria-hidden="true" />
+                    <span>Account</span>
+                    <ChevronDownIcon
+                      class="-mr-1 ml-1 size-4 text-current/70"
+                      aria-hidden="true"
+                    />
+                  </MenuButton>
+                </div>
+                <transition
+                  enter-active-class="transition ease-out duration-100"
+                  enter-from-class="transform opacity-0 scale-95"
+                  enter-to-class="transform opacity-100 scale-100"
+                  leave-active-class="transition ease-in duration-75"
+                  leave-from-class="transform opacity-100 scale-100"
+                  leave-to-class="transform opacity-0 scale-95"
+                >
+                  <MenuItems
+                    class="absolute right-0 z-10 mt-2 min-w-[200px] origin-top-right rounded-md bg-card py-1 text-card-foreground shadow-lg ring-1 ring-black/5 focus:outline-none"
+                  >
+                    <MenuItem v-slot="{ active, close }">
+                      <NuxtLink
+                        to="/my/"
+                        :class="[
+                          active
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-card-foreground',
+                          'block px-4 py-2 text-base',
+                        ]"
+                        @click.capture="close"
+                      >
+                        Dashboard
+                      </NuxtLink>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active, close }">
+                      <button
+                        @click="
+                          signOut();
+                          close();
+                        "
+                        :class="[
+                          active
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-card-foreground',
+                          'block w-full text-left px-4 py-2 text-base',
+                        ]"
+                      >
+                        Sign Out
+                      </button>
+                    </MenuItem>
+                  </MenuItems>
+                </transition>
+              </Menu>
             </div>
           </div>
 
@@ -249,6 +357,80 @@ const isDark = computed(
               {{ section.title }}
             </DisclosureButton>
           </NuxtLink>
+        </template>
+
+        <!-- Mobile Authentication Navigation -->
+        <template v-if="!user">
+          <NuxtLink
+            to="/auth/login"
+            custom
+            v-slot="{ isActive, href, navigate }"
+          >
+            <DisclosureButton
+              as="a"
+              :href="href"
+              @click="navigate"
+              :class="[
+                isActive
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                'block rounded-md px-3 py-2 text-base font-medium',
+              ]"
+              :aria-current="isActive ? 'page' : undefined"
+            >
+              Login
+            </DisclosureButton>
+          </NuxtLink>
+          <NuxtLink
+            to="/auth/signup"
+            custom
+            v-slot="{ isActive, href, navigate }"
+          >
+            <DisclosureButton
+              as="a"
+              :href="href"
+              @click="navigate"
+              :class="[
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90',
+                'block rounded-md px-3 py-2 text-base font-medium',
+              ]"
+              :aria-current="isActive ? 'page' : undefined"
+            >
+              Sign Up
+            </DisclosureButton>
+          </NuxtLink>
+        </template>
+
+        <!-- Mobile User Menu when logged in -->
+        <template v-else>
+          <NuxtLink to="/my/" custom v-slot="{ isActive, href, navigate }">
+            <DisclosureButton
+              as="a"
+              :href="href"
+              @click="navigate"
+              :class="[
+                isActive
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                'block rounded-md px-3 py-2 text-base font-medium',
+              ]"
+              :aria-current="isActive ? 'page' : undefined"
+            >
+              Dashboard
+            </DisclosureButton>
+          </NuxtLink>
+          <DisclosureButton
+            as="button"
+            @click="
+              signOut();
+              close();
+            "
+            class="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
+          >
+            Sign Out
+          </DisclosureButton>
         </template>
       </div>
     </DisclosurePanel>

@@ -15,16 +15,6 @@ const fallbackSiteData = {
         title: "Kepler.gl Test",
         url: "/test-keplergl",
       },
-      {
-        id: "login",
-        title: "Login",
-        url: "/auth/login",
-      },
-      {
-        id: "signup",
-        title: "Sign Up",
-        url: "/auth/signup",
-      },
     ],
   },
   footerNavigation: {
@@ -86,18 +76,10 @@ useHead({
 
 <template>
   <div>
-    <NavigationBar
-      :navigation="headerNavigation"
-      :globals="globals"
-      hydrate-on-interaction
-    />
+    <NavigationBar :navigation="headerNavigation" :globals="globals" />
 
-    <NuxtPage />
+    <NuxtPage class="min-h-[65vh]" />
 
-    <Footer
-      :navigation="footerNavigation"
-      :globals="globals"
-      hydrate-on-interaction
-    />
+    <Footer :navigation="footerNavigation" :globals="globals" />
   </div>
 </template>
