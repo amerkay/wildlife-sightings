@@ -2,7 +2,7 @@
 // Copyright contributors to the kepler.gl project
 
 /** @jsxImportSource react */
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import type { Dispatch } from "react";
 import { connect, Provider } from "react-redux";
 
@@ -16,19 +16,6 @@ import { addDataToMap } from "@kepler.gl/actions";
 import { processRowObject } from "@kepler.gl/processors";
 
 import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer";
-
-// 1. Setup Redux store with keplerGl
-const reducers = combineReducers({
-  keplerGl: keplerGlReducer.initialState({
-    uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
-    mapStyle: {
-      styleType: "dark", // `voyager` or `dark`, TODO follow system
-    },
-  }),
-});
-const middleWares = enhanceReduxMiddleware([]);
-const enhancers = applyMiddleware(...middleWares);
-const store = createStore(reducers, {}, compose(enhancers));
 
 interface KeplerMapProps {
   mapboxApiAccessToken: string;
@@ -149,10 +136,24 @@ const KeplerMap: React.FC<{
   mapboxApiAccessToken: string;
   apiUrl: string;
   isDarkMode?: boolean;
-}> = (props) => (
-  <Provider store={store}>
-    <ConnectedApp {...props} />
-  </Provider>
-);
+}> = (props) => {
+  const { mapboxApiAccessToken, apiUrl, isDarkMode } = props;
+  const store = useMemo(() => {
+    const reducers = combineReducers({
+      keplerGl: keplerGlReducer.initialState({
+        uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
+        mapStyle: { styleType: isDarkMode ? "dark" : "light" },
+      }),
+    });
+    const middleWares = enhanceReduxMiddleware([]);
+    const enhancers = applyMiddleware(...middleWares);
+    return createStore(reducers, {}, compose(enhancers));
+  }, [isDarkMode]);
+  return (
+    <Provider store={store}>
+      <ConnectedApp {...props} />
+    </Provider>
+  );
+};
 
 export default KeplerMap;
