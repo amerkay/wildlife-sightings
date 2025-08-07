@@ -413,6 +413,8 @@ services:
         "-c",
         "log_min_messages=fatal", # prevents Realtime polling queries from appearing in logs
       ]
+    ports:
+      - 54320:5432
 
   vector:
     container_name: supabase-vector

@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "types:generate": "pnpm dlx supabase gen types typescript --db-url \"postgres://postgres:your-super-secret-and-long-postgres-password@localhost:54320/postgres\" --schema public > types/database.types.ts"
   },
   "dependencies": {
     "@babel/runtime": "^7.12.1",
