@@ -79,8 +79,8 @@ onMounted(() => {
 
 <template>
   <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
-    <div class="flex items-center justify-center py-12">
-      <Card class="mx-auto w-full max-w-sm">
+    <Container class="flex items-center justify-center py-12">
+      <Card class="mx-auto max-w-sm min-w-xs sm:min-w-sm">
         <CardHeader>
           <CardTitle>Update Password</CardTitle>
           <CardDescription> Enter your new password below </CardDescription>
@@ -119,7 +119,7 @@ onMounted(() => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Container>
     <div class="hidden bg-muted lg:block">
       <img
         src="/signup-owl.jpg"

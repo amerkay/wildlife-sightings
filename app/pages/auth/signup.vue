@@ -77,8 +77,8 @@ const onSubmit = form.handleSubmit(async (values) => {
 
 <template>
   <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
-    <div class="flex items-center justify-center py-12 lg:order-2">
-      <Card class="mx-auto max-w-sm">
+    <Container class="flex items-center justify-center py-12 lg:order-2">
+      <Card class="mx-auto max-w-sm min-w-xs sm:min-w-sm">
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
           <CardDescription>
@@ -145,7 +145,7 @@ const onSubmit = form.handleSubmit(async (values) => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Container>
 
     <div class="hidden bg-muted lg:block lg:order-1">
       <img
