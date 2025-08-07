@@ -108,8 +108,6 @@ const App: React.FC<KeplerMapProps> = ({
     <div
       style={{
         position: "absolute",
-        top: "80px",
-        left: 0,
         width: "100%",
         height: "100%",
       }}
@@ -137,12 +135,18 @@ const KeplerMap: React.FC<{
   apiUrl: string;
   isDarkMode?: boolean;
 }> = (props) => {
-  const { mapboxApiAccessToken, apiUrl, isDarkMode } = props;
+  const { isDarkMode } = props;
   const store = useMemo(() => {
     const reducers = combineReducers({
       keplerGl: keplerGlReducer.initialState({
         uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
         mapStyle: { styleType: isDarkMode ? "dark" : "light" },
+        // UK default center
+        mapState: {
+          latitude: 52.029347152354966,
+          longitude: -3.3639196875002217,
+          zoom: 4,
+        },
       }),
     });
     const middleWares = enhanceReduxMiddleware([]);

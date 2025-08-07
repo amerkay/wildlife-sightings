@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="relative w-full min-h-[90vh]">
     <ClientOnly>
       <KeplerMapVue
         :mapboxApiAccessToken="mapboxAccessToken"
