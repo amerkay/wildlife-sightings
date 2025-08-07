@@ -35,8 +35,8 @@ const config = useRuntimeConfig();
 const MAPBOX_TOKEN = config.public.mapboxAccessToken as string;
 
 /** Map + geolocation state */
-const centerLng = ref<number>(7.4474); // Bern fallback
-const centerLat = ref<number>(46.948);
+const centerLng = ref<number>(-2.2426); // Manchester fallback
+const centerLat = ref<number>(53.4808);
 const isGeolocated = ref(false);
 
 /** Refs */
@@ -232,8 +232,8 @@ onBeforeUnmount(() => {
               :collapsed="true"
               :clearOnBlur="true"
               :marker="false"
-              addressAccuracy="address"
-              types="address,place"
+              types="address,place,postcode,locality,district"
+              countries="GB"
               :limit="10"
               placeholder="Search for an address or place..."
             />
