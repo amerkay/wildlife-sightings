@@ -16,9 +16,6 @@ watchEffect(() => {
 const formSchema = toTypedSchema(
   z.object({
     email: z.email("Please enter a valid email address"),
-    password: z
-      .string({ error: "Password is required" })
-      .min(6, "Password must be at least 6 characters"),
   })
 );
 
@@ -26,10 +23,11 @@ const form = useForm({
   validationSchema: formSchema,
 });
 
-const signIn = async (email: string, password: string) => {
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+const isLoading = ref(false);
+
+const requestPasswordReset = async (email: string) => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/update-password`,
   });
   if (error) {
     displayError(error);
@@ -43,9 +41,15 @@ const displayError = (error: any) => {
 };
 
 const onSubmit = form.handleSubmit(async (values) => {
-  const success = await signIn(values.email, values.password);
-  if (success) {
-    toast.success("Successfully signed in!");
+  isLoading.value = true;
+  try {
+    const success = await requestPasswordReset(values.email);
+    if (success) {
+      // Redirect to success page instead of showing toast
+      await navigateTo("/auth/reset-sent");
+    }
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
@@ -55,9 +59,10 @@ const onSubmit = form.handleSubmit(async (values) => {
     <div class="flex items-center justify-center py-12">
       <Card class="mx-auto w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle>Reset Password</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email address and we'll send you a link to reset your
+            password
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -76,33 +81,14 @@ const onSubmit = form.handleSubmit(async (values) => {
               </FormItem>
             </FormField>
 
-            <FormField v-slot="{ componentField }" name="password">
-              <FormItem>
-                <div class="flex items-center">
-                  <FormLabel>Password</FormLabel>
-                  <NuxtLink
-                    to="/auth/forgot-password"
-                    class="ml-auto inline-block text-sm underline"
-                  >
-                    Forgot your password?
-                  </NuxtLink>
-                </div>
-                <FormControl>
-                  <Input type="password" v-bind="componentField" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            </FormField>
-
-            <Button type="submit" class="w-full">Login</Button>
-            <!-- <Button variant="outline" type="button" class="w-full">
-              Login with Google
-            </Button> -->
+            <Button type="submit" class="w-full" :disabled="isLoading">
+              {{ isLoading ? "Sending..." : "Send Reset Link" }}
+            </Button>
           </form>
 
           <div class="mt-4 text-center text-sm">
-            Don't have an account?
-            <NuxtLink to="/auth/signup" class="underline">Sign up</NuxtLink>
+            Remember your password?
+            <NuxtLink to="/auth/login" class="underline">Sign in</NuxtLink>
           </div>
         </CardContent>
       </Card>
