@@ -26,7 +26,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: "/auth/login",
       callback: "/auth/confirm",
-      include: ["/my/(/*)?"],
+      include: ["/my/*"],
       // exclude: [],
       saveRedirectToCookie: true,
     },

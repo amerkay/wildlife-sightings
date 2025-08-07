@@ -12,20 +12,26 @@ export type Database = {
       sightings: {
         Row: {
           created_at: string
+          created_by: string | null
           id: number
           location: unknown | null
+          sighted_at: string | null
           type: Database["public"]["Enums"]["sighting_type"] | null
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           id?: number
           location?: unknown | null
+          sighted_at?: string | null
           type?: Database["public"]["Enums"]["sighting_type"] | null
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           id?: number
           location?: unknown | null
+          sighted_at?: string | null
           type?: Database["public"]["Enums"]["sighting_type"] | null
         }
         Relationships: []
