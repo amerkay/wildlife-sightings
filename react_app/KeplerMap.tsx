@@ -34,12 +34,14 @@ interface KeplerMapProps {
   mapboxApiAccessToken: string;
   apiUrl: string;
   dispatch: Dispatch<any>;
+  isDarkMode?: boolean;
 }
 
 const App: React.FC<KeplerMapProps> = ({
   mapboxApiAccessToken,
   apiUrl,
   dispatch,
+  isDarkMode,
 }) => {
   useEffect(() => {
     // Fetch parsed observations from Nuxt API
@@ -56,6 +58,9 @@ const App: React.FC<KeplerMapProps> = ({
             ],
             options: { centerMap: false },
             config: {
+              mapStyle: {
+                styleType: isDarkMode ? "dark" : "light",
+              },
               visState: {
                 layers: [
                   {
@@ -110,7 +115,7 @@ const App: React.FC<KeplerMapProps> = ({
           })
         );
       });
-  }, [apiUrl, dispatch]);
+  }, [apiUrl, dispatch, isDarkMode]);
 
   return (
     <div
@@ -140,9 +145,11 @@ const mapStateToProps = (state: KeplerGlState) => state;
 const dispatchToProps = (dispatch: Dispatch<any>) => ({ dispatch });
 const ConnectedApp = connect(mapStateToProps, dispatchToProps)(App);
 
-const KeplerMap: React.FC<{ mapboxApiAccessToken: string; apiUrl: string }> = (
-  props
-) => (
+const KeplerMap: React.FC<{
+  mapboxApiAccessToken: string;
+  apiUrl: string;
+  isDarkMode?: boolean;
+}> = (props) => (
   <Provider store={store}>
     <ConnectedApp {...props} />
   </Provider>

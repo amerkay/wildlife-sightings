@@ -4,6 +4,7 @@
       <KeplerMapVue
         :mapboxApiAccessToken="mapboxAccessToken"
         apiUrl="/api/observations"
+        :isDarkMode="$colorMode.value === 'dark'"
       />
     </ClientOnly>
   </div>
