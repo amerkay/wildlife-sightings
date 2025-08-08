@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, watchEffect, onBeforeUnmount } from "vue";
-import { useForm, Field } from "vee-validate";
+import { useFormContext, Field } from "vee-validate";
 import {
   MapboxMap,
   MapboxGeolocateControl,
@@ -42,7 +42,7 @@ const mapInstance = ref<any>(null);
 const geolocateRef = ref<any>(null);
 
 /** vee-validate context */
-const { setFieldValue } = useForm();
+const { setFieldValue } = useFormContext();
 const field = (suffix: string) => `${props.name}.${suffix}`;
 function syncFormFields(placeName?: string, county?: string) {
   setFieldValue(field("lat"), centerLat.value);
