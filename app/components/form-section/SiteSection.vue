@@ -91,7 +91,10 @@ function yesterdayStr() {
     <!-- Observations (wrapped in FormField to provide context for FormLabel) -->
     <FormField name="site.observed" v-slot>
       <FormItem>
-        <FormLabel>What did you observe? <span class="text-destructive">*</span></FormLabel>
+        <FormLabel
+          >What did you observe?
+          <span class="text-destructive">*</span></FormLabel
+        >
         <FormControl>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div
