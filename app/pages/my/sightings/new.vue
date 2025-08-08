@@ -48,7 +48,8 @@ const liveSchema = z
       error: "Select what you were doing",
     }),
     activityOther: z.string().optional().or(z.literal("")),
-    observationPeriod: z.string().optional().or(z.literal("")),
+    observationPeriodFrom: z.coerce.date().optional(),
+    observationPeriodTo: z.coerce.date().optional(),
   })
   .refine(
     (v) =>
@@ -84,7 +85,8 @@ const siteSchema = z
       error: "Select your connection",
     }),
     connectionOther: z.string().optional().or(z.literal("")),
-    observationPeriod: z.string().optional().or(z.literal("")),
+    observationPeriodFrom: z.coerce.date().optional(),
+    observationPeriodTo: z.coerce.date().optional(),
   })
   .refine(
     (v) =>
@@ -168,7 +170,8 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
         frequency: undefined,
         activity: undefined,
         activityOther: "",
-        observationPeriod: "",
+        observationPeriodFrom: "",
+        observationPeriodTo: "",
       },
       site: {
         sightingDate: "",
@@ -178,7 +181,8 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
         nestbox: "unknown",
         connection: undefined,
         connectionOther: "",
-        observationPeriod: "",
+        observationPeriodFrom: "",
+        observationPeriodTo: "",
       },
       dead: { sightingDate: "", cause: undefined, causeOther: "", details: "" },
       contact: { name: "", email: "", postcode: "" },
@@ -225,7 +229,8 @@ watch(
         nestbox: "unknown",
         connection: undefined,
         connectionOther: "",
-        observationPeriod: "",
+        observationPeriodFrom: "",
+        observationPeriodTo: "",
       });
     }
     if (t === "dead" && !values.dead) {

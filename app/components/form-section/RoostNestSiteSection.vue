@@ -201,7 +201,8 @@ function toggleObserved(v: string) {
 
     <!-- Observation period -->
     <ObservationPeriodField
-      field-name="site.observationPeriod"
+      field-name-from="site.observationPeriodFrom"
+      field-name-to="site.observationPeriodTo"
       label="Observation Period (optional)"
       description="If you have observed this roost or nest site for some time please enter the approx. time period of observation"
     />

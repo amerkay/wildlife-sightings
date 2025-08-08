@@ -110,7 +110,8 @@ const { values } = useFormContext();
 
     <!-- Observation Period Range Picker -->
     <ObservationPeriodField
-      field-name="live.observationPeriod"
+      field-name-from="live.observationPeriodFrom"
+      field-name-to="live.observationPeriodTo"
       label="Observation Period (optional)"
     />
   </section>
