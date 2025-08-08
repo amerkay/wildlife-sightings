@@ -15,8 +15,6 @@ import mbxGeocoding from "@mapbox/mapbox-sdk/services/geocoding";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const props = withDefaults(
   defineProps<{
@@ -203,129 +201,112 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <Card class="w-full">
-    <CardHeader>
-      <CardTitle class="text-lg">Section 2: Location of Sighting</CardTitle>
-    </CardHeader>
+  <div class="w-full space-y-4">
+    <div class="mb-2">
+      <Button type="button" variant="secondary" @click="requestGeolocation">
+        📍 Use My Current Location
+      </Button>
+    </div>
 
-    <CardContent class="space-y-4">
-      <div class="mb-2">
-        <Button type="button" variant="secondary" @click="requestGeolocation">
-          📍 Use My Current Location
-        </Button>
-      </div>
+    <!-- Map -->
+    <div class="relative rounded-xl overflow-hidden border">
+      <ClientOnly>
+        <MapboxMap
+          :access-token="MAPBOX_TOKEN"
+          map-style="mapbox://styles/mapbox/streets-v12"
+          :center="[centerLng, centerLat]"
+          :zoom="isGeolocated ? 15 : fallbackZoom"
+          :style="`height: ${height};`"
+          @mb-created="onMapCreated"
+          @mb-load="onMapLoaded"
+          @mb-moveend="onMoveEnd"
+        >
+          <MapboxGeocoder
+            :collapsed="true"
+            :clearOnBlur="true"
+            :marker="false"
+            types="address,place,postcode,locality,district"
+            countries="GB"
+            :limit="10"
+            placeholder="Search for an address or place..."
+          />
+          <MapboxGeolocateControl
+            ref="geolocateRef"
+            :position-options="{ enableHighAccuracy: true, timeout: 10000 }"
+            :track-user-location="false"
+            :fit-bounds-options="{ maxZoom: 15 }"
+            position="top-right"
+            @mb-trackuserlocationgeolocate="onUserGeolocate"
+          />
+          <MapboxNavigationControl position="top-right" />
+        </MapboxMap>
 
-      <!-- Map -->
-      <div class="relative rounded-xl overflow-hidden border">
-        <ClientOnly>
-          <MapboxMap
-            :access-token="MAPBOX_TOKEN"
-            map-style="mapbox://styles/mapbox/streets-v12"
-            :center="[centerLng, centerLat]"
-            :zoom="isGeolocated ? 15 : fallbackZoom"
-            :style="`height: ${height};`"
-            @mb-created="onMapCreated"
-            @mb-load="onMapLoaded"
-            @mb-moveend="onMoveEnd"
+        <!-- Centered pin overlay -->
+        <div
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 grid place-items-center -mt-10"
+        >
+          <svg
+            class="drop-shadow-md text-red-600"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="currentColor"
           >
-            <MapboxGeocoder
-              :collapsed="true"
-              :clearOnBlur="true"
-              :marker="false"
-              types="address,place,postcode,locality,district"
-              countries="GB"
-              :limit="10"
-              placeholder="Search for an address or place..."
+            <path
+              d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"
             />
-            <MapboxGeolocateControl
-              ref="geolocateRef"
-              :position-options="{ enableHighAccuracy: true, timeout: 10000 }"
-              :track-user-location="false"
-              :fit-bounds-options="{ maxZoom: 15 }"
-              position="top-right"
-              @mb-trackuserlocationgeolocate="onUserGeolocate"
-            />
-            <MapboxNavigationControl position="top-right" />
-          </MapboxMap>
-
-          <!-- Centered pin overlay -->
-          <div
-            aria-hidden="true"
-            class="pointer-events-none absolute inset-0 grid place-items-center -mt-10"
-          >
-            <svg
-              class="drop-shadow-md text-red-600"
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"
-              />
-            </svg>
-            <span
-              class="absolute top-[calc(50%+16px)] h-2 w-2 rounded-full bg-black/30"
-            ></span>
-          </div>
-        </ClientOnly>
-      </div>
-
-      <!-- Hidden lat/lng fields (kept in sync via setFieldValue) -->
-      <Field :name="`${name}.lat`" v-slot="{ field }">
-        <input type="hidden" v-bind="field" :value="centerLat" />
-      </Field>
-      <Field :name="`${name}.lng`" v-slot="{ field }">
-        <input type="hidden" v-bind="field" :value="centerLng" />
-      </Field>
-
-      <!-- Visible, auto-filled text fields -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="space-y-2">
-          <Label :for="`${name}-place`">Place Name / Road Number</Label>
-          <Field :name="`${name}.placeName`" v-slot="{ field, errorMessage }">
-            <Input
-              :id="`${name}-place`"
-              placeholder="e.g. A9 near Kinbuck"
-              v-bind="field"
-            />
-            <p v-if="errorMessage" class="text-sm text-destructive mt-1">
-              {{ errorMessage }}
-            </p>
-          </Field>
+          </svg>
+          <span
+            class="absolute top-[calc(50%+16px)] h-2 w-2 rounded-full bg-black/30"
+          ></span>
         </div>
+      </ClientOnly>
+    </div>
 
-        <div class="space-y-2">
-          <Label :for="`${name}-county`">County</Label>
-          <Field :name="`${name}.county`" v-slot="{ field, errorMessage }">
-            <Input
-              :id="`${name}-county`"
-              placeholder="Auto-filled (edit if needed)"
-              v-bind="field"
-            />
-            <p v-if="errorMessage" class="text-sm text-destructive mt-1">
-              {{ errorMessage }}
-            </p>
-          </Field>
-        </div>
-      </div>
+    <!-- Hidden lat/lng fields (kept in sync via setFieldValue) -->
+    <Field :name="`${name}.lat`" v-slot="{ field }">
+      <input type="hidden" v-bind="field" :value="centerLat" />
+    </Field>
+    <Field :name="`${name}.lng`" v-slot="{ field }">
+      <input type="hidden" v-bind="field" :value="centerLng" />
+    </Field>
 
+    <!-- Visible, auto-filled text fields -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="space-y-2">
-        <Label :for="`${name}-notes`">Location Notes</Label>
-        <Field :name="`${name}.notes`" v-slot="{ field }">
-          <Textarea
-            :id="`${name}-notes`"
-            placeholder='e.g. "In the hollow oak tree"'
+        <Label :for="`${name}-place`">Place Name / Road Number</Label>
+        <Field :name="`${name}.placeName`" v-slot="{ field, errorMessage }">
+          <Input
+            :id="`${name}-place`"
+            placeholder="e.g. A9 near Kinbuck"
             v-bind="field"
           />
+          <p v-if="errorMessage" class="text-sm text-destructive mt-1">
+            {{ errorMessage }}
+          </p>
         </Field>
       </div>
 
-      <!-- SR-only live region -->
-      <div class="sr-only" aria-live="polite">
-        Selected coordinates: {{ centerLat.toFixed(6) }},
-        {{ centerLng.toFixed(6) }}
+      <div class="space-y-2">
+        <Label :for="`${name}-county`">County</Label>
+        <Field :name="`${name}.county`" v-slot="{ field, errorMessage }">
+          <Input
+            :id="`${name}-county`"
+            placeholder="Auto-filled (edit if needed)"
+            v-bind="field"
+          />
+          <p v-if="errorMessage" class="text-sm text-destructive mt-1">
+            {{ errorMessage }}
+          </p>
+        </Field>
       </div>
-    </CardContent>
-  </Card>
+    </div>
+
+    <!-- SR-only live region -->
+    <div class="sr-only" aria-live="polite">
+      Selected coordinates: {{ centerLat.toFixed(6) }},
+      {{ centerLng.toFixed(6) }}
+    </div>
+  </div>
 </template>
