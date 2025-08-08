@@ -3,7 +3,6 @@ import { ref, nextTick, watchEffect, onBeforeUnmount } from "vue";
 import { useFormContext, Field } from "vee-validate";
 import {
   MapboxMap,
-  MapboxGeolocateControl,
   MapboxNavigationControl,
   MapboxGeocoder,
 } from "@studiometa/vue-mapbox-gl";
@@ -15,6 +14,7 @@ import mbxGeocoding from "@mapbox/mapbox-sdk/services/geocoding";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import mapboxgl from "mapbox-gl";
 
 const props = withDefaults(
   defineProps<{
@@ -37,9 +37,14 @@ const centerLng = ref<number>(-2.2426); // Manchester fallback
 const centerLat = ref<number>(53.4808);
 const isGeolocated = ref(false);
 
-/** Refs */
+/** Map instance */
 const mapInstance = ref<any>(null);
-const geolocateRef = ref<any>(null);
+/** Native Mapbox GeolocateControl */
+const geoControl = new mapboxgl.GeolocateControl({
+  positionOptions: { enableHighAccuracy: true, timeout: 10000 },
+  trackUserLocation: true,
+  fitBoundsOptions: { maxZoom: 15 },
+});
 
 /** vee-validate context */
 const { setFieldValue } = useFormContext();
@@ -127,6 +132,12 @@ async function reverseWithSdk(lng: number, lat: number) {
 /** Map events */
 function onMapCreated(map: any) {
   mapInstance.value = map;
+  map.addControl(geoControl, "top-right");
+  geoControl.on("geolocate", (ev) => {
+    console.debug("GeolocateControl geolocate event", ev);
+    onUserGeolocate(ev);
+  });
+  geoControl.on("error", (err) => console.debug("GeolocateControl error", err));
 }
 function onMapLoaded() {
   syncFormFields();
@@ -177,18 +188,9 @@ async function tryAutoLocate() {
   );
 }
 
-/** Button: use the control’s trigger (user gesture) with a navigator fallback */
+/** Button: trigger native Mapbox geolocation control */
 function requestGeolocation() {
-  const ctrl = geolocateRef.value?.control;
-  if (ctrl?.trigger) {
-    ctrl.trigger();
-  } else if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => onUserGeolocate(pos),
-      () => {},
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
+  geoControl.trigger();
 }
 
 onBeforeUnmount(() => {
@@ -229,14 +231,6 @@ onBeforeUnmount(() => {
             countries="GB"
             :limit="10"
             placeholder="Search for an address or place..."
-          />
-          <MapboxGeolocateControl
-            ref="geolocateRef"
-            :position-options="{ enableHighAccuracy: true, timeout: 10000 }"
-            :track-user-location="false"
-            :fit-bounds-options="{ maxZoom: 15 }"
-            position="top-right"
-            @mb-trackuserlocationgeolocate="onUserGeolocate"
           />
           <MapboxNavigationControl position="top-right" />
         </MapboxMap>
