@@ -6,7 +6,6 @@ import * as z from "zod";
 
 /* UI */
 import { toast } from "vue-sonner";
-import { Button } from "@/components/ui/button";
 
 /* Sections */
 import TypeSection from "@/components/form-section/TypeSection.vue";
@@ -308,13 +307,33 @@ const currentSection = computed(() => {
         </p>
       </header>
 
-      <TypeSection v-model="typeField" />
       <LocationSection />
-      <KeepAlive>
-        <component :is="currentSection" :key="values.type" />
-      </KeepAlive>
+      <TypeSection v-model="typeField" />
+
+      <Transition name="section-fade" mode="out-in">
+        <KeepAlive>
+          <component :is="currentSection" :key="values.type" />
+        </KeepAlive>
+      </Transition>
       <ContactSection />
       <SubmitSection />
     </form>
   </Container>
 </template>
+
+<style scoped>
+.section-fade-enter-active,
+.section-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.section-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.section-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+</style>
