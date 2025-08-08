@@ -17,13 +17,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 // Added date related imports
-import { ref, onMounted } from "vue";
+import { ref, onMounted, type Ref } from "vue";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon } from "lucide-vue-next";
 import {
   DateFormatter,
   getLocalTimeZone,
   parseDate,
+  type DateValue,
   // CalendarDate (only if needed later)
 } from "@internationalized/date";
 import {
@@ -56,7 +57,11 @@ const dfLong = new DateFormatter("en-US", { dateStyle: "long" });
 const dfMedium = new DateFormatter("en-US", { dateStyle: "medium" });
 
 // Observation period range (kept as a single stored string: "YYYY-MM-DD to YYYY-MM-DD")
-const obsRange = ref<DateRange>({ start: undefined, end: undefined });
+// Explicitly type start/end as DateValue | undefined to satisfy DateRange expectations
+const obsRange = ref({
+  start: undefined as DateValue | undefined,
+  end: undefined as DateValue | undefined,
+}) as Ref<DateRange>;
 
 onMounted(() => {
   // Parse existing stored observation period if present (expects "start to end")
