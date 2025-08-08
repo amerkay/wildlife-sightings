@@ -16,7 +16,7 @@ const emit = defineEmits<{
     <h2 class="text-xl font-medium">Type of Sighting</h2>
     <RadioGroup
       :model-value="props.modelValue"
-      @update:model-value="(value) => emit('update:modelValue', value as Props['modelValue'])"
+      @update:model-value="(value: string) => emit('update:modelValue', value as Props['modelValue'])"
       class="grid gap-3 sm:grid-cols-3"
     >
       <RadioCard

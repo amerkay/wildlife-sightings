@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { SightingDateField } from "./fields";
 
 const DEAD_CAUSE = [
   { value: "road-minor", label: "Road Casualty - Minor Road" },
@@ -33,43 +34,17 @@ const DEAD_CAUSE = [
 ] as const;
 
 const { values } = useFormContext();
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
-function yesterdayStr() {
-  return new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-}
 </script>
 
 <template>
   <section class="space-y-6">
     <h2 class="text-xl font-medium">Observation Details</h2>
 
-    <FormField name="dead.dateFound" v-slot="{ field, errorMessage }">
-      <FormItem>
-        <FormLabel>Date Found</FormLabel>
-        <FormControl>
-          <div class="flex gap-2">
-            <Input type="date" v-bind="field" class="max-w-[260px]" />
-            <Button
-              type="button"
-              variant="secondary"
-              @click="() => field.onChange(todayStr())"
-              >Today</Button
-            >
-            <Button
-              type="button"
-              variant="secondary"
-              @click="() => field.onChange(yesterdayStr())"
-              >Yesterday</Button
-            >
-          </div>
-        </FormControl>
-        <p v-if="errorMessage" class="text-sm text-destructive mt-1">
-          {{ errorMessage }}
-        </p>
-      </FormItem>
-    </FormField>
+    <SightingDateField
+      field-name="dead.sightingDate"
+      label="Date Found"
+      required
+    />
 
     <FormField name="dead.cause" v-slot="{ componentField }">
       <FormItem>

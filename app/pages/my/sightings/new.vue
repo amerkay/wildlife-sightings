@@ -11,7 +11,7 @@ import { toast } from "vue-sonner";
 import TypeSection from "@/components/form-section/TypeSection.vue";
 import LocationSection from "@/components/form-section/LocationSection.vue";
 import LiveSection from "@/components/form-section/LiveSection.vue";
-import SiteSection from "@/components/form-section/SiteSection.vue";
+import RoostNestSiteSection from "~/components/form-section/RoostNestSiteSection.vue";
 import DeadSection from "@/components/form-section/DeadSection.vue";
 import ContactSection from "@/components/form-section/ContactSection.vue";
 import SubmitSection from "@/components/form-section/SubmitSection.vue";
@@ -40,7 +40,7 @@ const contactSchema = z.object({
 
 const liveSchema = z
   .object({
-    date: z.coerce.date({ error: "Date of sighting is required" }),
+    sightingDate: z.coerce.date({ error: "Date of sighting is required" }),
     frequency: z.enum(["once", "weekly", "monthly", "less-monthly"], {
       error: "Select a frequency",
     }),
@@ -59,8 +59,8 @@ const liveSchema = z
 
 const siteSchema = z
   .object({
-    lastUseDate: z.coerce.date({
-      error: "Approx. date of last use is required",
+    sightingDate: z.coerce.date({
+      error: "Approx. date of last Roosted/Nested is required",
     }),
     observed: z
       .array(
@@ -101,7 +101,7 @@ const siteSchema = z
 
 const deadSchema = z
   .object({
-    dateFound: z.coerce.date({ error: "Date found is required" }),
+    sightingDate: z.coerce.date({ error: "Date found is required" }),
     cause: z.enum(
       [
         "road-minor",
@@ -164,14 +164,14 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
         notes: "",
       },
       live: {
-        date: "",
+        sightingDate: "",
         frequency: undefined,
         activity: undefined,
         activityOther: "",
         observationPeriod: "",
       },
       site: {
-        lastUseDate: "",
+        sightingDate: "",
         observed: [],
         siteType: undefined,
         siteTypeOther: "",
@@ -180,7 +180,7 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
         connectionOther: "",
         observationPeriod: "",
       },
-      dead: { dateFound: "", cause: undefined, causeOther: "", details: "" },
+      dead: { sightingDate: "", cause: undefined, causeOther: "", details: "" },
       contact: { name: "", email: "", postcode: "" },
       captcha: "",
     } as any,
@@ -218,7 +218,7 @@ watch(
   (t) => {
     if (t === "site" && !values.site) {
       setFieldValue("site", {
-        lastUseDate: "",
+        lastRoostNestDate: "",
         observed: [],
         siteType: undefined,
         siteTypeOther: "",
@@ -287,7 +287,7 @@ const showDead = computed(() => values.type === "dead");
 
 const currentSection = computed(() => {
   if (showLive.value) return LiveSection;
-  if (showSite.value) return SiteSection;
+  if (showSite.value) return RoostNestSiteSection;
   if (showDead.value) return DeadSection;
   return LiveSection;
 });
@@ -317,6 +317,17 @@ const currentSection = computed(() => {
       </Transition>
       <ContactSection />
       <SubmitSection />
+
+      <!-- Form Data Preview -->
+      <section class="space-y-4 border-t pt-6">
+        <h3 class="text-lg font-medium">Form Data Preview</h3>
+        <div class="rounded-md bg-slate-50 dark:bg-slate-900 p-4 overflow-auto">
+          <pre
+            class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap"
+            >{{ JSON.stringify(values, null, 2) }}</pre
+          >
+        </div>
+      </section>
     </form>
   </Container>
 </template>
