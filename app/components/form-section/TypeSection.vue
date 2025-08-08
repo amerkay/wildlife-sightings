@@ -22,17 +22,17 @@ const emit = defineEmits<{
       <RadioCard
         value="live"
         :selected="props.modelValue"
-        label="Random live sighting"
+        label="Random sighting 🦉"
       />
       <RadioCard
         value="site"
         :selected="props.modelValue"
-        label="Roost / nest site 🦉"
+        label="Roost / nest site 🪺"
       />
       <RadioCard
         value="dead"
         :selected="props.modelValue"
-        label="Dead owl ✝️"
+        label="Dead owl ⚰️"
       />
     </RadioGroup>
   </section>

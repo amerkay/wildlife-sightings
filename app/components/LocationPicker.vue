@@ -24,8 +24,15 @@ const props = withDefaults(
     height?: string;
     /** Default zoom if geolocation is blocked/denied. */
     fallbackZoom?: number;
+    /** Show reverse geocoding fields and enable reverse geocoding API calls. */
+    showReverseGeoFields?: boolean;
   }>(),
-  { name: "location", height: "400px", fallbackZoom: 12 }
+  {
+    name: "location",
+    height: "400px",
+    fallbackZoom: 12,
+    showReverseGeoFields: false,
+  }
 );
 
 /** Nuxt public runtime config for Mapbox token */
@@ -52,8 +59,10 @@ const field = (suffix: string) => `${props.name}.${suffix}`;
 function syncFormFields(placeName?: string, county?: string) {
   setFieldValue(field("lat"), centerLat.value);
   setFieldValue(field("lng"), centerLng.value);
-  if (placeName !== undefined) setFieldValue(field("placeName"), placeName);
-  if (county !== undefined) setFieldValue(field("county"), county);
+  if (props.showReverseGeoFields) {
+    if (placeName !== undefined) setFieldValue(field("placeName"), placeName);
+    if (county !== undefined) setFieldValue(field("county"), county);
+  }
 }
 
 /** =========================
@@ -67,6 +76,11 @@ let inflightReq: any | null = null;
 
 /** Parse geocoder feature into your two text fields */
 function updateFieldsFromFeature(feature: any | undefined) {
+  if (!props.showReverseGeoFields) {
+    syncFormFields();
+    return;
+  }
+
   if (!feature) {
     syncFormFields("", "");
     return;
@@ -93,6 +107,11 @@ function updateFieldsFromFeature(feature: any | undefined) {
 
 /** Reverse geocode current center using the SDK (maintained library) */
 async function reverseWithSdk(lng: number, lat: number) {
+  if (!props.showReverseGeoFields) {
+    syncFormFields();
+    return;
+  }
+
   // Cancel an older lookup if still running
   if (inflightReq?.abort) {
     try {
@@ -143,7 +162,7 @@ function onMapLoaded() {
   syncFormFields();
   // Initial reverse for the fallback center
   reverseWithSdk(centerLng.value, centerLat.value);
-  tryAutoLocate();
+  requestGeolocation();
 }
 function onMoveEnd() {
   if (!mapInstance.value) return;
@@ -163,29 +182,6 @@ function onUserGeolocate(ev: any) {
   isGeolocated.value = true;
   syncFormFields();
   reverseWithSdk(centerLng.value, centerLat.value);
-}
-
-/** Best-effort auto locate on load (no user gesture required) */
-const autoLocateTriggered = ref(false);
-async function tryAutoLocate() {
-  await nextTick();
-  if (autoLocateTriggered.value || !mapInstance.value) return;
-  autoLocateTriggered.value = true;
-
-  if (!("geolocation" in navigator)) return;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords;
-      centerLat.value = latitude;
-      centerLng.value = longitude;
-      isGeolocated.value = true;
-      mapInstance.value?.flyTo({ center: [longitude, latitude], zoom: 15 });
-      syncFormFields();
-      reverseWithSdk(centerLng.value, centerLat.value);
-    },
-    () => {}, // silent fail; user can still click the button
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
 }
 
 /** Button: trigger native Mapbox geolocation control */
@@ -267,7 +263,10 @@ onBeforeUnmount(() => {
     </Field>
 
     <!-- Visible, auto-filled text fields -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div
+      v-if="showReverseGeoFields"
+      class="grid grid-cols-1 md:grid-cols-2 gap-4"
+    >
       <div class="space-y-2">
         <Label :for="`${name}-place`">Place Name / Road Number</Label>
         <Field :name="`${name}.placeName`" v-slot="{ field, errorMessage }">

@@ -23,8 +23,8 @@ import SubmitSection from "@/components/form-section/SubmitSection.vue";
 const locationSchema = z.object({
   lat: z.number({ error: "Latitude required" }),
   lng: z.number({ error: "Longitude required" }),
-  placeName: z.string().min(1, "Place name / road number is required"),
-  county: z.string().optional().default(""),
+  // placeName: z.string().min(1, "Place name / road number is required"),
+  // county: z.string().optional().default(""),
   notes: z
     .string()
     .max(500, "Keep location notes under 500 chars")
@@ -159,8 +159,8 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
       location: {
         lat: 53.4808,
         lng: -2.2426,
-        placeName: "",
-        county: "",
+        // placeName: "",
+        // county: "",
         notes: "",
       },
       live: {
@@ -307,7 +307,7 @@ const currentSection = computed(() => {
         </p>
       </header>
 
-      <LocationSection />
+      <LocationSection :show-reverse-geo-fields="false" />
       <TypeSection v-model="typeField" />
 
       <Transition name="section-fade" mode="out-in">

@@ -41,7 +41,7 @@ const { values } = useFormContext();
     <!-- Date Picker -->
     <SightingDateField
       field-name="live.sightingDate"
-      label="Date of Sighting"
+      label="Date of sighting"
       required
     />
 

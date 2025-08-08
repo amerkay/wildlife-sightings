@@ -67,7 +67,7 @@ function toggleObserved(v: string) {
     <!-- Last Roosted/Nested date -->
     <SightingDateField
       field-name="site.sightingDate"
-      label="Approximate Date of Last Roosted/Nested"
+      label="Date of sighting"
       required
     />
 

@@ -9,6 +9,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import LocationPicker from "@/components/LocationPicker.vue";
+
+const props = withDefaults(
+  defineProps<{
+    /** Show reverse geocoding fields and enable reverse geocoding API calls. */
+    showReverseGeoFields?: boolean;
+  }>(),
+  { showReverseGeoFields: true }
+);
 </script>
 
 <template>
@@ -16,7 +24,10 @@ import LocationPicker from "@/components/LocationPicker.vue";
     <h2 class="text-xl font-medium">Location of Sighting</h2>
 
     <!-- Uses your ready-made LocationPicker.vue -->
-    <LocationPicker name="location" />
+    <LocationPicker
+      name="location"
+      :show-reverse-geo-fields="showReverseGeoFields"
+    />
 
     <FormField name="location.notes" v-slot="{ componentField }">
       <FormItem>
