@@ -211,7 +211,11 @@ onBeforeUnmount(() => {
       <ClientOnly>
         <MapboxMap
           :access-token="MAPBOX_TOKEN"
-          map-style="mapbox://styles/mapbox/streets-v12"
+          :map-style="
+            $colorMode.value === 'dark'
+              ? 'mapbox://styles/mapbox/dark-v11'
+              : 'mapbox://styles/mapbox/streets-v12'
+          "
           :center="[centerLng, centerLat]"
           :zoom="isGeolocated ? 15 : fallbackZoom"
           :style="`height: ${height};`"
