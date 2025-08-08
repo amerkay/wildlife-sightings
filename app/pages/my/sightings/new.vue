@@ -158,7 +158,11 @@ const typeRef = ref<"live" | "site" | "dead">("live");
 const currentSchema = computed(() => {
   const t = typeRef.value;
   return toTypedSchema(
-    t === "live" ? liveFormSchema : t === "site" ? siteFormSchema : deadFormSchema
+    t === "live"
+      ? liveFormSchema
+      : t === "site"
+      ? siteFormSchema
+      : deadFormSchema
   );
 });
 
@@ -203,18 +207,26 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
 const [typeField] = defineField("type");
 
 /* Sync typeRef with form value */
-watch(() => values.type, (newType) => {
-  if (newType) {
-    typeRef.value = newType as "live" | "site" | "dead";
-  }
-}, { immediate: true });
+watch(
+  () => values.type,
+  (newType) => {
+    if (newType) {
+      typeRef.value = newType as "live" | "site" | "dead";
+    }
+  },
+  { immediate: true }
+);
 
 /* Also sync the other way for initial value */
-watch(typeRef, (newType) => {
-  if (values.type !== newType) {
-    setFieldValue("type", newType);
-  }
-}, { immediate: true });
+watch(
+  typeRef,
+  (newType) => {
+    if (values.type !== newType) {
+      setFieldValue("type", newType);
+    }
+  },
+  { immediate: true }
+);
 
 /* Cleanup "other" fields when their controller changes */
 watch(
