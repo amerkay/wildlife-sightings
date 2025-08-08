@@ -11,6 +11,12 @@ const isDark = computed(
 const toggleTheme = () => {
   colorMode.preference = isDark.value ? "light" : "dark";
 };
+
+// To prevent hydration mismatch, we'll show a default state during SSR
+const isClient = ref(false);
+onMounted(() => {
+  isClient.value = true;
+});
 </script>
 
 <template>
@@ -21,8 +27,9 @@ const toggleTheme = () => {
     :class="['h-8 w-8 rounded-full', className]"
     @click="toggleTheme"
   >
+    <!-- Show consistent icon during SSR, then switch to dynamic on client -->
     <svg
-      v-if="isDark"
+      v-if="!isClient || isDark"
       xmlns="http://www.w3.org/2000/svg"
       class="size-5"
       viewBox="0 0 24 24"

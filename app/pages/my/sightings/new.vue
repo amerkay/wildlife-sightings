@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, watch, computed } from "vue";
+import { h, watch, computed, ref } from "vue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
@@ -126,36 +126,46 @@ const deadSchema = z
     { path: ["causeOther"], message: "Please describe the cause" }
   );
 
-const schema = toTypedSchema(
-  z.discriminatedUnion("type", [
-    z.object({
-      type: z.literal("live"),
-      location: locationSchema,
-      live: liveSchema,
-      contact: contactSchema,
-      captcha: z.string().min(0).optional().or(z.literal("")), // keep field but not required while reCAPTCHA is commented
-    }),
-    z.object({
-      type: z.literal("site"),
-      location: locationSchema,
-      site: siteSchema,
-      contact: contactSchema,
-      captcha: z.string().min(0).optional().or(z.literal("")),
-    }),
-    z.object({
-      type: z.literal("dead"),
-      location: locationSchema,
-      dead: deadSchema,
-      contact: contactSchema,
-      captcha: z.string().min(0).optional().or(z.literal("")),
-    }),
-  ])
-);
+/* Create individual form schemas for each type */
+const liveFormSchema = z.object({
+  type: z.literal("live"),
+  location: locationSchema,
+  live: liveSchema,
+  contact: contactSchema,
+  captcha: z.string().min(0).optional().or(z.literal("")),
+});
+
+const siteFormSchema = z.object({
+  type: z.literal("site"),
+  location: locationSchema,
+  site: siteSchema,
+  contact: contactSchema,
+  captcha: z.string().min(0).optional().or(z.literal("")),
+});
+
+const deadFormSchema = z.object({
+  type: z.literal("dead"),
+  location: locationSchema,
+  dead: deadSchema,
+  contact: contactSchema,
+  captcha: z.string().min(0).optional().or(z.literal("")),
+});
+
+/* Reactive type reference */
+const typeRef = ref<"live" | "site" | "dead">("live");
+
+/* Reactive schema based on current type */
+const currentSchema = computed(() => {
+  const t = typeRef.value;
+  return toTypedSchema(
+    t === "live" ? liveFormSchema : t === "site" ? siteFormSchema : deadFormSchema
+  );
+});
 
 /* -------------- useForm -------------- */
 const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
   {
-    validationSchema: schema,
+    validationSchema: currentSchema,
     initialValues: {
       type: "live",
       location: {
@@ -192,6 +202,20 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
 );
 const [typeField] = defineField("type");
 
+/* Sync typeRef with form value */
+watch(() => values.type, (newType) => {
+  if (newType) {
+    typeRef.value = newType as "live" | "site" | "dead";
+  }
+}, { immediate: true });
+
+/* Also sync the other way for initial value */
+watch(typeRef, (newType) => {
+  if (values.type !== newType) {
+    setFieldValue("type", newType);
+  }
+}, { immediate: true });
+
 /* Cleanup "other" fields when their controller changes */
 watch(
   () => values.live?.activity,
@@ -218,11 +242,11 @@ watch(
   }
 );
 watch(
-  () => values.type,
+  typeRef,
   (t) => {
     if (t === "site" && !values.site) {
       setFieldValue("site", {
-        lastRoostNestDate: "",
+        sightingDate: "",
         observed: [],
         siteType: undefined,
         siteTypeOther: "",
@@ -235,7 +259,7 @@ watch(
     }
     if (t === "dead" && !values.dead) {
       setFieldValue("dead", {
-        dateFound: "",
+        sightingDate: "",
         cause: undefined,
         causeOther: "",
         details: "",
@@ -286,9 +310,9 @@ const submit = handleSubmit(
   }
 );
 
-const showLive = computed(() => values.type === "live");
-const showSite = computed(() => values.type === "site");
-const showDead = computed(() => values.type === "dead");
+const showLive = computed(() => typeRef.value === "live");
+const showSite = computed(() => typeRef.value === "site");
+const showDead = computed(() => typeRef.value === "dead");
 
 const currentSection = computed(() => {
   if (showLive.value) return LiveSection;
@@ -313,11 +337,11 @@ const currentSection = computed(() => {
       </header>
 
       <LocationSection :show-reverse-geo-fields="false" />
-      <TypeSection v-model="typeField" />
+      <TypeSection v-model="typeRef" />
 
       <Transition name="section-fade" mode="out-in">
         <KeepAlive>
-          <component :is="currentSection" :key="values.type" />
+          <component :is="currentSection" :key="typeRef" />
         </KeepAlive>
       </Transition>
       <ContactSection />

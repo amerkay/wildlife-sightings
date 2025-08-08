@@ -124,9 +124,7 @@ const isDark = computed(
               </li>
             </ul>
 
-            <!-- <ClientOnly> -->
             <ThemeToggle class="mt-4" />
-            <!-- </ClientOnly> -->
           </nav>
         </div>
       </div>

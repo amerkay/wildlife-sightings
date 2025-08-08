@@ -286,9 +286,7 @@ const signOut = async () => {
             </div>
           </div>
 
-          <!-- <ClientOnly> -->
           <ThemeToggle class="ml-3" />
-          <!-- </ClientOnly> -->
         </div>
       </div>
     </Container>
