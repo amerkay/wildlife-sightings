@@ -16,7 +16,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { RadioCard } from "@/components/ui/radio-card";
 import { SightingDateField, ObservationPeriodField } from "./fields";
@@ -80,20 +79,20 @@ function toggleObserved(v: string) {
         >
         <FormControl>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div
+            <label
               v-for="opt in SITE_OBSERVED"
               :key="opt.key"
-              class="flex items-center gap-2"
+              class="flex items-center gap-2 cursor-pointer"
+              @click="toggleObserved(opt.key)"
             >
               <Checkbox
                 :checked="values.site?.observed?.includes(opt.key)"
-                @update:checked="toggleObserved(opt.key)"
-                :id="`site-ob-${opt.key}`"
+                @click.stop
               />
-              <FormLabel :for="`site-ob-${opt.key}`" class="cursor-pointer">{{
+              <span class="text-sm leading-none font-medium select-none">{{
                 opt.label
-              }}</FormLabel>
-            </div>
+              }}</span>
+            </label>
           </div>
         </FormControl>
         <FormMessage />
