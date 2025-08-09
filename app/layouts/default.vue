@@ -15,6 +15,11 @@ const fallbackSiteData = {
         title: "Kepler.gl Test",
         url: "/test-keplergl",
       },
+      {
+        id: "sighting-new",
+        title: "New Sighting",
+        url: "/my/sightings/new",
+      },
     ],
   },
   footerNavigation: {

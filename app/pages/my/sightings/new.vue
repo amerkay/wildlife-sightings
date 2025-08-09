@@ -318,26 +318,99 @@ watch(
 
 const submit = handleSubmit(
   async (formValues) => {
-    // TODO: POST to your API
-    toast({
-      title: "Sighting submitted ✅",
-      description: h(
-        "pre",
-        { class: "mt-2 w-[360px] rounded-md bg-slate-950 p-4" },
-        h(
-          "code",
-          { class: "text-white text-xs" },
-          JSON.stringify(formValues, null, 2)
-        )
-      ),
-    });
-    // resetForm()
+    try {
+      const supabase = useSupabaseClient();
+      const user = useSupabaseUser();
+
+      // Base sighting data
+      const sightingData: any = {
+        type: formValues.type,
+        user_id: user.value?.id || null,
+
+        // Location as PostGIS point
+        location: `POINT(${formValues.location.lng} ${formValues.location.lat})`,
+        location_notes: formValues.location.notes || null,
+
+        // Contact info
+        contact_name: formValues.contact.name,
+        contact_email: formValues.contact.email,
+        contact_postcode: formValues.contact.postcode || null,
+
+        // Metadata
+        status: "pending",
+      };
+
+      // Add type-specific data
+      if (formValues.type === "live") {
+        sightingData.sighting_date = formValues.live.sightingDate;
+        sightingData.observation_period_from =
+          formValues.live.observationPeriodFrom || null;
+        sightingData.observation_period_to =
+          formValues.live.observationPeriodTo || null;
+        sightingData.frequency = formValues.live.frequency || null;
+        sightingData.activity = formValues.live.activity || null;
+        sightingData.activity_other =
+          formValues.live.activity === "other"
+            ? formValues.live.activityOther
+            : null;
+      } else if (formValues.type === "site") {
+        sightingData.sighting_date = formValues.site.sightingDate;
+        sightingData.observation_period_from =
+          formValues.site.observationPeriodFrom || null;
+        sightingData.observation_period_to =
+          formValues.site.observationPeriodTo || null;
+        sightingData.observed = formValues.site.observed || [];
+        sightingData.site_type = formValues.site.siteType || null;
+        sightingData.site_type_other =
+          formValues.site.siteType === "other"
+            ? formValues.site.siteTypeOther
+            : null;
+        sightingData.nestbox = formValues.site.nestbox || "unknown";
+        sightingData.connection = formValues.site.connection || null;
+        sightingData.connection_other =
+          formValues.site.connection === "other"
+            ? formValues.site.connectionOther
+            : null;
+      } else if (formValues.type === "dead") {
+        sightingData.sighting_date = formValues.dead.sightingDate;
+        sightingData.cause_of_death = formValues.dead.cause || null;
+        sightingData.cause_of_death_other =
+          formValues.dead.cause === "other" ? formValues.dead.causeOther : null;
+        sightingData.death_details = formValues.dead.details || null;
+      }
+
+      const { data, error } = await supabase
+        .from("sightings")
+        .insert(sightingData)
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Supabase error:", error);
+        toast("Submission failed ❌", {
+          description: `Error: ${error.message}`,
+        });
+        return;
+      }
+
+      const referenceId =
+        (data as any)?.id?.toString().slice(0, 8) || "unknown";
+      toast.success("Sighting submitted ✅", {
+        description: `Your sighting has been submitted successfully! Reference ID: ${referenceId}...`,
+      });
+
+      // Redirect to dashboard after successful submission
+      await navigateTo("/my/sightings/");
+    } catch (err) {
+      console.error("Submission error:", err);
+      toast.error("Submission failed ❌", {
+        description: "An unexpected error occurred. Please try again.",
+      });
+    }
   },
   () => {
-    toast({
-      title: "Please fix the errors",
+    toast.error("Please fix the errors", {
       description: "Some fields need your attention.",
-      variant: "destructive",
     });
   }
 );

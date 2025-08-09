@@ -252,7 +252,7 @@ const signOut = async () => {
                   >
                     <MenuItem v-slot="{ active, close }">
                       <NuxtLink
-                        to="/my/"
+                        to="/my/sightings/"
                         :class="[
                           active
                             ? 'bg-accent text-accent-foreground'
@@ -403,7 +403,11 @@ const signOut = async () => {
 
         <!-- Mobile User Menu when logged in -->
         <template v-else>
-          <NuxtLink to="/my/" custom v-slot="{ isActive, href, navigate }">
+          <NuxtLink
+            to="/my/sightings/"
+            custom
+            v-slot="{ isActive, href, navigate }"
+          >
             <DisclosureButton
               as="a"
               :href="href"
