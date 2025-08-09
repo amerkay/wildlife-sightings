@@ -19,90 +19,26 @@ import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer";
 
 interface KeplerMapProps {
   mapboxApiAccessToken: string;
-  apiUrl: string;
   dispatch: Dispatch<any>;
   isDarkMode?: boolean;
+  onMapReady?: (addDataToMapFn: (payload: any) => void) => void;
 }
 
 const App: React.FC<KeplerMapProps> = ({
   mapboxApiAccessToken,
-  apiUrl,
   dispatch,
   isDarkMode,
+  onMapReady,
 }) => {
   useEffect(() => {
-    // Fetch parsed observations from Nuxt API
-    fetch(apiUrl)
-      .then((res) => res.json())
-      .then((data) => {
-        dispatch(
-          addDataToMap({
-            datasets: [
-              {
-                info: { label: "Barn Owl Observations", id: "barn_owl_obs" },
-                data: processRowObject(data) ?? { fields: [], rows: [] },
-              },
-            ],
-            options: { centerMap: false },
-            config: {
-              mapStyle: {
-                styleType: isDarkMode ? "dark" : "light",
-              },
-              visState: {
-                layers: [
-                  {
-                    id: "barn_owls_layer",
-                    type: "point",
-                    config: {
-                      dataId: "barn_owl_obs",
-                      label: "Barn Owls",
-                      color: [18, 147, 154],
-                      columns: { lat: "lat", lng: "lng" },
-                      isVisible: true,
-                      visConfig: {
-                        radius: 10,
-                        fixedRadius: false,
-                        opacity: 0.8,
-                        outline: false,
-                        thickness: 2,
-                        filled: true,
-                        radiusRange: [0, 50],
-                      },
-                    },
-                  },
-                ],
-                filters: [
-                  {
-                    dataId: ["barn_owl_obs"],
-                    id: "filter_eventDate",
-                    name: ["eventDate"],
-                    type: "timeRange",
-                    value: [1600000000000, 1752962400000],
-                    plotType: {
-                      interval: "1-week",
-                      defaultTimeFormat: "L",
-                      type: "histogram",
-                      aggregation: "sum",
-                    },
-                    view: "enlarged",
-                    speed: 1,
-                  },
-                ],
-              },
-              mapState: {
-                bearing: 0,
-                dragRotate: false,
-                latitude: 52.029347152354966,
-                longitude: -3.3639196875002217,
-                pitch: 0,
-                zoom: 4,
-                isSplit: false,
-              },
-            },
-          })
-        );
-      });
-  }, [apiUrl, dispatch, isDarkMode]);
+    // Expose the addDataToMap function to the parent component
+    if (onMapReady) {
+      const addDataToMapFn = (payload: any) => {
+        dispatch(addDataToMap(payload));
+      };
+      onMapReady(addDataToMapFn);
+    }
+  }, [dispatch, onMapReady]);
 
   return (
     <div
@@ -132,8 +68,8 @@ const ConnectedApp = connect(mapStateToProps, dispatchToProps)(App);
 
 const KeplerMap: React.FC<{
   mapboxApiAccessToken: string;
-  apiUrl: string;
   isDarkMode?: boolean;
+  onMapReady?: (addDataToMapFn: (payload: any) => void) => void;
 }> = (props) => {
   const { isDarkMode } = props;
   const store = useMemo(() => {
