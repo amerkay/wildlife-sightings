@@ -62,7 +62,7 @@ const mapInstance = ref<any>(null);
 /** Native Mapbox GeolocateControl */
 const geoControl = new mapboxgl.GeolocateControl({
   positionOptions: { enableHighAccuracy: true, timeout: 10000 },
-  trackUserLocation: true,
+  trackUserLocation: false, // Don't continuously track - just get location once
   fitBoundsOptions: { maxZoom: 15 },
 });
 
@@ -191,7 +191,7 @@ function onMapCreated(map: any) {
 }
 
 function onMapLoaded() {
-  requestGeolocation();
+  // Don't automatically request geolocation - let user decide
 }
 
 function onMoveEnd() {
