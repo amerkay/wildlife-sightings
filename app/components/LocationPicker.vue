@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watchEffect, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
 import { useFormContext, Field } from "vee-validate";
 import {
   MapboxMap,
@@ -26,12 +26,18 @@ const props = withDefaults(
     fallbackZoom?: number;
     /** Show reverse geocoding fields and enable reverse geocoding API calls. */
     showReverseGeoFields?: boolean;
+    /** Default latitude (Manchester fallback). */
+    defaultLat?: number;
+    /** Default longitude (Manchester fallback). */
+    defaultLng?: number;
   }>(),
   {
     name: "location",
     height: "400px",
     fallbackZoom: 12,
     showReverseGeoFields: false,
+    defaultLat: 53.4808,
+    defaultLng: -2.2426,
   }
 );
 
@@ -40,9 +46,16 @@ const config = useRuntimeConfig();
 const MAPBOX_TOKEN = config.public.mapboxAccessToken as string;
 
 /** Map + geolocation state */
-const centerLng = ref<number>(-2.2426); // Manchester fallback
-const centerLat = ref<number>(53.4808);
+const centerLng = ref<number>(props.defaultLng);
+const centerLat = ref<number>(props.defaultLat);
 const isGeolocated = ref(false);
+
+/** Check if current position is at default */
+const isAtDefault = computed(
+  () =>
+    Math.abs(centerLat.value - props.defaultLat) < 0.0001 &&
+    Math.abs(centerLng.value - props.defaultLng) < 0.0001
+);
 
 /** Map instance */
 const mapInstance = ref<any>(null);
@@ -54,16 +67,41 @@ const geoControl = new mapboxgl.GeolocateControl({
 });
 
 /** vee-validate context */
-const { setFieldValue } = useFormContext();
+const { setFieldValue, setFieldTouched } = useFormContext();
 const field = (suffix: string) => `${props.name}.${suffix}`;
+
+/** Sync form fields - only set lat/lng if not at default position */
 function syncFormFields(placeName?: string, county?: string) {
-  setFieldValue(field("lat"), centerLat.value);
-  setFieldValue(field("lng"), centerLng.value);
+  if (isAtDefault.value) {
+    // Keep lat/lng null when at default position for validation
+    setFieldValue(field("lat"), null);
+    setFieldValue(field("lng"), null);
+  } else {
+    setFieldValue(field("lat"), centerLat.value);
+    setFieldValue(field("lng"), centerLng.value);
+  }
+
+  // Mark fields as touched to trigger validation
+  setFieldTouched(field("lat"), true);
+  setFieldTouched(field("lng"), true);
+
   if (props.showReverseGeoFields) {
     if (placeName !== undefined) setFieldValue(field("placeName"), placeName);
     if (county !== undefined) setFieldValue(field("county"), county);
   }
 }
+
+/** Watch for position changes and sync form */
+watch(
+  [centerLat, centerLng],
+  () => {
+    syncFormFields();
+    if (!isAtDefault.value) {
+      reverseWithSdk(centerLng.value, centerLat.value);
+    }
+  },
+  { immediate: true }
+);
 
 /** =========================
  *  Mapbox SDK: Geocoding client
@@ -76,10 +114,7 @@ let inflightReq: any | null = null;
 
 /** Parse geocoder feature into your two text fields */
 function updateFieldsFromFeature(feature: any | undefined) {
-  if (!props.showReverseGeoFields) {
-    syncFormFields();
-    return;
-  }
+  if (!props.showReverseGeoFields) return;
 
   if (!feature) {
     syncFormFields("", "");
@@ -107,10 +142,7 @@ function updateFieldsFromFeature(feature: any | undefined) {
 
 /** Reverse geocode current center using the SDK (maintained library) */
 async function reverseWithSdk(lng: number, lat: number) {
-  if (!props.showReverseGeoFields) {
-    syncFormFields();
-    return;
-  }
+  if (!props.showReverseGeoFields) return;
 
   // Cancel an older lookup if still running
   if (inflightReq?.abort) {
@@ -141,8 +173,7 @@ async function reverseWithSdk(lng: number, lat: number) {
     const feature = resp?.body?.features?.[0];
     updateFieldsFromFeature(feature);
   } catch (_) {
-    // Keep lat/lng synced even if lookup fails
-    syncFormFields();
+    // Keep current state on error
   } finally {
     inflightReq = null;
   }
@@ -158,19 +189,16 @@ function onMapCreated(map: any) {
   });
   geoControl.on("error", (err) => console.debug("GeolocateControl error", err));
 }
+
 function onMapLoaded() {
-  syncFormFields();
-  // Initial reverse for the fallback center
-  reverseWithSdk(centerLng.value, centerLat.value);
   requestGeolocation();
 }
+
 function onMoveEnd() {
   if (!mapInstance.value) return;
   const c = mapInstance.value.getCenter();
   centerLng.value = c.lng;
   centerLat.value = c.lat;
-  syncFormFields(); // immediately reflect coords
-  reverseWithSdk(centerLng.value, centerLat.value);
 }
 
 /** Geolocate success (from the control) */
@@ -180,8 +208,6 @@ function onUserGeolocate(ev: any) {
   centerLng.value = coords.longitude;
   centerLat.value = coords.latitude;
   isGeolocated.value = true;
-  syncFormFields();
-  reverseWithSdk(centerLng.value, centerLat.value);
 }
 
 /** Button: trigger native Mapbox geolocation control */
@@ -259,11 +285,16 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Hidden lat/lng fields (kept in sync via setFieldValue) -->
-    <Field :name="`${name}.lat`" v-slot="{ field }">
-      <input type="hidden" v-bind="field" :value="centerLat" />
+    <Field :name="`${name}.lat`" v-slot="{ field, errorMessage }">
+      <input type="hidden" v-bind="field" />
+      <!-- Show error only for lat field to avoid duplication -->
+      <p v-if="errorMessage" class="text-sm text-destructive mt-2">
+        {{ errorMessage }}
+      </p>
     </Field>
     <Field :name="`${name}.lng`" v-slot="{ field }">
-      <input type="hidden" v-bind="field" :value="centerLng" />
+      <input type="hidden" v-bind="field" />
+      <!-- No error display for lng to avoid duplication -->
     </Field>
 
     <!-- Visible, auto-filled text fields -->

@@ -21,8 +21,18 @@ import SubmitSection from "@/components/form-section/SubmitSection.vue";
 
 /* ---------------- Schema ---------------- */
 const locationSchema = z.object({
-  lat: z.number({ error: "Latitude required" }),
-  lng: z.number({ error: "Longitude required" }),
+  lat: z
+    .number({ error: "Please select a location on the map" })
+    .nullable()
+    .refine((val) => val !== null, {
+      message: "Please select a location on the map",
+    }),
+  lng: z
+    .number({ error: "Please select a location on the map" })
+    .nullable()
+    .refine((val) => val !== null, {
+      message: "Please select a location on the map",
+    }),
   // placeName: z.string().min(1, "Place name / road number is required"),
   // county: z.string().optional().default(""),
   notes: z
@@ -173,8 +183,8 @@ const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
     initialValues: {
       type: "live",
       location: {
-        lat: 53.4808,
-        lng: -2.2426,
+        lat: null,
+        lng: null,
         // placeName: "",
         // county: "",
         notes: "",
