@@ -31,7 +31,7 @@ const colorMode = useColorMode();
 const KeplerMapVue = applyReactInVue(KeplerMap);
 
 // Fetch data from the API
-const { data, pending, error } = await useFetch('/api/observations');
+const { data, pending, error } = await useFetch("/api/observations");
 
 // Handle when the map is ready and we get the addDataToMap function
 const handleMapReady = (addDataToMapFn: (payload: any) => void) => {
@@ -46,7 +46,7 @@ const handleMapReady = (addDataToMapFn: (payload: any) => void) => {
       options: { centerMap: false },
       config: {
         mapStyle: {
-          styleType: colorMode.value === 'dark' ? "dark" : "light",
+          styleType: colorMode.value === "dark" ? "dark" : "light",
         },
         visState: {
           layers: [

@@ -1,187 +1,181 @@
-<template>
-  <Container>
-    <div class="mx-auto w-full max-w-4xl space-y-6">
-      <header class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-semibold">My Sightings</h1>
-          <p class="text-muted-foreground">
-            View and manage your owl sighting submissions
-          </p>
-        </div>
-        <Button as-child>
-          <NuxtLink to="/my/sightings/new">
-            <Plus class="mr-2 h-4 w-4" />
-            New Sighting
-          </NuxtLink>
-        </Button>
-      </header>
-
-      <div v-if="pending" class="flex justify-center py-8">
-        <div class="text-muted-foreground">Loading your sightings...</div>
-      </div>
-
-      <div v-else-if="error" class="text-center py-8">
-        <div class="text-destructive">Failed to load sightings</div>
-        <Button @click="refresh()" variant="outline" class="mt-2">
-          Try Again
-        </Button>
-      </div>
-
-      <div v-else-if="!data || data.length === 0" class="text-center py-12">
-        <div class="text-muted-foreground mb-4">
-          You haven't submitted any sightings yet
-        </div>
-        <Button as-child>
-          <NuxtLink to="/my/sightings/new">Submit Your First Sighting</NuxtLink>
-        </Button>
-      </div>
-
-      <div v-else class="grid gap-4">
-        <Card v-for="sighting in data" :key="sighting.id" class="p-6">
-          <div class="flex items-start justify-between">
-            <div class="space-y-2">
-              <div class="flex items-center gap-2">
-                <Badge :variant="getStatusVariant(sighting.status)">
-                  {{ sighting.status }}
-                </Badge>
-                <Badge variant="outline">
-                  {{ sighting.type }}
-                </Badge>
-              </div>
-
-              <div class="text-sm text-muted-foreground">
-                Sighted: {{ formatDate(sighting.sighting_date) }}
-              </div>
-
-              <div class="text-sm text-muted-foreground">
-                Submitted: {{ formatDate(sighting.created_at) }}
-              </div>
-
-              <div
-                v-if="
-                  sighting.observation_period_from ||
-                  sighting.observation_period_to
-                "
-                class="text-sm text-muted-foreground"
-              >
-                <strong>Observation Period:</strong>
-                <span
-                  v-if="
-                    sighting.observation_period_from &&
-                    sighting.observation_period_to
-                  "
-                >
-                  {{ formatDate(sighting.observation_period_from) }} -
-                  {{ formatDate(sighting.observation_period_to) }}
-                </span>
-                <span v-else-if="sighting.observation_period_from">
-                  From {{ formatDate(sighting.observation_period_from) }}
-                </span>
-                <span v-else-if="sighting.observation_period_to">
-                  Until {{ formatDate(sighting.observation_period_to) }}
-                </span>
-              </div>
-
-              <div v-if="sighting.location_notes" class="text-sm">
-                <strong>Location:</strong> {{ sighting.location_notes }}
-              </div>
-
-              <div class="text-xs text-muted-foreground">
-                ID: {{ sighting.id }}
-              </div>
-            </div>
-
-            <div class="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                @click="viewDetails(sighting)"
-              >
-                View
-              </Button>
-              <Button
-                v-if="sighting.status === 'pending'"
-                variant="outline"
-                size="sm"
-                @click="editSighting(sighting)"
-              >
-                Edit
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </div>
-  </Container>
-</template>
-
 <script setup lang="ts">
 import { Plus } from "lucide-vue-next";
+import { applyReactInVue } from "veaury";
+import KeplerMap from "../../../../react_app/KeplerMap";
+import { processRowObject } from "@kepler.gl/processors";
+import type { Database } from "../../../../types/database.types";
 
-// Add page middleware for authentication
-// definePageMeta({
-//   middleware: 'auth'
-// })
+type Sighting = Database["public"]["Tables"]["sightings"]["Row"];
 
+const {
+  public: { mapboxAccessToken },
+} = useRuntimeConfig();
+
+const colorMode = useColorMode();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
-const { data, pending, error, refresh } = await useAsyncData(
-  "user-sightings",
+const KeplerMapVue = applyReactInVue(KeplerMap);
+
+// Fetch user's sightings from Supabase
+const { data, pending, error } = await useAsyncData(
+  "user-sightings-map",
   async () => {
     if (!user.value) return [];
 
     const { data, error } = await supabase
       .from("sightings")
-      .select("*")
+      .select(`id, created_at, status, lat, lng, sighting_date`)
       .eq("user_id", user.value.id)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching sightings:", error);
+      console.error("Error fetching user sightings:", error);
       throw error;
     }
 
-    return data || [];
+    // transform sighting_date to UTC string for consistency
+    data.forEach((sighting: Sighting) => {
+      if (sighting.sighting_date) {
+        sighting.sighting_date = new Date(sighting.sighting_date).toISOString();
+      }
+    });
+
+    // console.log("Fetched user sightings:", data);
+
+    return data as Sighting[];
   }
 );
 
-function getStatusVariant(status: string) {
-  switch (status) {
-    case "approved":
-      return "default";
-    case "pending":
-      return "secondary";
-    case "rejected":
-      return "destructive";
-    default:
-      return "outline";
+// Handle when the map is ready and we get the addDataToMap function
+const handleMapReady = (addDataToMapFn: (payload: any) => void) => {
+  if (data.value && data.value.length > 0) {
+    addDataToMapFn({
+      datasets: [
+        {
+          info: { label: "My Sightings", id: "user_sightings" },
+          data: processRowObject(data.value) ?? { fields: [], rows: [] },
+        },
+      ],
+      options: { centerMap: true, zoom: 7 },
+      config: {
+        mapStyle: {
+          styleType: colorMode.value === "dark" ? "dark" : "light",
+        },
+        visState: {
+          layers: [
+            {
+              id: "user_sightings_layer",
+              type: "point",
+              config: {
+                dataId: "user_sightings",
+                label: "My Sightings",
+                color: [255, 165, 0], // Orange color to distinguish from public data
+                columns: { lat: "lat", lng: "lng" },
+                isVisible: true,
+                visConfig: {
+                  radius: 15,
+                  fixedRadius: false,
+                  opacity: 0.9,
+                  outline: true,
+                  thickness: 2,
+                  filled: true,
+                  radiusRange: [5, 50],
+                  strokeColor: [255, 255, 255],
+                  strokeColorRange: {
+                    colors: ["#FFFFFF", "#000000"],
+                  },
+                },
+                textLabel: [
+                  {
+                    field: {
+                      name: "type",
+                      type: "string",
+                    },
+                    color: [255, 255, 255],
+                    size: 12,
+                    offset: [0, 0],
+                    anchor: "middle",
+                    alignment: "center",
+                  },
+                ],
+              },
+            },
+          ],
+          filters: [
+            {
+              dataId: ["user_sightings"],
+              id: "filter_sighting_date",
+              name: ["sighting_date"],
+              type: "timeRange",
+              value: [
+                new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).getTime(),
+                Date.now(),
+              ], // Last year
+              plotType: {
+                interval: "1-week",
+                defaultTimeFormat: "L",
+                type: "histogram",
+                aggregation: "sum",
+              },
+              view: "enlarged",
+              speed: 1,
+            },
+          ],
+        },
+        mapState: {
+          bearing: 0,
+          dragRotate: false,
+          latitude: 52.029347152354966, // UK center
+          longitude: -3.3639196875002217,
+          pitch: 0,
+          zoom: 7,
+          isSplit: false,
+        },
+      },
+    });
   }
-}
-
-function formatDate(dateString: string) {
-  if (!dateString) return "N/A";
-
-  // Handle both DATE (YYYY-MM-DD) and TIMESTAMP formats
-  const date = new Date(dateString);
-
-  // Check if date is valid
-  if (isNaN(date.getTime())) return "Invalid Date";
-
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function viewDetails(sighting: any) {
-  // TODO: Navigate to detail view or show modal
-  console.log("View sighting:", sighting);
-}
-
-function editSighting(sighting: any) {
-  // TODO: Navigate to edit form with pre-filled data
-  console.log("Edit sighting:", sighting);
-}
+};
 </script>
+
+<template>
+  <div class="relative w-full min-h-[90vh]">
+    <div v-if="pending" class="flex items-center justify-center h-full">
+      <div class="text-lg">Loading your sightings...</div>
+    </div>
+    <div v-else-if="error" class="flex items-center justify-center h-full">
+      <div class="text-lg text-red-500">
+        Error loading your sightings: {{ error }}
+      </div>
+    </div>
+    <div
+      v-else-if="!data || data.length === 0"
+      class="flex items-center justify-center h-full"
+    >
+      <div class="text-center">
+        <div class="text-lg mb-4">You haven't submitted any sightings yet</div>
+        <div>{{ data }}</div>
+        <Button as-child>
+          <NuxtLink to="/my/sightings/new">Submit Your First Sighting</NuxtLink>
+        </Button>
+      </div>
+    </div>
+    <ClientOnly v-else>
+      <KeplerMapVue
+        :mapboxApiAccessToken="mapboxAccessToken"
+        :isDarkMode="colorMode.value === 'dark'"
+        :onMapReady="handleMapReady"
+      />
+    </ClientOnly>
+
+    <!-- Floating action button for new sighting -->
+    <div v-if="data && data.length > 0" class="absolute top-4 right-4 z-10">
+      <Button as-child>
+        <NuxtLink to="/my/sightings/new">
+          <Plus class="mr-2 h-4 w-4" />
+          New Sighting
+        </NuxtLink>
+      </Button>
+    </div>
+  </div>
+</template>
