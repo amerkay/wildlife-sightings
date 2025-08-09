@@ -40,13 +40,6 @@ const props = defineProps<{
   globals: Globals;
 }>();
 
-const colorMode = useColorMode();
-const isDark = computed(
-  () =>
-    colorMode.preference === "dark" ||
-    (colorMode.preference === "system" && colorMode.value === "dark")
-);
-
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 

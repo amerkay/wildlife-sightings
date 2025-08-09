@@ -10,7 +10,7 @@
       <KeplerMapVue
         v-else
         :mapboxApiAccessToken="mapboxAccessToken"
-        :isDarkMode="colorMode.value === 'dark'"
+        :isDarkMode="colorMode === 'dark'"
         :onMapReady="handleMapReady"
       />
     </ClientOnly>

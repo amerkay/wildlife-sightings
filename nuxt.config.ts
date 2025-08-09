@@ -38,6 +38,8 @@ export default defineNuxtConfig({
     // { path: "~/components/block", pathPrefix: false, priority: 2 },
     // { path: "~/components/shared", pathPrefix: false },
     { path: "~/components/base", pathPrefix: false },
+    { path: "~/components/dataset-loader", pathPrefix: false },
+
     // { path: "~/components/forms", pathPrefix: false },
     {
       path: "~/components/ui",
@@ -57,6 +59,7 @@ export default defineNuxtConfig({
      */
     componentDir: "./app/components/ui",
   },
+
   colorMode: {
     preference: "system",
     fallback: "light",

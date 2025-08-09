@@ -14,112 +14,25 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "vue-sonner";
-
-interface DatasetPreset {
-  id: string;
-  label: string;
-  kind: string;
-  endpoint: string;
-  layerConfig: {
-    id: string;
-    type: "point" | "cluster" | "heatmap";
-    config: {
-      dataId: string;
-      label: string;
-      color: [number, number, number];
-      columns: { lat: string; lng: string };
-      isVisible: boolean;
-      visConfig: Record<string, any>;
-    };
-  };
-}
+import {
+  useDatasetLoaders,
+  type DatasetPreset,
+} from "~/composables/dataset-loaders";
 
 const emit = defineEmits<{
   datasetLoaded: [payload: { preset: DatasetPreset; data: any[] }];
   datasetError: [error: any];
 }>();
 
-const supabase = useSupabaseClient();
-
-const presets = ref<DatasetPreset[]>([
-  {
-    id: "gbif_barn_owl_obs",
-    label: "GBIF Barn Owl Observations",
-    kind: "observations",
-    endpoint: "/api/observations",
-    layerConfig: {
-      id: "gbif_barn_owl_obs_layer",
-      type: "heatmap",
-      config: {
-        dataId: "gbif_barn_owl_obs",
-        label: "GBIF Barn Owl Observations",
-        color: [18, 147, 154],
-        columns: { lat: "lat", lng: "lng" },
-        isVisible: true,
-        visConfig: {
-          opacity: 0.6,
-          radius: 8,
-          colorRange: {
-            colors: [
-              "#4C0035",
-              "#880030",
-              "#B72F15",
-              "#D6610A",
-              "#EF9100",
-              "#FFC300",
-            ],
-            name: "Global Warming",
-            type: "sequential",
-            category: "Uber",
-          },
-        },
-      },
-    },
-  },
-  {
-    id: "public_sightings",
-    label: "Public Sightings",
-    kind: "sightings",
-    endpoint: "supabase://sightings_public",
-    layerConfig: {
-      id: "public_sightings_layer",
-      type: "cluster",
-      config: {
-        dataId: "public_sightings",
-        label: "Public Sightings",
-        color: [252, 242, 26],
-        columns: { lat: "lat", lng: "lng" },
-        isVisible: true,
-        visConfig: {
-          opacity: 0.7,
-          clusterRadius: 40,
-          radiusRange: [5, 50],
-          colorRange: {
-            colors: [
-              "#37535E",
-              "#39747F",
-              "#39969B",
-              "#5DB7A8",
-              "#A4D4AD",
-              "#E5EEC1",
-            ],
-            name: "Ocean Green",
-            type: "sequential",
-            category: "Uber",
-          },
-          colorAggregation: "count",
-        },
-      },
-    },
-  },
-  // Future datasets can be added here
-]);
+const { availableDatasets } = useDatasetLoaders();
 
 const loading = ref(false);
 const loadedDatasets = ref<Set<string>>(new Set());
 
 const availablePresets = computed(() =>
-  presets.value.filter((p) => !loadedDatasets.value.has(p.id))
+  availableDatasets
+    .map((loader) => loader.preset)
+    .filter((p) => !loadedDatasets.value.has(p.id))
 );
 
 async function onSelect(preset: DatasetPreset) {
@@ -129,51 +42,20 @@ async function onSelect(preset: DatasetPreset) {
   toast(`Loading ${preset.label}…`);
 
   try {
-    let data: any[];
-
-    if (preset.endpoint.startsWith("supabase://")) {
-      // Handle Supabase queries
-      const viewName = preset.endpoint.replace("supabase://", "");
-
-      if (viewName === "sightings_public") {
-        const { data: supabaseData, error } = await supabase
-          .from("sightings_public")
-          .select("*, lat, lng");
-
-        if (error) {
-          console.error("Error fetching public sightings:", error);
-          throw error;
-        }
-
-        data =
-          supabaseData
-            ?.map((item: any) => ({
-              ...item,
-              sighting_date: item.sighting_date
-                ? new Date(item.sighting_date).toISOString()
-                : null,
-            }))
-            .filter((item: any) => item.lat !== null && item.lng !== null) ||
-          [];
-      } else {
-        throw new Error(`Unknown Supabase view: ${viewName}`);
-      }
-    } else {
-      // Handle regular API endpoints
-      data = await $fetch<any[]>(preset.endpoint);
-
-      // Transform data to ensure consistent date format
-      data = data.map((item: any) => ({
-        ...item,
-        sighting_date: item.sighting_date
-          ? typeof item.sighting_date === "number"
-            ? new Date(item.sighting_date).toISOString()
-            : new Date(item.sighting_date).toISOString()
-          : null,
-      }));
+    // Find the corresponding loader
+    const loader = availableDatasets.find((l) => l.preset.id === preset.id);
+    if (!loader) {
+      throw new Error(`No loader found for dataset: ${preset.id}`);
     }
 
-    if (!data || !Array.isArray(data) || data.length === 0) {
+    const result = await loader.loadData();
+
+    if (
+      !result ||
+      !result.data ||
+      !Array.isArray(result.data) ||
+      result.data.length === 0
+    ) {
       toast.error("No data found", {
         description: `${preset.label} contains no records`,
       });
@@ -181,10 +63,10 @@ async function onSelect(preset: DatasetPreset) {
     }
 
     loadedDatasets.value.add(preset.id);
-    emit("datasetLoaded", { preset, data });
+    emit("datasetLoaded", result);
 
     toast.success("Dataset loaded", {
-      description: `${preset.label} (${data.length} records)`,
+      description: `${preset.label} (${result.data.length} records)`,
     });
   } catch (error) {
     console.error(`Error loading ${preset.label}:`, error);
@@ -216,7 +98,7 @@ defineExpose({
         {{ loading ? "Loading..." : "Add Dataset" }}
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-80">
+    <PopoverContent class="w-full sm:w-sm">
       <Command>
         <CommandInput placeholder="Search datasets…" />
         <CommandGroup heading="Available Datasets">

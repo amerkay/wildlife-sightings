@@ -23,13 +23,6 @@ export interface FooterProps {
 }
 
 const props = defineProps<FooterProps>();
-
-const colorMode = useColorMode();
-const isDark = computed(
-  () =>
-    colorMode.preference === "dark" ||
-    (colorMode.preference === "system" && colorMode.value === "dark")
-);
 </script>
 
 <template>

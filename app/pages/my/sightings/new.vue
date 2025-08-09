@@ -508,17 +508,6 @@ const currentSection = computed(() => {
       </Transition>
       <ContactSection />
       <SubmitSection />
-
-      <!-- Form Data Preview -->
-      <section class="space-y-4 border-t pt-6">
-        <h3 class="text-lg font-medium">Form Data Preview</h3>
-        <div class="rounded-md bg-slate-50 dark:bg-slate-900 p-4 overflow-auto">
-          <pre
-            class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap"
-            >{{ JSON.stringify(values, null, 2) }}</pre
-          >
-        </div>
-      </section>
     </form>
   </Container>
 </template>
