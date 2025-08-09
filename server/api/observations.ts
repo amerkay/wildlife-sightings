@@ -25,12 +25,10 @@ export default defineEventHandler(async () => {
     return {
       lat: parseFloat(row.decimalLatitude),
       lng: parseFloat(row.decimalLongitude),
-      occurrenceID: row.occurrenceID,
-      eventDate: isNaN(dt) ? null : dt, // Convert to epoch timestamp (milliseconds)
-      institutionCode: row.institutionCode,
-      basisOfRecord: row.basisOfRecord,
-      countryCode: row.countryCode,
-      locality: row.locality,
+      occurrence_id: row.occurrenceID,
+      sighting_date: isNaN(dt) ? null : dt, // Convert to epoch timestamp (milliseconds)
+      institution_code: row.institutionCode,
+      basis_of_record: row.basisOfRecord,
     };
   });
 

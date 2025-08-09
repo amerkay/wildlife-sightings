@@ -44,7 +44,7 @@ const App: React.FC<KeplerMapProps> = ({
     <div
       style={{
         position: "absolute",
-        width: "100%",
+        width: "100vw",
         height: "100%",
       }}
     >
@@ -89,8 +89,14 @@ const KeplerMap: React.FC<{
     const enhancers = applyMiddleware(...middleWares);
     return createStore(reducers, {}, compose(enhancers));
   }, [isDarkMode]);
+
   return (
     <Provider store={store}>
+      <style>{`
+        .bottom-widget__field-select {
+          max-width: 85px !important;
+        }
+      `}</style>
       <ConnectedApp {...props} />
     </Provider>
   );

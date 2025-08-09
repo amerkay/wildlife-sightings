@@ -5,10 +5,15 @@ import { computed } from "vue";
 const fallbackSiteData = {
   headerNavigation: {
     items: [
+      // {
+      //   id: "home",
+      //   title: "Home",
+      //   url: "/",
+      // },
       {
-        id: "home",
-        title: "Home",
-        url: "/",
+        id: "sighting-my",
+        title: "My Sighting",
+        url: "/my/sightings/",
       },
       {
         id: "sighting-new",

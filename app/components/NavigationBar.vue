@@ -59,7 +59,7 @@ const signOut = async () => {
 <template>
   <Disclosure
     as="header"
-    class="dark sticky top-0 z-50 w-full bg-background text-foreground"
+    class="dark top-0 z-50 w-full bg-background text-foreground"
     v-slot="{ open, close }"
   >
     <Container class="py-0">
@@ -232,7 +232,7 @@ const signOut = async () => {
                     class="inline-flex items-center justify-center rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none"
                   >
                     <UserIcon class="size-5 mr-1" aria-hidden="true" />
-                    <span>Account</span>
+                    <span>&nbsp;</span>
                     <ChevronDownIcon
                       class="-mr-1 ml-1 size-4 text-current/70"
                       aria-hidden="true"

@@ -128,3 +128,42 @@ set search_path = public, extensions
 as $$
   select st_x((s.location::geometry));
 $$;
+
+
+-- Create a public view for sightings with limited fields
+
+-- Remove existing view if it exists
+DROP VIEW IF EXISTS public.sightings_public;
+
+-- Recreate the public view with lat/lng instead of geography
+CREATE OR REPLACE VIEW public.sightings_public AS
+WITH g AS (
+  SELECT
+    id,
+    type,
+    status,
+    sighting_date,
+    -- snap to a 5,000m grid in a metric projection, then get the centroid in WGS84
+    ST_Transform(
+      ST_Centroid(
+        ST_SnapToGrid(
+          ST_Transform(location::geometry, 3857),
+          5000, 5000  -- 5 km grid
+        )
+      ),
+      4326
+    ) AS geom_5km
+  FROM public.sightings
+  -- WHERE status = 'approved'
+)
+SELECT
+  id,              -- omit if you don’t want stable IDs public
+  type,
+  sighting_date,
+  ST_Y(geom_5km) AS lat,
+  ST_X(geom_5km) AS lng
+FROM g;
+
+-- Ensure anon can read only the view, not the base table
+GRANT SELECT ON public.sightings_public TO anon;
+REVOKE ALL ON public.sightings FROM anon;

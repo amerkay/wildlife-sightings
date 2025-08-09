@@ -74,8 +74,8 @@ const handleMapReady = (addDataToMapFn: (payload: any) => void) => {
           filters: [
             {
               dataId: ["barn_owl_obs"],
-              id: "filter_eventDate",
-              name: ["eventDate"],
+              id: "filter_sighting_date",
+              name: ["sighting_date"],
               type: "timeRange",
               value: [1600000000000, 1752962400000],
               plotType: {
