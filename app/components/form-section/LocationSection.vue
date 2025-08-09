@@ -27,11 +27,12 @@ const props = withDefaults(
     <LocationPicker
       name="location"
       :show-reverse-geo-fields="showReverseGeoFields"
+      required
     />
 
     <FormField name="location.notes" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>Location Notes</FormLabel>
+        <FormLabel>Location Notes (optional)</FormLabel>
         <FormControl>
           <Input
             placeholder="e.g., In the hollow oak tree"

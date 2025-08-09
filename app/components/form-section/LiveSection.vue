@@ -48,7 +48,7 @@ const { values } = useFormContext();
     <!-- Frequency -->
     <FormField name="live.frequency" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>How often have you seen an owl here?</FormLabel>
+        <FormLabel>How often have you seen an owl here? (optional)</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
             <SelectTrigger class="w-full sm:w-[320px]">
@@ -71,7 +71,7 @@ const { values } = useFormContext();
     <!-- Activity -->
     <FormField name="live.activity" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>What were you doing?</FormLabel>
+        <FormLabel>What were you doing? (optional)</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
             <SelectTrigger class="w-full sm:w-[320px]">

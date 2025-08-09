@@ -30,6 +30,8 @@ const props = withDefaults(
     defaultLat?: number;
     /** Default longitude (Manchester fallback). */
     defaultLng?: number;
+    /** Whether location selection is required. */
+    required?: boolean;
   }>(),
   {
     name: "location",
@@ -38,6 +40,7 @@ const props = withDefaults(
     showReverseGeoFields: false,
     defaultLat: 53.4808,
     defaultLng: -2.2426,
+    required: false,
   }
 );
 
@@ -191,7 +194,7 @@ function onMapCreated(map: any) {
 }
 
 function onMapLoaded() {
-  // Don't automatically request geolocation - let user decide
+  requestGeolocation();
 }
 
 function onMoveEnd() {
@@ -226,10 +229,18 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="w-full space-y-4">
-    <div class="mb-2">
+    <div>
       <Button type="button" variant="secondary" @click="requestGeolocation">
         📍 Use My Current Location
       </Button>
+    </div>
+
+    <!-- Location selection label -->
+    <div v-if="required">
+      <Label class="text-sm font-medium leading-none">
+        Move the map to refine your location selecton
+        <span class="text-destructive">*</span>
+      </Label>
     </div>
 
     <!-- Map -->

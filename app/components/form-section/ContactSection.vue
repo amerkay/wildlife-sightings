@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
     <div class="grid gap-6 sm:grid-cols-2">
       <FormField name="contact.name" v-slot="{ componentField }">
         <FormItem>
-          <FormLabel>Name</FormLabel>
+          <FormLabel>
+            Name
+            <span class="text-destructive">*</span>
+          </FormLabel>
           <FormControl>
             <Input placeholder="Your full name" v-bind="componentField" />
           </FormControl>
@@ -26,7 +29,10 @@ import { Input } from "@/components/ui/input";
 
       <FormField name="contact.email" v-slot="{ componentField }">
         <FormItem>
-          <FormLabel>Email</FormLabel>
+          <FormLabel>
+            Email
+            <span class="text-destructive">*</span>
+          </FormLabel>
           <FormControl>
             <Input
               type="email"

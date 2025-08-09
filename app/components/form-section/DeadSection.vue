@@ -48,7 +48,7 @@ const { values } = useFormContext();
 
     <FormField name="dead.cause" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>Apparent Cause of Death</FormLabel>
+        <FormLabel>Apparent Cause of Death (optional)</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
             <SelectTrigger class="w-full sm:w-[420px]">

@@ -73,10 +73,7 @@ function toggleObserved(v: string) {
     <!-- Observations (wrapped in FormField to provide context for FormLabel) -->
     <FormField name="site.observed" v-slot>
       <FormItem>
-        <FormLabel
-          >What did you observe?
-          <span class="text-destructive">*</span></FormLabel
-        >
+        <FormLabel>What did you observe? (optional)</FormLabel>
         <FormControl>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label
@@ -102,7 +99,7 @@ function toggleObserved(v: string) {
     <!-- Site type -->
     <FormField name="site.siteType" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>What is the site like?</FormLabel>
+        <FormLabel>What is the site like? (optional)</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
             <SelectTrigger class="w-full sm:w-[360px]">
@@ -142,7 +139,7 @@ function toggleObserved(v: string) {
     <!-- Nestbox -->
     <FormField name="site.nestbox" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>Is there a nestbox at the site?</FormLabel>
+        <FormLabel>Is there a nestbox at the site? (optional)</FormLabel>
         <FormControl>
           <RadioGroup v-bind="componentField" class="flex gap-4">
             <RadioCard
@@ -162,7 +159,7 @@ function toggleObserved(v: string) {
     <!-- Connection -->
     <FormField name="site.connection" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>Your connection to the property</FormLabel>
+        <FormLabel>Your connection to the property (optional)</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
             <SelectTrigger class="w-full sm:w-[360px]">

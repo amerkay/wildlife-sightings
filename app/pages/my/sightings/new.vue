@@ -51,15 +51,17 @@ const contactSchema = z.object({
 const liveSchema = z
   .object({
     sightingDate: z.coerce.date({ error: "Date of sighting is required" }),
-    frequency: z.enum(["once", "weekly", "monthly", "less-monthly"], {
-      error: "Select a frequency",
-    }),
-    activity: z.enum(["driving", "walking", "home", "other"], {
-      error: "Select what you were doing",
-    }),
+    frequency: z
+      .enum(["once", "weekly", "monthly", "less-monthly"])
+      .optional()
+      .or(z.literal("")),
+    activity: z
+      .enum(["driving", "walking", "home", "other"])
+      .optional()
+      .or(z.literal("")),
     activityOther: z.string().optional().or(z.literal("")),
-    observationPeriodFrom: z.coerce.date().optional(),
-    observationPeriodTo: z.coerce.date().optional(),
+    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
+    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
   })
   .refine(
     (v) =>
@@ -84,19 +86,27 @@ const siteSchema = z
           "young-heard",
         ])
       )
-      .min(1, "Select at least one observation"),
-    siteType: z.enum(
-      ["traditional-farm", "modern-farm", "mixed-farm", "tree-hole", "other"],
-      { error: "Select site type" }
-    ),
+      .optional()
+      .default([]),
+    siteType: z
+      .enum([
+        "traditional-farm",
+        "modern-farm",
+        "mixed-farm",
+        "tree-hole",
+        "other",
+      ])
+      .optional()
+      .or(z.literal("")),
     siteTypeOther: z.string().optional().or(z.literal("")),
     nestbox: z.enum(["yes", "no", "unknown"]).optional().or(z.literal("")),
-    connection: z.enum(["owner", "tenant", "watcher", "other"], {
-      error: "Select your connection",
-    }),
+    connection: z
+      .enum(["owner", "tenant", "watcher", "other"])
+      .optional()
+      .or(z.literal("")),
     connectionOther: z.string().optional().or(z.literal("")),
-    observationPeriodFrom: z.coerce.date().optional(),
-    observationPeriodTo: z.coerce.date().optional(),
+    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
+    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
   })
   .refine(
     (v) =>
@@ -114,8 +124,8 @@ const siteSchema = z
 const deadSchema = z
   .object({
     sightingDate: z.coerce.date({ error: "Date found is required" }),
-    cause: z.enum(
-      [
+    cause: z
+      .enum([
         "road-minor",
         "road-major",
         "road-motorway",
@@ -124,9 +134,9 @@ const deadSchema = z
         "drowned",
         "unknown",
         "other",
-      ],
-      { error: "Select cause" }
-    ),
+      ])
+      .optional()
+      .or(z.literal("")),
     causeOther: z.string().optional().or(z.literal("")),
     details: z.string().optional().or(z.literal("")),
   })
