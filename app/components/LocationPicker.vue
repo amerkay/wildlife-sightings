@@ -233,7 +233,10 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Map -->
-    <div class="relative rounded-xl overflow-hidden border">
+    <div
+      class="relative rounded-xl overflow-hidden border"
+      :style="`width: 100%; height: ${height}; min-height: ${height};`"
+    >
       <ClientOnly>
         <MapboxMap
           :access-token="MAPBOX_TOKEN"
@@ -244,7 +247,7 @@ onBeforeUnmount(() => {
           "
           :center="[centerLng, centerLat]"
           :zoom="isGeolocated ? 15 : fallbackZoom"
-          :style="`height: ${height};`"
+          :style="`height: ${height}; width: 100%;`"
           @mb-created="onMapCreated"
           @mb-load="onMapLoaded"
           @mb-moveend="onMoveEnd"

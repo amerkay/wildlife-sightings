@@ -51,7 +51,7 @@ const { values } = useFormContext();
         <FormLabel>How often have you seen an owl here?</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
-            <SelectTrigger class="w-[320px]">
+            <SelectTrigger class="w-full sm:w-[320px]">
               <SelectValue placeholder="Select frequency" />
             </SelectTrigger>
             <SelectContent>
@@ -74,7 +74,7 @@ const { values } = useFormContext();
         <FormLabel>What were you doing?</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
-            <SelectTrigger class="w-[320px]">
+            <SelectTrigger class="w-full sm:w-[320px]">
               <SelectValue placeholder="Select activity" />
             </SelectTrigger>
             <SelectContent>

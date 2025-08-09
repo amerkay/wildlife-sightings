@@ -51,7 +51,7 @@ const { values } = useFormContext();
         <FormLabel>Apparent Cause of Death</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
-            <SelectTrigger class="w-[420px]">
+            <SelectTrigger class="w-full sm:w-[420px]">
               <SelectValue placeholder="Select cause" />
             </SelectTrigger>
             <SelectContent>

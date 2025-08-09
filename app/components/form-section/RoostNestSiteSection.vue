@@ -105,7 +105,7 @@ function toggleObserved(v: string) {
         <FormLabel>What is the site like?</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
-            <SelectTrigger class="w-[360px]">
+            <SelectTrigger class="w-full sm:w-[360px]">
               <SelectValue placeholder="Select site type" />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +165,7 @@ function toggleObserved(v: string) {
         <FormLabel>Your connection to the property</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
-            <SelectTrigger class="w-[360px]">
+            <SelectTrigger class="w-full sm:w-[360px]">
               <SelectValue placeholder="Select your connection" />
             </SelectTrigger>
             <SelectContent>
