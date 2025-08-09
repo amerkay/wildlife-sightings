@@ -13,7 +13,6 @@ import keplerGlReducer, {
   type KeplerGlState,
 } from "@kepler.gl/reducers";
 import { addDataToMap } from "@kepler.gl/actions";
-import { processRowObject } from "@kepler.gl/processors";
 
 import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer";
 
@@ -76,7 +75,7 @@ const KeplerMap: React.FC<{
     const reducers = combineReducers({
       keplerGl: keplerGlReducer.initialState({
         uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
-        mapStyle: { styleType: isDarkMode ? "dark" : "light" },
+        mapStyle: { styleType: isDarkMode ? "dark-matter" : "light" },
         // UK default center
         mapState: {
           latitude: 52.029347152354966,

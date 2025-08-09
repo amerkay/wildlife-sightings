@@ -10,7 +10,7 @@
       <KeplerMapVue
         v-else
         :mapboxApiAccessToken="mapboxAccessToken"
-        :isDarkMode="colorMode === 'dark'"
+        :isDarkMode="colorMode.value === 'dark'"
         :onMapReady="handleMapReady"
       />
     </ClientOnly>
@@ -45,9 +45,6 @@ const handleMapReady = (addDataToMapFn: (payload: any) => void) => {
       ],
       options: { centerMap: false },
       config: {
-        mapStyle: {
-          styleType: colorMode.value === "dark" ? "dark" : "light",
-        },
         visState: {
           layers: [
             {

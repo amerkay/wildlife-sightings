@@ -5,7 +5,6 @@ import { useDatasetLoaders } from "./index";
 
 export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
   const { gbifBarnOwl, publicSightings, userSightings } = useDatasetLoaders();
-  const colorMode = useColorMode();
 
   // Map of all available datasets
   const allDatasets = {
@@ -22,14 +21,6 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
   >(new Map());
 
   let addDataToMapFunction: ((payload: any) => void) | null = null;
-
-  // Watch colorMode changes and update map style
-  watch(
-    () => colorMode.value,
-    () => {
-      updateMapData();
-    }
-  );
 
   // Load initial datasets based on enabledDatasetIds
   const loadInitialDatasets = () => {
@@ -132,9 +123,6 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
         datasets,
         options: { centerMap: true },
         config: {
-          mapStyle: {
-            styleType: colorMode?.value === "dark" ? "dark" : "light",
-          },
           visState: { layers, filters },
         },
       });
