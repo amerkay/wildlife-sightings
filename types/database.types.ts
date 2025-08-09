@@ -11,28 +11,97 @@ export type Database = {
     Tables: {
       sightings: {
         Row: {
+          activity: Database["public"]["Enums"]["activity_type"] | null
+          activity_other: string | null
+          admin_notes: string | null
+          cause_of_death:
+            | Database["public"]["Enums"]["cause_of_death_type"]
+            | null
+          cause_of_death_other: string | null
+          connection: Database["public"]["Enums"]["connection_type"] | null
+          connection_other: string | null
+          contact_email: string
+          contact_name: string
+          contact_postcode: string | null
           created_at: string
-          created_by: string | null
-          id: number
-          location: unknown | null
-          sighted_at: string | null
-          type: Database["public"]["Enums"]["sighting_type"] | null
+          death_details: string | null
+          frequency: Database["public"]["Enums"]["frequency_type"] | null
+          id: string
+          location: unknown
+          location_notes: string | null
+          nestbox: Database["public"]["Enums"]["nestbox_type"] | null
+          observation_period_from: string | null
+          observation_period_to: string | null
+          observed: Database["public"]["Enums"]["observed_type"][] | null
+          sighting_date: string
+          site_type: Database["public"]["Enums"]["site_type"] | null
+          site_type_other: string | null
+          status: string | null
+          type: Database["public"]["Enums"]["sighting_type"]
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
+          activity?: Database["public"]["Enums"]["activity_type"] | null
+          activity_other?: string | null
+          admin_notes?: string | null
+          cause_of_death?:
+            | Database["public"]["Enums"]["cause_of_death_type"]
+            | null
+          cause_of_death_other?: string | null
+          connection?: Database["public"]["Enums"]["connection_type"] | null
+          connection_other?: string | null
+          contact_email: string
+          contact_name: string
+          contact_postcode?: string | null
           created_at?: string
-          created_by?: string | null
-          id?: number
-          location?: unknown | null
-          sighted_at?: string | null
-          type?: Database["public"]["Enums"]["sighting_type"] | null
+          death_details?: string | null
+          frequency?: Database["public"]["Enums"]["frequency_type"] | null
+          id?: string
+          location: unknown
+          location_notes?: string | null
+          nestbox?: Database["public"]["Enums"]["nestbox_type"] | null
+          observation_period_from?: string | null
+          observation_period_to?: string | null
+          observed?: Database["public"]["Enums"]["observed_type"][] | null
+          sighting_date: string
+          site_type?: Database["public"]["Enums"]["site_type"] | null
+          site_type_other?: string | null
+          status?: string | null
+          type: Database["public"]["Enums"]["sighting_type"]
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          activity?: Database["public"]["Enums"]["activity_type"] | null
+          activity_other?: string | null
+          admin_notes?: string | null
+          cause_of_death?:
+            | Database["public"]["Enums"]["cause_of_death_type"]
+            | null
+          cause_of_death_other?: string | null
+          connection?: Database["public"]["Enums"]["connection_type"] | null
+          connection_other?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_postcode?: string | null
           created_at?: string
-          created_by?: string | null
-          id?: number
-          location?: unknown | null
-          sighted_at?: string | null
-          type?: Database["public"]["Enums"]["sighting_type"] | null
+          death_details?: string | null
+          frequency?: Database["public"]["Enums"]["frequency_type"] | null
+          id?: string
+          location?: unknown
+          location_notes?: string | null
+          nestbox?: Database["public"]["Enums"]["nestbox_type"] | null
+          observation_period_from?: string | null
+          observation_period_to?: string | null
+          observed?: Database["public"]["Enums"]["observed_type"][] | null
+          sighting_date?: string
+          site_type?: Database["public"]["Enums"]["site_type"] | null
+          site_type_other?: string | null
+          status?: string | null
+          type?: Database["public"]["Enums"]["sighting_type"]
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -44,7 +113,33 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      sighting_type: "random" | "nest" | "brood"
+      activity_type: "driving" | "walking" | "home" | "other"
+      cause_of_death_type:
+        | "road-minor"
+        | "road-major"
+        | "road-motorway"
+        | "powerlines"
+        | "railway"
+        | "drowned"
+        | "unknown"
+        | "other"
+      connection_type: "owner" | "tenant" | "watcher" | "other"
+      frequency_type: "once" | "weekly" | "monthly" | "less-monthly"
+      nestbox_type: "yes" | "no" | "unknown"
+      observed_type:
+        | "nest"
+        | "roost-regular"
+        | "roost-occasional"
+        | "fly-in-out"
+        | "carrying-food"
+        | "young-heard"
+      sighting_type: "live" | "site" | "dead"
+      site_type:
+        | "traditional-farm"
+        | "modern-farm"
+        | "mixed-farm"
+        | "tree-hole"
+        | "other"
       status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -173,7 +268,36 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      sighting_type: ["random", "nest", "brood"],
+      activity_type: ["driving", "walking", "home", "other"],
+      cause_of_death_type: [
+        "road-minor",
+        "road-major",
+        "road-motorway",
+        "powerlines",
+        "railway",
+        "drowned",
+        "unknown",
+        "other",
+      ],
+      connection_type: ["owner", "tenant", "watcher", "other"],
+      frequency_type: ["once", "weekly", "monthly", "less-monthly"],
+      nestbox_type: ["yes", "no", "unknown"],
+      observed_type: [
+        "nest",
+        "roost-regular",
+        "roost-occasional",
+        "fly-in-out",
+        "carrying-food",
+        "young-heard",
+      ],
+      sighting_type: ["live", "site", "dead"],
+      site_type: [
+        "traditional-farm",
+        "modern-farm",
+        "mixed-farm",
+        "tree-hole",
+        "other",
+      ],
       status: ["pending", "approved", "rejected"],
     },
   },

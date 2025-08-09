@@ -37,15 +37,26 @@ const locationSchema = z.object({
   // county: z.string().optional().default(""),
   notes: z
     .string()
-    .max(500, "Keep location notes under 500 chars")
+    .max(700, "Keep location notes under 700 chars")
     .optional()
     .or(z.literal("")),
 });
 
 const contactSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Enter a valid email"),
-  postcode: z.string().optional().or(z.literal("")),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(200, "Name must be under 200 characters"),
+  email: z
+    .email("Enter a valid email")
+    .max(320, "Email must be under 320 characters"),
+  postcode: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .refine((val) => !val || val.length <= 20, {
+      message: "Postcode must be under 20 characters",
+    }),
 });
 
 const liveSchema = z
@@ -59,7 +70,13 @@ const liveSchema = z
       .enum(["driving", "walking", "home", "other"])
       .optional()
       .or(z.literal("")),
-    activityOther: z.string().optional().or(z.literal("")),
+    activityOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Activity description must be under 200 characters",
+      }),
     observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
     observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
   })
@@ -98,13 +115,25 @@ const siteSchema = z
       ])
       .optional()
       .or(z.literal("")),
-    siteTypeOther: z.string().optional().or(z.literal("")),
+    siteTypeOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Site description must be under 200 characters",
+      }),
     nestbox: z.enum(["yes", "no", "unknown"]).optional().or(z.literal("")),
     connection: z
       .enum(["owner", "tenant", "watcher", "other"])
       .optional()
       .or(z.literal("")),
-    connectionOther: z.string().optional().or(z.literal("")),
+    connectionOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Connection description must be under 200 characters",
+      }),
     observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
     observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
   })
@@ -137,8 +166,20 @@ const deadSchema = z
       ])
       .optional()
       .or(z.literal("")),
-    causeOther: z.string().optional().or(z.literal("")),
-    details: z.string().optional().or(z.literal("")),
+    causeOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Cause description must be under 200 characters",
+      }),
+    details: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 700, {
+        message: "Details must be under 700 characters",
+      }),
   })
   .refine(
     (v) =>
@@ -343,10 +384,18 @@ const submit = handleSubmit(
       // Add type-specific data
       if (formValues.type === "live") {
         sightingData.sighting_date = formValues.live.sightingDate;
-        sightingData.observation_period_from =
-          formValues.live.observationPeriodFrom || null;
-        sightingData.observation_period_to =
-          formValues.live.observationPeriodTo || null;
+        // Convert dates to DATE format (YYYY-MM-DD) for database
+        sightingData.observation_period_from = formValues.live
+          .observationPeriodFrom
+          ? new Date(formValues.live.observationPeriodFrom)
+              .toISOString()
+              .split("T")[0]
+          : null;
+        sightingData.observation_period_to = formValues.live.observationPeriodTo
+          ? new Date(formValues.live.observationPeriodTo)
+              .toISOString()
+              .split("T")[0]
+          : null;
         sightingData.frequency = formValues.live.frequency || null;
         sightingData.activity = formValues.live.activity || null;
         sightingData.activity_other =
@@ -355,10 +404,18 @@ const submit = handleSubmit(
             : null;
       } else if (formValues.type === "site") {
         sightingData.sighting_date = formValues.site.sightingDate;
-        sightingData.observation_period_from =
-          formValues.site.observationPeriodFrom || null;
-        sightingData.observation_period_to =
-          formValues.site.observationPeriodTo || null;
+        // Convert dates to DATE format (YYYY-MM-DD) for database
+        sightingData.observation_period_from = formValues.site
+          .observationPeriodFrom
+          ? new Date(formValues.site.observationPeriodFrom)
+              .toISOString()
+              .split("T")[0]
+          : null;
+        sightingData.observation_period_to = formValues.site.observationPeriodTo
+          ? new Date(formValues.site.observationPeriodTo)
+              .toISOString()
+              .split("T")[0]
+          : null;
         sightingData.observed = formValues.site.observed || [];
         sightingData.site_type = formValues.site.siteType || null;
         sightingData.site_type_other =

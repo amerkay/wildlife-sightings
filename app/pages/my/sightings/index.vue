@@ -57,6 +57,31 @@
                 Submitted: {{ formatDate(sighting.created_at) }}
               </div>
 
+              <div
+                v-if="
+                  sighting.observation_period_from ||
+                  sighting.observation_period_to
+                "
+                class="text-sm text-muted-foreground"
+              >
+                <strong>Observation Period:</strong>
+                <span
+                  v-if="
+                    sighting.observation_period_from &&
+                    sighting.observation_period_to
+                  "
+                >
+                  {{ formatDate(sighting.observation_period_from) }} -
+                  {{ formatDate(sighting.observation_period_to) }}
+                </span>
+                <span v-else-if="sighting.observation_period_from">
+                  From {{ formatDate(sighting.observation_period_from) }}
+                </span>
+                <span v-else-if="sighting.observation_period_to">
+                  Until {{ formatDate(sighting.observation_period_to) }}
+                </span>
+              </div>
+
               <div v-if="sighting.location_notes" class="text-sm">
                 <strong>Location:</strong> {{ sighting.location_notes }}
               </div>
@@ -92,6 +117,11 @@
 
 <script setup lang="ts">
 import { Plus } from "lucide-vue-next";
+
+// Add page middleware for authentication
+// definePageMeta({
+//   middleware: 'auth'
+// })
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -130,7 +160,15 @@ function getStatusVariant(status: string) {
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString("en-GB", {
+  if (!dateString) return "N/A";
+
+  // Handle both DATE (YYYY-MM-DD) and TIMESTAMP formats
+  const date = new Date(dateString);
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  return date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
