@@ -62,8 +62,16 @@ export const usePublicSightingsDataset = () => {
     };
   };
 
+  const { data, pending, error } = useAsyncData(
+    "public-sightings-map",
+    loadData
+  );
+
   return {
     preset,
     loadData,
+    data,
+    pending,
+    error,
   };
 };

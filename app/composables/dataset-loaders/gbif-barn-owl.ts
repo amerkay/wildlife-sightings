@@ -49,8 +49,13 @@ export const useGbifBarnOwlDataset = () => {
     };
   };
 
+  const { data, pending, error } = useAsyncData("gbif-barn-owl-map", loadData);
+
   return {
     preset,
     loadData,
+    data,
+    pending,
+    error,
   };
 };

@@ -12,8 +12,11 @@ const KeplerMapVue = applyReactInVue(KeplerMap);
 // Configure which datasets to load - just specify the IDs!
 const enabledDatasets = ["bot_user_sightings"];
 
-const { handleMapReady, addDataset, userSightingsData, pending, error } =
+const { handleMapReady, addDataset, getDatasetData, pending, error } =
   useMapDatasets(enabledDatasets);
+
+// Get user sightings data for template conditionals
+const userSightingsData = computed(() => getDatasetData("bot_user_sightings"));
 
 // Handle dataset loading from MapDatasetLoader
 const handleDatasetLoaded = ({ preset, data }: any) => {

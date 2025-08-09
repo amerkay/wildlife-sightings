@@ -1,4 +1,4 @@
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onUnmounted } from "vue";
 import { processRowObject } from "@kepler.gl/processors";
 import { type DatasetPreset } from "./base";
 import { useDatasetLoaders } from "./index";
@@ -20,7 +20,6 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
   const externalDatasets = ref<
     Map<string, { preset: DatasetPreset; data: any[] }>
   >(new Map());
-  const loading = ref(false);
 
   let addDataToMapFunction: ((payload: any) => void) | null = null;
 
@@ -33,27 +32,32 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
   );
 
   // Load initial datasets based on enabledDatasetIds
-  const loadInitialDatasets = async () => {
+  const loadInitialDatasets = () => {
     if (enabledDatasetIds.length === 0) return;
 
-    loading.value = true;
+    // Watch for data changes and update map when datasets load
+    const watchers = enabledDatasetIds
+      .map((datasetId) => {
+        const loader = allDatasets[datasetId as keyof typeof allDatasets];
+        if (!loader) return null;
 
-    for (const datasetId of enabledDatasetIds) {
-      const loader = allDatasets[datasetId as keyof typeof allDatasets];
-      if (!loader) continue;
+        return watch(
+          [loader.data, loader.pending],
+          ([data, pending]) => {
+            if (!pending && data?.data && data.data.length > 0) {
+              loadedDatasets.value.set(datasetId, data);
+              updateMapData();
+            }
+          },
+          { immediate: true }
+        );
+      })
+      .filter(Boolean);
 
-      try {
-        const result = await loader.loadData();
-        if (result && result.data.length > 0) {
-          loadedDatasets.value.set(datasetId, result);
-        }
-      } catch (error) {
-        console.error(`Failed to load ${datasetId}:`, error);
-      }
-    }
-
-    loading.value = false;
-    updateMapData();
+    // Clean up watchers when component unmounts
+    onUnmounted(() => {
+      watchers.forEach((unwatch) => unwatch && unwatch());
+    });
   };
 
   // Add external dataset (from MapDatasetLoader)
@@ -142,30 +146,36 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
     loadInitialDatasets();
   };
 
-  // Get user sightings data for template conditionals
-  const userSightingsData = computed(() => {
-    const userDataset = loadedDatasets.value.get("bot_user_sightings");
-    return userDataset?.data || null;
-  });
+  // Get loaded dataset data by ID (for template conditionals)
+  const getDatasetData = (datasetId: string) => {
+    const dataset = loadedDatasets.value.get(datasetId);
+    return dataset?.data || null;
+  };
 
   const pending = computed(() => {
-    return enabledDatasetIds.includes("bot_user_sightings")
-      ? userSightings.pending.value
-      : loading.value;
+    // Check if any enabled dataset is still loading
+    return enabledDatasetIds.some((datasetId) => {
+      const loader = allDatasets[datasetId as keyof typeof allDatasets];
+      return loader?.pending?.value;
+    });
   });
 
   const error = computed(() => {
-    return enabledDatasetIds.includes("bot_user_sightings")
-      ? userSightings.error.value
-      : null;
+    // Return the first error from any enabled dataset
+    for (const datasetId of enabledDatasetIds) {
+      const loader = allDatasets[datasetId as keyof typeof allDatasets];
+      if (loader?.error?.value) {
+        return loader.error.value;
+      }
+    }
+    return null;
   });
 
   return {
     handleMapReady,
     addDataset,
-    userSightingsData,
+    getDatasetData,
     pending,
     error,
-    loading,
   };
 };
