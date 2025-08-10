@@ -1,19 +1,22 @@
-import type { DatasetPreset, DatasetLoaderResult } from "./base";
-import { transformDateField } from "./base";
+export const DATASET_ID = "bot_public_sightings";
+export const LAYER_ID = `${DATASET_ID}_layer`;
+
+import type { DatasetPreset, DatasetLoaderResult } from "../base";
+import { transformDateField } from "../base";
 
 export const usePublicSightingsDataset = () => {
   const supabase = useSupabaseClient();
 
   const preset: DatasetPreset = {
-    id: "bot_public_sightings",
+    id: DATASET_ID,
     label: "Barn Owl Trust - Public Sightings",
     kind: "sightings",
     endpoint: "supabase://sightings_public",
     layerConfig: {
-      id: "bot_public_sightings_layer",
+      id: LAYER_ID,
       type: "cluster",
       config: {
-        dataId: "bot_public_sightings",
+        dataId: DATASET_ID,
         label: "Public Sightings",
         color: [252, 242, 26],
         columns: { lat: "lat", lng: "lng" },

@@ -1,4 +1,7 @@
-import type { DatasetPreset, DatasetLoaderResult } from "./base";
+export const DATASET_ID = "bot_user_sightings";
+export const LAYER_ID = `${DATASET_ID}_layer`;
+
+import type { DatasetPreset, DatasetLoaderResult } from "../base";
 import type { Database } from "~~/types/database.types";
 
 type Sighting = Database["public"]["Tables"]["sightings"]["Row"];
@@ -8,15 +11,15 @@ export const useUserSightingsDataset = () => {
   const user = useSupabaseUser();
 
   const preset: DatasetPreset = {
-    id: "bot_user_sightings",
+    id: DATASET_ID,
     label: "My Sightings",
     kind: "sightings",
-    endpoint: "supabase://bot_user_sightings",
+    endpoint: `supabase://${DATASET_ID}`,
     layerConfig: {
-      id: "bot_user_sightings_layer",
+      id: LAYER_ID,
       type: "point",
       config: {
-        dataId: "bot_user_sightings",
+        dataId: DATASET_ID,
         label: "My Sightings",
         color: [76, 154, 78], // Green color for user sightings
         columns: { lat: "lat", lng: "lng" },

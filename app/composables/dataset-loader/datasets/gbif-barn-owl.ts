@@ -1,19 +1,22 @@
-import type { DatasetPreset, DatasetLoaderResult } from "./base";
-import { transformDateField } from "./base";
+export const DATASET_ID = "gbif_barn_owl_obs";
+export const LAYER_ID = `${DATASET_ID}_layer`;
+
+import type { DatasetPreset, DatasetLoaderResult } from "../base";
+import { transformDateField } from "../base";
 
 export const useGbifBarnOwlDataset = () => {
   const preset: DatasetPreset = {
-    id: "gbif_barn_owl_obs",
+    id: DATASET_ID,
     label: "GBIF Barn Owl Observations",
     kind: "observations",
-    endpoint: "/api/observations",
+    endpoint: "/datasets/gbif-uk-ie-barn-owl.json",
     layerConfig: {
-      id: "gbif_barn_owl_obs_layer",
+      id: LAYER_ID,
       type: "heatmap",
       config: {
-        dataId: "gbif_barn_owl_obs",
+        dataId: DATASET_ID,
         label: "GBIF Barn Owl Observations",
-        color: [18, 147, 154],
+        color: [255, 204, 102],
         columns: { lat: "lat", lng: "lng" },
         isVisible: true,
         visConfig: {

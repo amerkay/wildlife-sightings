@@ -4,14 +4,15 @@ import { type DatasetPreset } from "./base";
 import { useDatasetLoaders } from "./index";
 
 export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
-  const { gbifBarnOwl, publicSightings, userSightings } = useDatasetLoaders();
+  const { allDatasets } = useDatasetLoaders();
 
   // Map of all available datasets
-  const allDatasets = {
-    bot_user_sightings: userSightings,
-    bot_public_sightings: publicSightings,
-    gbif_barn_owl_obs: gbifBarnOwl,
-  };
+  const allDatasetsMap = allDatasets.reduce<
+    Record<string, (typeof allDatasets)[number]>
+  >((acc, dataset) => {
+    acc[dataset.preset.id] = dataset;
+    return acc;
+  }, {});
 
   const loadedDatasets = ref<
     Map<string, { preset: DatasetPreset; data: any[] }>
@@ -27,23 +28,22 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
     if (enabledDatasetIds.length === 0) return;
 
     // Watch for data changes and update map when datasets load
-    const watchers = enabledDatasetIds
-      .map((datasetId) => {
-        const loader = allDatasets[datasetId as keyof typeof allDatasets];
-        if (!loader) return null;
+    const watchers = enabledDatasetIds.map((datasetId) => {
+      const loader = allDatasetsMap[datasetId];
+      if (!loader) return null;
 
-        return watch(
-          [loader.data, loader.pending],
-          ([data, pending]) => {
-            if (!pending && data?.data && data.data.length > 0) {
-              loadedDatasets.value.set(datasetId, data);
-              updateMapData();
-            }
-          },
-          { immediate: true }
-        );
-      })
-      .filter(Boolean);
+      return watch(
+        [loader.data, loader.pending],
+        ([data, pending]) => {
+          if (!pending && data?.data && data.data.length > 0) {
+            loadedDatasets.value.set(datasetId, data);
+            updateMapData();
+          }
+        },
+        { immediate: true }
+      );
+    });
+    // .filter(Boolean);
 
     // Clean up watchers when component unmounts
     onUnmounted(() => {
@@ -143,7 +143,7 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
   const pending = computed(() => {
     // Check if any enabled dataset is still loading
     return enabledDatasetIds.some((datasetId) => {
-      const loader = allDatasets[datasetId as keyof typeof allDatasets];
+      const loader = allDatasetsMap[datasetId];
       return loader?.pending?.value;
     });
   });
@@ -151,7 +151,7 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
   const error = computed(() => {
     // Return the first error from any enabled dataset
     for (const datasetId of enabledDatasetIds) {
-      const loader = allDatasets[datasetId as keyof typeof allDatasets];
+      const loader = allDatasetsMap[datasetId];
       if (loader?.error?.value) {
         return loader.error.value;
       }

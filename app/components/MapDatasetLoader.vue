@@ -14,10 +14,8 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "vue-sonner";
-import {
-  useDatasetLoaders,
-  type DatasetPreset,
-} from "~/composables/dataset-loaders";
+import { type DatasetPreset } from "~/composables/dataset-loader/base";
+import { useDatasetLoaders } from "~/composables/dataset-loader/";
 
 const emit = defineEmits<{
   datasetLoaded: [payload: { preset: DatasetPreset; data: any[] }];

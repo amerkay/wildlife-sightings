@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { applyReactInVue } from "veaury";
 import KeplerMap from "../../../../react_app/KeplerMap";
-import { useMapDatasets } from "~/composables/dataset-loaders";
+import { useMapDatasets } from "~/composables/dataset-loader";
+import { DATASET_ID as USER_SIGHTINGS_DATASET_ID } from "~/composables/dataset-loader/datasets/user-sightings";
 
 const {
   public: { mapboxAccessToken },
@@ -10,13 +11,15 @@ const {
 const KeplerMapVue = applyReactInVue(KeplerMap);
 
 // Configure which datasets to load - just specify the IDs!
-const enabledDatasets = ["bot_user_sightings"];
+const enabledDatasets = [USER_SIGHTINGS_DATASET_ID];
 
 const { handleMapReady, addDataset, getDatasetData, pending, error } =
   useMapDatasets(enabledDatasets);
 
 // Get user sightings data for template conditionals
-const userSightingsData = computed(() => getDatasetData("bot_user_sightings"));
+const userSightingsData = computed(() =>
+  getDatasetData(USER_SIGHTINGS_DATASET_ID)
+);
 
 // Handle dataset loading from MapDatasetLoader
 const handleDatasetLoaded = ({ preset, data }: any) => {
@@ -51,7 +54,9 @@ const handleDatasetError = (error: any) => {
       </div>
 
       <div
-        v-if="!userSightingsData || userSightingsData.length === 0"
+        v-if="
+          !pending && (!userSightingsData || userSightingsData.length === 0)
+        "
         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-lg shadow-lg text-center z-10"
       >
         <div class="text-lg mb-4">You haven't submitted any sightings yet</div>
