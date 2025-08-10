@@ -121,7 +121,12 @@ export const useMapDatasets = (enabledDatasetIds: string[] = []) => {
 
       addDataToMapFunction({
         datasets,
-        options: { centerMap: true },
+        // centerMap true if more than 3 rows in total in all datasets
+        options: {
+          centerMap:
+            datasets.reduce((acc, ds) => acc + (ds.data.rows.length || 0), 0) >
+            3,
+        },
         config: {
           visState: { layers, filters },
         },

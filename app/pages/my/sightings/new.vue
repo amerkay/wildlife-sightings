@@ -338,7 +338,7 @@ const submit = handleSubmit(
       <SubmitSection />
 
       <!-- Debug, show JSON formatted values -->
-      <pre>{{ JSON.stringify(values, null, 2) }}</pre>
+      <!-- <pre>{{ JSON.stringify(values, null, 2) }}</pre> -->
     </form>
   </Container>
 </template>

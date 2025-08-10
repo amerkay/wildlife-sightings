@@ -75,7 +75,7 @@ const KeplerMap: React.FC<{
     const reducers = combineReducers({
       keplerGl: keplerGlReducer.initialState({
         uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
-        mapStyle: { styleType: isDarkMode ? "dark-matter" : "light" },
+        mapStyle: { styleType: isDarkMode ? "dark" : "light" }, // dark-matter
         // UK default center
         mapState: {
           latitude: 52.029347152354966,

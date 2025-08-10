@@ -20,7 +20,8 @@ const isActive = computed(
   () => props.selected !== undefined && props.selected === props.value
 );
 const activeClass = computed(
-  () => props.activeClass ?? "bg-accent border-primary ring-2 ring-primary/40"
+  () =>
+    props.activeClass ?? "bg-accent/50 border-primary ring-2 ring-primary/40"
 );
 </script>
 
@@ -29,7 +30,7 @@ const activeClass = computed(
     :class="
       cn(
         'flex items-start gap-3 rounded-md border p-3 transition-colors cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-        isActive ? activeClass : 'hover:bg-accent',
+        isActive ? activeClass : 'hover:bg-accent/50',
         props.class
       )
     "

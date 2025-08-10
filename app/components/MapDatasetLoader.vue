@@ -98,7 +98,7 @@ defineExpose({
     </PopoverTrigger>
     <PopoverContent class="w-full sm:w-sm">
       <Command>
-        <CommandInput placeholder="Search datasets…" />
+        <CommandInput placeholder="Search datasets…" class="h-8 px-2" />
         <CommandGroup heading="Available Datasets">
           <CommandItem
             v-for="dataset in availablePresets"

@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     // docs @ https://supabase.nuxtjs.org/getting-started/introduction
     "@nuxtjs/supabase",
+    "@nuxt/fonts",
   ],
 
   // docs @ https://supabase.nuxtjs.org/getting-started/introduction
