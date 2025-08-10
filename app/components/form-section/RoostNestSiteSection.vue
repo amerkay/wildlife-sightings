@@ -1,3 +1,77 @@
+<script lang="ts">
+import * as z from "zod";
+import {
+  SITE_OBSERVED as SITE_OBSERVED_CONST,
+  SITE_TYPES as SITE_TYPES_CONST,
+  NESTBOX_OPTIONS as NESTBOX_OPTIONS_CONST,
+  CONNECTION_OPTIONS as CONNECTION_OPTIONS_CONST,
+} from "./constants";
+
+// Derive tuples for z.enum from constants
+export type SiteObserved = (typeof SITE_OBSERVED_CONST)[number]["key"];
+const SITE_OBSERVED_VALUES = SITE_OBSERVED_CONST.map((o) => o.key) as [
+  SiteObserved,
+  ...SiteObserved[]
+];
+
+export type SiteType = (typeof SITE_TYPES_CONST)[number]["value"];
+const SITE_TYPE_VALUES = SITE_TYPES_CONST.map((o) => o.value) as [
+  SiteType,
+  ...SiteType[]
+];
+
+export type NestboxOpt = (typeof NESTBOX_OPTIONS_CONST)[number]["value"];
+const NESTBOX_VALUES = NESTBOX_OPTIONS_CONST.map((o) => o.value) as [
+  NestboxOpt,
+  ...NestboxOpt[]
+];
+
+export type ConnectionOpt = (typeof CONNECTION_OPTIONS_CONST)[number]["value"];
+const CONNECTION_VALUES = CONNECTION_OPTIONS_CONST.map((o) => o.value) as [
+  ConnectionOpt,
+  ...ConnectionOpt[]
+];
+
+export const siteSchema = z
+  .object({
+    sightingDate: z.coerce.date({
+      error: "Approx. date of last Roosted/Nested is required",
+    }),
+    observed: z.array(z.enum(SITE_OBSERVED_VALUES)).optional().default([]),
+    siteType: z.enum(SITE_TYPE_VALUES).optional().or(z.literal("")),
+    siteTypeOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Site description must be under 200 characters",
+      }),
+    nestbox: z.enum(NESTBOX_VALUES).optional().or(z.literal("")),
+    connection: z.enum(CONNECTION_VALUES).optional().or(z.literal("")),
+    connectionOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Connection description must be under 200 characters",
+      }),
+    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
+    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
+  })
+  .refine(
+    (v) =>
+      v.siteType !== "other" ||
+      (v.siteTypeOther && v.siteTypeOther.trim().length > 0),
+    { path: ["siteTypeOther"], message: "Please describe the site" }
+  )
+  .refine(
+    (v) =>
+      v.connection !== "other" ||
+      (v.connectionOther && v.connectionOther.trim().length > 0),
+    { path: ["connectionOther"], message: "Please describe your connection" }
+  );
+</script>
+
 <script setup lang="ts">
 import { useFormContext } from "vee-validate";
 import {
@@ -19,32 +93,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { RadioCard } from "@/components/ui/radio-card";
 import { SightingDateField, ObservationPeriodField } from "./fields";
-
-const SITE_OBSERVED = [
-  { key: "nest", label: "Nest (eggs or young seen)" },
-  { key: "roost-regular", label: "Regular roost site (>10 pellets seen)" },
-  {
-    key: "roost-occasional",
-    label: "Occasional roost site (<10 pellets seen)",
-  },
-  { key: "fly-in-out", label: "Owl flying into/out of the site" },
-  { key: "carrying-food", label: "Owl carrying food to the site" },
-  { key: "young-heard", label: "Young heard calling" },
-] as const;
-
-const SITE_TYPES = [
-  { value: "traditional-farm", label: "Traditional farm building" },
-  { value: "modern-farm", label: "Modern farm building (e.g., 'Dutch' barn)" },
-  { value: "mixed-farm", label: "Mix of traditional and modern buildings" },
-  { value: "tree-hole", label: "Tree hole / hollow" },
-  { value: "other", label: "Other" },
-] as const;
-
-const NESTBOX_OPTIONS = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "unknown", label: "Unknown" },
-] as const;
+import {
+  SITE_OBSERVED,
+  SITE_TYPES,
+  NESTBOX_OPTIONS,
+  CONNECTION_OPTIONS,
+} from "./constants";
 
 const { values, setFieldValue } = useFormContext();
 
@@ -79,16 +133,14 @@ function toggleObserved(v: string) {
             <label
               v-for="opt in SITE_OBSERVED"
               :key="opt.key"
-              class="flex items-center gap-2 cursor-pointer"
+              class="inline-flex items-center gap-3 rounded-md border p-3 hover:bg-muted/50"
               @click="toggleObserved(opt.key)"
             >
               <Checkbox
                 :checked="values.site?.observed?.includes(opt.key)"
                 @click.stop
               />
-              <span class="text-sm leading-none font-medium select-none">{{
-                opt.label
-              }}</span>
+              <span>{{ opt.label }}</span>
             </label>
           </div>
         </FormControl>
@@ -102,7 +154,7 @@ function toggleObserved(v: string) {
         <FormLabel>What is the site like? (optional)</FormLabel>
         <FormControl>
           <Select v-bind="componentField">
-            <SelectTrigger class="w-full sm:w-[360px]">
+            <SelectTrigger class="w-full sm:w-[420px]">
               <SelectValue placeholder="Select site type" />
             </SelectTrigger>
             <SelectContent>
@@ -110,8 +162,9 @@ function toggleObserved(v: string) {
                 v-for="opt in SITE_TYPES"
                 :key="opt.value"
                 :value="opt.value"
-                >{{ opt.label }}</SelectItem
               >
+                {{ opt.label }}
+              </SelectItem>
             </SelectContent>
           </Select>
         </FormControl>
@@ -166,12 +219,13 @@ function toggleObserved(v: string) {
               <SelectValue placeholder="Select your connection" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="owner">I am the owner</SelectItem>
-              <SelectItem value="tenant">I am the tenant</SelectItem>
-              <SelectItem value="watcher"
-                >I 'just keep an eye on it'</SelectItem
+              <SelectItem
+                v-for="opt in CONNECTION_OPTIONS"
+                :key="opt.value"
+                :value="opt.value"
               >
-              <SelectItem value="other">Other</SelectItem>
+                {{ opt.label }}
+              </SelectItem>
             </SelectContent>
           </Select>
         </FormControl>

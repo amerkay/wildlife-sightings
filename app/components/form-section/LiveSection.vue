@@ -1,3 +1,47 @@
+<script lang="ts">
+import * as z from "zod";
+import {
+  LIVE_FREQ as LIVE_FREQ_CONST,
+  LIVE_ACTIVITY as LIVE_ACTIVITY_CONST,
+} from "./constants";
+
+// Types from constants
+type LiveFreq = (typeof LIVE_FREQ_CONST)[number]["value"];
+type LiveActivity = (typeof LIVE_ACTIVITY_CONST)[number]["value"];
+
+// Derive tuples for z.enum
+const LIVE_FREQ_VALUES = LIVE_FREQ_CONST.map((o) => o.value) as [
+  LiveFreq,
+  ...LiveFreq[]
+];
+const LIVE_ACTIVITY_VALUES = LIVE_ACTIVITY_CONST.map((o) => o.value) as [
+  LiveActivity,
+  ...LiveActivity[]
+];
+
+export const liveSchema = z
+  .object({
+    sightingDate: z.coerce.date({ error: "Date of sighting is required" }),
+    frequency: z.enum(LIVE_FREQ_VALUES).optional().or(z.literal("")),
+    activity: z.enum(LIVE_ACTIVITY_VALUES).optional().or(z.literal("")),
+    activityOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Activity description must be under 200 characters",
+      }),
+    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
+    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
+  })
+  .refine(
+    (v) =>
+      v.activity !== "other" ||
+      (v.activityOther && v.activityOther.trim().length > 0),
+    { path: ["activityOther"], message: "Please describe the activity" }
+  );
+</script>
+
 <script setup lang="ts">
 import { useFormContext } from "vee-validate";
 import {
@@ -16,20 +60,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { SightingDateField, ObservationPeriodField } from "./fields";
-
-const LIVE_FREQ = [
-  { value: "once", label: "Just this once" },
-  { value: "weekly", label: "More than once a week" },
-  { value: "monthly", label: "More than once a month" },
-  { value: "less-monthly", label: "Less than once a month" },
-] as const;
-
-const LIVE_ACTIVITY = [
-  { value: "driving", label: "Driving" },
-  { value: "walking", label: "Walking" },
-  { value: "home", label: "At home" },
-  { value: "other", label: "Other" },
-] as const;
+import { LIVE_FREQ, LIVE_ACTIVITY } from "./constants";
 
 const { values } = useFormContext();
 </script>

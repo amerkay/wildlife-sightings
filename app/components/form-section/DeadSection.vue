@@ -1,3 +1,40 @@
+<script lang="ts">
+import * as z from "zod";
+import { DEAD_CAUSE as DEAD_CAUSE_CONST } from "./constants";
+
+// Derive tuple for z.enum from constants
+export type DeadCause = (typeof DEAD_CAUSE_CONST)[number]["value"];
+const DEAD_CAUSE_VALUES = DEAD_CAUSE_CONST.map((o) => o.value) as [
+  DeadCause,
+  ...DeadCause[]
+];
+
+export const deadSchema = z
+  .object({
+    sightingDate: z.coerce.date({ error: "Date found is required" }),
+    cause: z.enum(DEAD_CAUSE_VALUES).optional().or(z.literal("")),
+    causeOther: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 200, {
+        message: "Cause description must be under 200 characters",
+      }),
+    details: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 700, {
+        message: "Details must be under 700 characters",
+      }),
+  })
+  .refine(
+    (v) =>
+      v.cause !== "other" || (v.causeOther && v.causeOther.trim().length > 0),
+    { path: ["causeOther"], message: "Please describe the cause" }
+  );
+</script>
+
 <script setup lang="ts">
 import { useFormContext } from "vee-validate";
 import {
@@ -18,20 +55,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SightingDateField } from "./fields";
-
-const DEAD_CAUSE = [
-  { value: "road-minor", label: "Road Casualty - Minor Road" },
-  { value: "road-major", label: "Road Casualty - Major Road (A/B road)" },
-  {
-    value: "road-motorway",
-    label: "Road Casualty - Dual Carriageway / Motorway",
-  },
-  { value: "powerlines", label: "Near power lines / pylon" },
-  { value: "railway", label: "Near railway line" },
-  { value: "drowned", label: "Drowned (e.g., in water trough)" },
-  { value: "unknown", label: "Cause not obvious / Unknown" },
-  { value: "other", label: "Other" },
-] as const;
+import { DEAD_CAUSE } from "./constants";
 
 const { values } = useFormContext();
 </script>

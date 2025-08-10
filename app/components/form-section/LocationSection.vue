@@ -1,3 +1,28 @@
+<script lang="ts">
+import * as z from "zod";
+export const locationSchema = z.object({
+  lat: z
+    .number({ error: "Please select a location on the map" })
+    .nullable()
+    .refine((val) => val !== null, {
+      message: "Please select a location on the map",
+    }),
+  lng: z
+    .number({ error: "Please select a location on the map" })
+    .nullable()
+    .refine((val) => val !== null, {
+      message: "Please select a location on the map",
+    }),
+  // placeName: z.string().min(1, "Place name / road number is required"),
+  // county: z.string().optional().default(""),
+  notes: z
+    .string()
+    .max(700, "Keep location notes under 700 chars")
+    .optional()
+    .or(z.literal("")),
+});
+</script>
+
 <script setup lang="ts">
 import {
   FormField,

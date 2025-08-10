@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RadioGroup } from "~/components/ui/radio-group";
 import { RadioCard } from "~/components/ui/radio-card";
+import { TYPE_OPTIONS } from "./constants";
 
 interface Props {
   modelValue: "live" | "site" | "dead";
@@ -20,19 +21,11 @@ const emit = defineEmits<{
       class="grid gap-3 sm:grid-cols-3"
     >
       <RadioCard
-        value="live"
+        v-for="opt in TYPE_OPTIONS"
+        :key="opt.value"
+        :value="opt.value"
         :selected="props.modelValue"
-        label="Random sighting 🦉"
-      />
-      <RadioCard
-        value="site"
-        :selected="props.modelValue"
-        label="Roost / nest site 🪺"
-      />
-      <RadioCard
-        value="dead"
-        :selected="props.modelValue"
-        label="Dead owl ⚰️"
+        :label="opt.label"
       />
     </RadioGroup>
   </section>

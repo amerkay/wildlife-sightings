@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, watch, computed, ref } from "vue";
+import { computed } from "vue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
@@ -9,436 +9,250 @@ import { toast } from "vue-sonner";
 
 /* Sections */
 import TypeSection from "@/components/form-section/TypeSection.vue";
-import LocationSection from "@/components/form-section/LocationSection.vue";
-import LiveSection from "@/components/form-section/LiveSection.vue";
-import RoostNestSiteSection from "~/components/form-section/RoostNestSiteSection.vue";
-import DeadSection from "@/components/form-section/DeadSection.vue";
-import ContactSection from "@/components/form-section/ContactSection.vue";
+import LocationSection, {
+  locationSchema,
+} from "@/components/form-section/LocationSection.vue";
+import LiveSection, {
+  liveSchema,
+} from "@/components/form-section/LiveSection.vue";
+import RoostNestSiteSection, {
+  siteSchema,
+} from "~/components/form-section/RoostNestSiteSection.vue";
+import DeadSection, {
+  deadSchema,
+} from "@/components/form-section/DeadSection.vue";
+import ContactSection, {
+  contactSchema,
+} from "@/components/form-section/ContactSection.vue";
 import SubmitSection from "@/components/form-section/SubmitSection.vue";
 
-/* reCAPTCHA v3 — kept but commented out per request */
-// import { useReCaptcha } from 'vue-recaptcha-v3'
+/* Auth */
+const user = useSupabaseUser();
+const isLoggedIn = computed(() => !!user.value);
+const userDisplayName = computed(
+  () =>
+    (user.value?.user_metadata as any)?.full_name ||
+    (user.value?.user_metadata as any)?.name ||
+    user.value?.email ||
+    ""
+);
 
-/* ---------------- Schema ---------------- */
-const locationSchema = z.object({
-  lat: z
-    .number({ error: "Please select a location on the map" })
-    .nullable()
-    .refine((val) => val !== null, {
-      message: "Please select a location on the map",
+/* ---------------------------------- */
+/* tiny helpers (UI -> DB normalization) */
+// Accepts string | Date | "" | undefined | null
+const toYMD = (d?: string | Date | null) => {
+  if (!d) return null;
+  const date = typeof d === "string" ? new Date(d) : d;
+  const time = date?.getTime?.();
+  if (!time || Number.isNaN(time)) return null;
+  return date.toISOString().slice(0, 10);
+};
+
+const nullIfEmpty = (s?: string | null) =>
+  s && s.trim().length > 0 ? s : null;
+
+const point = (lng: number | null, lat: number | null) =>
+  lng != null && lat != null ? `POINT(${lng} ${lat})` : null;
+
+/* ---------------------------------- */
+/* defaults (keeps initialValues short) */
+const locationDefaults = {
+  lat: null as number | null,
+  lng: null as number | null,
+  notes: "",
+};
+const liveDefaults = {
+  sightingDate: "",
+  frequency: undefined as string | undefined,
+  activity: undefined as string | undefined,
+  activityOther: "",
+  observationPeriodFrom: "",
+  observationPeriodTo: "",
+};
+const siteDefaults = {
+  sightingDate: "",
+  observed: [] as string[],
+  siteType: undefined as string | undefined,
+  siteTypeOther: "",
+  nestbox: "unknown",
+  connection: undefined as string | undefined,
+  connectionOther: "",
+  observationPeriodFrom: "",
+  observationPeriodTo: "",
+};
+const deadDefaults = {
+  sightingDate: "",
+  cause: undefined as string | undefined,
+  causeOther: "",
+  details: "",
+};
+const contactDefaults = { name: "", email: "", postcode: "" };
+
+/* ---------------------------------- */
+/* unified schema (discriminated union) */
+type ReportType = "live" | "site" | "dead";
+
+const baseUnionSchema = (loggedIn: boolean) =>
+  z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("live"),
+      location: locationSchema,
+      live: liveSchema,
+      contact: loggedIn ? z.never() : contactSchema,
+      captcha: z.string().min(0).optional().or(z.literal("")),
     }),
-  lng: z
-    .number({ error: "Please select a location on the map" })
-    .nullable()
-    .refine((val) => val !== null, {
-      message: "Please select a location on the map",
+    z.object({
+      type: z.literal("site"),
+      location: locationSchema,
+      site: siteSchema,
+      contact: loggedIn ? z.never() : contactSchema,
+      captcha: z.string().min(0).optional().or(z.literal("")),
     }),
-  // placeName: z.string().min(1, "Place name / road number is required"),
-  // county: z.string().optional().default(""),
-  notes: z
-    .string()
-    .max(700, "Keep location notes under 700 chars")
-    .optional()
-    .or(z.literal("")),
-});
-
-const contactSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(200, "Name must be under 200 characters"),
-  email: z
-    .email("Enter a valid email")
-    .max(320, "Email must be under 320 characters"),
-  postcode: z
-    .string()
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => !val || val.length <= 20, {
-      message: "Postcode must be under 20 characters",
+    z.object({
+      type: z.literal("dead"),
+      location: locationSchema,
+      dead: deadSchema,
+      contact: loggedIn ? z.never() : contactSchema,
+      captcha: z.string().min(0).optional().or(z.literal("")),
     }),
-});
+  ]);
 
-const liveSchema = z
-  .object({
-    sightingDate: z.coerce.date({ error: "Date of sighting is required" }),
-    frequency: z
-      .enum(["once", "weekly", "monthly", "less-monthly"])
-      .optional()
-      .or(z.literal("")),
-    activity: z
-      .enum(["driving", "walking", "home", "other"])
-      .optional()
-      .or(z.literal("")),
-    activityOther: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .refine((val) => !val || val.length <= 200, {
-        message: "Activity description must be under 200 characters",
-      }),
-    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
-    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
-  })
-  .refine(
-    (v) =>
-      v.activity !== "other" ||
-      (v.activityOther && v.activityOther.trim().length > 0),
-    { path: ["activityOther"], message: "Please describe the activity" }
-  );
+/**
+ * Schema that validates UI values AND produces a DB-ready payload (snake_case).
+ * We capture user state so contact_* can be derived when logged in.
+ */
+const dbPayloadSchema = (
+  loggedIn: boolean,
+  u: ReturnType<typeof useSupabaseUser>["value"]
+) =>
+  baseUnionSchema(loggedIn).transform((v) => {
+    // contact derivation
+    const derivedContact = loggedIn
+      ? {
+          name:
+            ((u?.user_metadata as any)?.full_name ||
+              (u?.user_metadata as any)?.name ||
+              u?.email?.split("@")[0] ||
+              null) ??
+            null,
+          email: u?.email ?? null,
+          postcode: null,
+        }
+      : {
+          name: nullIfEmpty((v as any).contact?.name),
+          email: nullIfEmpty((v as any).contact?.email),
+          postcode: nullIfEmpty((v as any).contact?.postcode),
+        };
 
-const siteSchema = z
-  .object({
-    sightingDate: z.coerce.date({
-      error: "Approx. date of last Roosted/Nested is required",
-    }),
-    observed: z
-      .array(
-        z.enum([
-          "nest",
-          "roost-regular",
-          "roost-occasional",
-          "fly-in-out",
-          "carrying-food",
-          "young-heard",
-        ])
-      )
-      .optional()
-      .default([]),
-    siteType: z
-      .enum([
-        "traditional-farm",
-        "modern-farm",
-        "mixed-farm",
-        "tree-hole",
-        "other",
-      ])
-      .optional()
-      .or(z.literal("")),
-    siteTypeOther: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .refine((val) => !val || val.length <= 200, {
-        message: "Site description must be under 200 characters",
-      }),
-    nestbox: z.enum(["yes", "no", "unknown"]).optional().or(z.literal("")),
-    connection: z
-      .enum(["owner", "tenant", "watcher", "other"])
-      .optional()
-      .or(z.literal("")),
-    connectionOther: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .refine((val) => !val || val.length <= 200, {
-        message: "Connection description must be under 200 characters",
-      }),
-    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
-    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
-  })
-  .refine(
-    (v) =>
-      v.siteType !== "other" ||
-      (v.siteTypeOther && v.siteTypeOther.trim().length > 0),
-    { path: ["siteTypeOther"], message: "Please describe the site" }
-  )
-  .refine(
-    (v) =>
-      v.connection !== "other" ||
-      (v.connectionOther && v.connectionOther.trim().length > 0),
-    { path: ["connectionOther"], message: "Please describe your connection" }
-  );
+    const base = {
+      type: v.type,
+      user_id: u?.id ?? null,
+      // location
+      location: point(v.location.lng, v.location.lat),
+      location_notes: nullIfEmpty(v.location.notes),
+      // contact
+      contact_name: derivedContact.name,
+      contact_email: derivedContact.email,
+      contact_postcode: derivedContact.postcode,
+      // metadata
+      status: "pending" as const,
+    };
 
-const deadSchema = z
-  .object({
-    sightingDate: z.coerce.date({ error: "Date found is required" }),
-    cause: z
-      .enum([
-        "road-minor",
-        "road-major",
-        "road-motorway",
-        "powerlines",
-        "railway",
-        "drowned",
-        "unknown",
-        "other",
-      ])
-      .optional()
-      .or(z.literal("")),
-    causeOther: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .refine((val) => !val || val.length <= 200, {
-        message: "Cause description must be under 200 characters",
-      }),
-    details: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .refine((val) => !val || val.length <= 700, {
-        message: "Details must be under 700 characters",
-      }),
-  })
-  .refine(
-    (v) =>
-      v.cause !== "other" || (v.causeOther && v.causeOther.trim().length > 0),
-    { path: ["causeOther"], message: "Please describe the cause" }
-  );
+    if (v.type === "live") {
+      return {
+        ...base,
+        sighting_date: v.live.sightingDate,
+        observation_period_from: toYMD(v.live.observationPeriodFrom),
+        observation_period_to: toYMD(v.live.observationPeriodTo),
+        frequency: v.live.frequency ?? null,
+        activity: v.live.activity ?? null,
+        activity_other:
+          v.live.activity === "other"
+            ? nullIfEmpty(v.live.activityOther)
+            : null,
+      };
+    }
 
-/* Create individual form schemas for each type */
-const liveFormSchema = z.object({
-  type: z.literal("live"),
-  location: locationSchema,
-  live: liveSchema,
-  contact: contactSchema,
-  captcha: z.string().min(0).optional().or(z.literal("")),
-});
+    if (v.type === "site") {
+      return {
+        ...base,
+        sighting_date: v.site.sightingDate,
+        observation_period_from: toYMD(v.site.observationPeriodFrom),
+        observation_period_to: toYMD(v.site.observationPeriodTo),
+        observed: v.site.observed ?? [],
+        site_type: v.site.siteType ?? null,
+        site_type_other:
+          v.site.siteType === "other"
+            ? nullIfEmpty(v.site.siteTypeOther)
+            : null,
+        nestbox: v.site.nestbox ?? "unknown",
+        connection: v.site.connection ?? null,
+        connection_other:
+          v.site.connection === "other"
+            ? nullIfEmpty(v.site.connectionOther)
+            : null,
+      };
+    }
 
-const siteFormSchema = z.object({
-  type: z.literal("site"),
-  location: locationSchema,
-  site: siteSchema,
-  contact: contactSchema,
-  captcha: z.string().min(0).optional().or(z.literal("")),
-});
+    // dead
+    return {
+      ...base,
+      sighting_date: v.dead.sightingDate,
+      cause_of_death: v.dead.cause ?? null,
+      cause_of_death_other:
+        v.dead.cause === "other" ? nullIfEmpty(v.dead.causeOther) : null,
+      death_details: nullIfEmpty(v.dead.details),
+    };
+  });
 
-const deadFormSchema = z.object({
-  type: z.literal("dead"),
-  location: locationSchema,
-  dead: deadSchema,
-  contact: contactSchema,
-  captcha: z.string().min(0).optional().or(z.literal("")),
-});
+/* Vee-validate schema for the FORM (no transform here) */
+const validationSchema = computed(() =>
+  toTypedSchema(baseUnionSchema(isLoggedIn.value))
+);
 
-/* Reactive type reference */
-const typeRef = ref<"live" | "site" | "dead">("live");
-
-/* Reactive schema based on current type */
-const currentSchema = computed(() => {
-  const t = typeRef.value;
-  return toTypedSchema(
-    t === "live"
-      ? liveFormSchema
-      : t === "site"
-      ? siteFormSchema
-      : deadFormSchema
-  );
-});
+/* initial form values (concise, composable) */
+const initialValues = {
+  type: "live" as ReportType,
+  location: { ...locationDefaults },
+  live: { ...liveDefaults },
+  site: { ...siteDefaults },
+  dead: { ...deadDefaults },
+  contact: { ...contactDefaults },
+  captcha: "",
+} as const;
 
 /* -------------- useForm -------------- */
-const { handleSubmit, resetForm, setFieldValue, values, defineField } = useForm(
-  {
-    validationSchema: currentSchema,
-    initialValues: {
-      type: "live",
-      location: {
-        lat: null,
-        lng: null,
-        // placeName: "",
-        // county: "",
-        notes: "",
-      },
-      live: {
-        sightingDate: "",
-        frequency: undefined,
-        activity: undefined,
-        activityOther: "",
-        observationPeriodFrom: "",
-        observationPeriodTo: "",
-      },
-      site: {
-        sightingDate: "",
-        observed: [],
-        siteType: undefined,
-        siteTypeOther: "",
-        nestbox: "unknown",
-        connection: undefined,
-        connectionOther: "",
-        observationPeriodFrom: "",
-        observationPeriodTo: "",
-      },
-      dead: { sightingDate: "", cause: undefined, causeOther: "", details: "" },
-      contact: { name: "", email: "", postcode: "" },
-      captcha: "",
-    } as any,
-  }
-);
-const [typeField] = defineField("type");
+const { handleSubmit, resetForm, values, defineField } = useForm({
+  validationSchema: validationSchema,
+  initialValues: initialValues as any,
+});
 
-/* Sync typeRef with form value */
-watch(
-  () => values.type,
-  (newType) => {
-    if (newType) {
-      typeRef.value = newType as "live" | "site" | "dead";
-    }
-  },
-  { immediate: true }
-);
+// IMPORTANT FIX: no generic here, so it uses the path overload
+const [type] = defineField("type");
 
-/* Also sync the other way for initial value */
-watch(
-  typeRef,
-  (newType) => {
-    if (values.type !== newType) {
-      setFieldValue("type", newType);
-    }
-  },
-  { immediate: true }
-);
+/* Section component map (no if/else chain) */
+const sections = {
+  live: LiveSection,
+  site: RoostNestSiteSection,
+  dead: DeadSection,
+} as const;
 
-/* Cleanup "other" fields when their controller changes */
-watch(
-  () => values.live?.activity,
-  (v) => {
-    if (v !== "other") setFieldValue("live.activityOther", "");
-  }
-);
-watch(
-  () => values.site?.siteType,
-  (v) => {
-    if (v !== "other") setFieldValue("site.siteTypeOther", "");
-  }
-);
-watch(
-  () => values.site?.connection,
-  (v) => {
-    if (v !== "other") setFieldValue("site.connectionOther", "");
-  }
-);
-watch(
-  () => values.dead?.cause,
-  (v) => {
-    if (v !== "other") setFieldValue("dead.causeOther", "");
-  }
-);
-watch(
-  typeRef,
-  (t) => {
-    if (t === "site" && !values.site) {
-      setFieldValue("site", {
-        sightingDate: "",
-        observed: [],
-        siteType: undefined,
-        siteTypeOther: "",
-        nestbox: "unknown",
-        connection: undefined,
-        connectionOther: "",
-        observationPeriodFrom: "",
-        observationPeriodTo: "",
-      });
-    }
-    if (t === "dead" && !values.dead) {
-      setFieldValue("dead", {
-        sightingDate: "",
-        cause: undefined,
-        causeOther: "",
-        details: "",
-      });
-    }
-  },
-  { immediate: true }
-);
+const currentSection = computed(() => sections[type.value as ReportType]);
 
-/* reCAPTCHA flow — kept but commented out per your request */
-// const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
-// async function onSubmitWithCaptcha(e: Event) {
-//   e.preventDefault()
-//   try {
-//     await recaptchaLoaded()
-//     const token = await executeRecaptcha('owl_sighting_submit')
-//     setFieldValue('captcha', token)
-//   } catch {
-//     toast({ title: 'reCAPTCHA failed', description: 'Please try again.', variant: 'destructive' })
-//     return
-//   }
-//   submit()
-// }
-
+/* -------------- submit -------------- */
 const submit = handleSubmit(
-  async (formValues) => {
+  async () => {
     try {
       const supabase = useSupabaseClient();
-      const user = useSupabaseUser();
 
-      // Base sighting data
-      const sightingData: any = {
-        type: formValues.type,
-        user_id: user.value?.id || null,
-
-        // Location as PostGIS point
-        location: `POINT(${formValues.location.lng} ${formValues.location.lat})`,
-        location_notes: formValues.location.notes || null,
-
-        // Contact info
-        contact_name: formValues.contact.name,
-        contact_email: formValues.contact.email,
-        contact_postcode: formValues.contact.postcode || null,
-
-        // Metadata
-        status: "pending",
-      };
-
-      // Add type-specific data
-      if (formValues.type === "live") {
-        sightingData.sighting_date = formValues.live.sightingDate;
-        // Convert dates to DATE format (YYYY-MM-DD) for database
-        sightingData.observation_period_from = formValues.live
-          .observationPeriodFrom
-          ? new Date(formValues.live.observationPeriodFrom)
-              .toISOString()
-              .split("T")[0]
-          : null;
-        sightingData.observation_period_to = formValues.live.observationPeriodTo
-          ? new Date(formValues.live.observationPeriodTo)
-              .toISOString()
-              .split("T")[0]
-          : null;
-        sightingData.frequency = formValues.live.frequency || null;
-        sightingData.activity = formValues.live.activity || null;
-        sightingData.activity_other =
-          formValues.live.activity === "other"
-            ? formValues.live.activityOther
-            : null;
-      } else if (formValues.type === "site") {
-        sightingData.sighting_date = formValues.site.sightingDate;
-        // Convert dates to DATE format (YYYY-MM-DD) for database
-        sightingData.observation_period_from = formValues.site
-          .observationPeriodFrom
-          ? new Date(formValues.site.observationPeriodFrom)
-              .toISOString()
-              .split("T")[0]
-          : null;
-        sightingData.observation_period_to = formValues.site.observationPeriodTo
-          ? new Date(formValues.site.observationPeriodTo)
-              .toISOString()
-              .split("T")[0]
-          : null;
-        sightingData.observed = formValues.site.observed || [];
-        sightingData.site_type = formValues.site.siteType || null;
-        sightingData.site_type_other =
-          formValues.site.siteType === "other"
-            ? formValues.site.siteTypeOther
-            : null;
-        sightingData.nestbox = formValues.site.nestbox || "unknown";
-        sightingData.connection = formValues.site.connection || null;
-        sightingData.connection_other =
-          formValues.site.connection === "other"
-            ? formValues.site.connectionOther
-            : null;
-      } else if (formValues.type === "dead") {
-        sightingData.sighting_date = formValues.dead.sightingDate;
-        sightingData.cause_of_death = formValues.dead.cause || null;
-        sightingData.cause_of_death_other =
-          formValues.dead.cause === "other" ? formValues.dead.causeOther : null;
-        sightingData.death_details = formValues.dead.details || null;
-      }
+      // Build DB payload in one line from validated UI values
+      const payload = dbPayloadSchema(isLoggedIn.value, user.value).parse(
+        values
+      );
 
       const { data, error } = await supabase
         .from("sightings")
-        .insert(sightingData)
+        .insert(payload as any)
         .select("id")
         .single();
 
@@ -456,7 +270,6 @@ const submit = handleSubmit(
         description: `Your sighting has been submitted successfully! Reference ID: ${referenceId}...`,
       });
 
-      // Redirect to dashboard after successful submission
       await navigateTo("/my/sightings/");
     } catch (err) {
       console.error("Submission error:", err);
@@ -471,17 +284,6 @@ const submit = handleSubmit(
     });
   }
 );
-
-const showLive = computed(() => typeRef.value === "live");
-const showSite = computed(() => typeRef.value === "site");
-const showDead = computed(() => typeRef.value === "dead");
-
-const currentSection = computed(() => {
-  if (showLive.value) return LiveSection;
-  if (showSite.value) return RoostNestSiteSection;
-  if (showDead.value) return DeadSection;
-  return LiveSection;
-});
 </script>
 
 <template>
@@ -499,15 +301,25 @@ const currentSection = computed(() => {
       </header>
 
       <LocationSection :show-reverse-geo-fields="false" />
-      <TypeSection v-model="typeRef" />
+      <TypeSection v-model="type" />
 
       <Transition name="section-fade" mode="out-in">
         <KeepAlive>
-          <component :is="currentSection" :key="typeRef" />
+          <component :is="currentSection" :key="type" />
         </KeepAlive>
       </Transition>
-      <ContactSection />
+
+      <!-- Auth-aware contact section -->
+      <div v-if="isLoggedIn" class="rounded-md border p-4 text-sm">
+        You are logged in as <strong>{{ userDisplayName }}</strong
+        >. We’ll use your account details for contact.
+      </div>
+      <ContactSection v-else />
+
       <SubmitSection />
+
+      <!-- Debug, show JSON formatted values -->
+      <pre>{{ JSON.stringify(values, null, 2) }}</pre>
     </form>
   </Container>
 </template>
@@ -517,12 +329,10 @@ const currentSection = computed(() => {
 .section-fade-leave-active {
   transition: all 0.3s ease;
 }
-
 .section-fade-enter-from {
   opacity: 0;
   transform: translateY(20px);
 }
-
 .section-fade-leave-to {
   opacity: 0;
   transform: translateY(-20px);
