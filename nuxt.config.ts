@@ -9,8 +9,14 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
+    // turnstile: {
+    //   secretKey: process.env.TURNSTILE_SECRET_KEY,
+    // },
     public: {
       mapboxAccessToken: process.env.MAPBOX_ACCESS_TOKEN,
+      turnstileSiteKey: process.env.TURNSTILE_SITE_KEY,
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_KEY,
     },
   },
 
@@ -20,6 +26,8 @@ export default defineNuxtConfig({
     // docs @ https://supabase.nuxtjs.org/getting-started/introduction
     "@nuxtjs/supabase",
     "@nuxt/fonts",
+    // docs @ https://github.com/nuxt-modules/turnstile/
+    "@nuxtjs/turnstile",
   ],
 
   // docs @ https://supabase.nuxtjs.org/getting-started/introduction
@@ -33,13 +41,16 @@ export default defineNuxtConfig({
     },
   },
 
+  turnstile: {
+    siteKey: process.env.TURNSTILE_SITE_KEY,
+  },
+
   css: ["@/assets/css/tailwind.css"],
   components: [
     { path: "~/components", pathPrefix: false },
     // { path: "~/components/block", pathPrefix: false, priority: 2 },
     // { path: "~/components/shared", pathPrefix: false },
     { path: "~/components/base", pathPrefix: false },
-    { path: "~/components/dataset-loader", pathPrefix: false },
 
     // { path: "~/components/forms", pathPrefix: false },
     {

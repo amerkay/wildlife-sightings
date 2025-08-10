@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
@@ -258,6 +258,8 @@ const currentSection = computed(
 );
 
 /* -------------- submit -------------- */
+const token = ref<string | null>(null);
+
 const submit = handleSubmit(
   async () => {
     try {
@@ -268,22 +270,22 @@ const submit = handleSubmit(
         values
       );
 
-      const { data, error } = await supabase
-        .from("sightings")
-        .insert(payload as any)
-        .select("id")
-        .single();
+      // Call Edge Function with Turnstile token + payload
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(
+        "turnstile-verify",
+        {
+          body: { token: isLoggedIn.value ? undefined : token.value, payload },
+        }
+      );
 
-      if (error) {
-        console.error("Supabase error:", error);
-        toast("Submission failed ❌", {
-          description: `Error: ${error.message}`,
-        });
+      if (fnError) {
+        console.error("Function error:", fnError);
+        toast("Submission failed ❌", { description: fnError.message });
         return;
       }
 
       const referenceId =
-        (data as any)?.id?.toString().slice(0, 8) || "unknown";
+        (fnData as any)?.id?.toString().slice(0, 8) || "unknown";
       toast.success("Sighting submitted ✅", {
         description: `Your sighting has been submitted successfully! Reference ID: ${referenceId}...`,
       });
@@ -334,6 +336,11 @@ const submit = handleSubmit(
         >. We’ll use your account details for contact.
       </div>
       <ContactSection v-else />
+
+      <!-- Turnstile widget -->
+      <div>
+        <NuxtTurnstile v-if="!isLoggedIn" v-model="token" />
+      </div>
 
       <SubmitSection />
 

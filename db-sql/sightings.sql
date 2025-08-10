@@ -1,5 +1,58 @@
--- Drop existing table and recreate with optimized field types
+-- Drop existing objects first (in reverse dependency order)
+DROP VIEW IF EXISTS public.sightings_public CASCADE;
 DROP TABLE IF EXISTS public.sightings CASCADE;
+
+-- Drop custom types
+DROP TYPE IF EXISTS public.sighting_type CASCADE;
+DROP TYPE IF EXISTS public.frequency_type CASCADE;
+DROP TYPE IF EXISTS public.activity_type CASCADE;
+DROP TYPE IF EXISTS public.cause_of_death_type CASCADE;
+DROP TYPE IF EXISTS public.observed_type CASCADE;
+DROP TYPE IF EXISTS public.site_type CASCADE;
+DROP TYPE IF EXISTS public.nestbox_type CASCADE;
+DROP TYPE IF EXISTS public.connection_type CASCADE;
+
+-- Enable PostGIS extension for geography and geometry types
+CREATE EXTENSION IF NOT EXISTS postgis SCHEMA extensions;
+
+-- Create ENUM types for form values
+CREATE TYPE public.sighting_type AS ENUM ('live', 'site', 'dead');
+
+CREATE TYPE public.frequency_type AS ENUM ('once', 'weekly', 'monthly', 'less-monthly');
+
+CREATE TYPE public.activity_type AS ENUM ('driving', 'walking', 'home', 'other');
+
+CREATE TYPE public.cause_of_death_type AS ENUM (
+    'road-minor',
+    'road-major', 
+    'road-motorway',
+    'powerlines',
+    'railway',
+    'drowned',
+    'unknown',
+    'other'
+);
+
+CREATE TYPE public.observed_type AS ENUM (
+    'nest',
+    'roost-regular',
+    'roost-occasional',
+    'fly-in-out',
+    'carrying-food',
+    'young-heard'
+);
+
+CREATE TYPE public.site_type AS ENUM (
+    'traditional-farm',
+    'modern-farm',
+    'mixed-farm',
+    'tree-hole',
+    'other'
+);
+
+CREATE TYPE public.nestbox_type AS ENUM ('yes', 'no', 'unknown');
+
+CREATE TYPE public.connection_type AS ENUM ('owner', 'tenant', 'watcher', 'other');
 
 -- Recreate sightings table with VARCHAR limits and DATE fields
 CREATE TABLE public.sightings (

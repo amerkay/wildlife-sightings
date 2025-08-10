@@ -10,17 +10,6 @@ import { Button } from "@/components/ui/button";
 
 <template>
   <section class="space-y-4">
-    <!-- Keep reCAPTCHA visible note; actual logic handled in parent (commented out) -->
-    <FormField name="captcha" v-slot>
-      <FormItem>
-        <FormDescription>
-          Protected by Google reCAPTCHA v3. The token is generated during
-          submission.
-        </FormDescription>
-        <FormMessage />
-      </FormItem>
-    </FormField>
-
     <p class="text-sm text-muted-foreground">
       By submitting, you agree to our data sharing & confidentiality policy.
     </p>

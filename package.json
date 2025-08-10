@@ -44,8 +44,10 @@
     "@math.gl/core": "^4.0.0",
     "@math.gl/web-mercator": "^3.6.2",
     "@nuxt/fonts": "0.11.4",
+    "@nuxt/scripts": "^0.11.10",
     "@nuxtjs/color-mode": "^3.5.2",
     "@nuxtjs/supabase": "1.6.0",
+    "@nuxtjs/turnstile": "1.0.0",
     "@studiometa/vue-mapbox-gl": "^2.7.2",
     "@tailwindcss/vite": "^4.1.11",
     "@vee-validate/zod": "^4.15.1",
@@ -73,7 +75,6 @@
     "veaury": "^2.6.3",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.18",
-    "vue-recaptcha-v3": "^2.0.1",
     "vue-router": "^4.5.1",
     "vue-sonner": "^2.0.2",
     "zod": "^4.0.15"
