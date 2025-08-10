@@ -29,13 +29,18 @@ import SubmitSection from "@/components/form-section/SubmitSection.vue";
 /* Auth */
 const user = useSupabaseUser();
 const isLoggedIn = computed(() => !!user.value);
-const userDisplayName = computed(
-  () =>
-    (user.value?.user_metadata as any)?.full_name ||
-    (user.value?.user_metadata as any)?.name ||
-    user.value?.email ||
-    ""
-);
+const userDisplayName = computed(() => {
+  if (!user.value) return "";
+
+  const firstName = (user.value.user_metadata as any)?.first_name;
+  const lastName = (user.value.user_metadata as any)?.last_name;
+
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  }
+
+  return user.value.email || "";
+});
 
 /* ---------------------------------- */
 /* tiny helpers (UI -> DB normalization) */
@@ -53,6 +58,32 @@ const nullIfEmpty = (s?: string | null) =>
 
 const point = (lng: number | null, lat: number | null) =>
   lng != null && lat != null ? `POINT(${lng} ${lat})` : null;
+
+/* ---------------------------------- */
+/* contact derivation helper */
+const deriveContactInfo = (
+  loggedIn: boolean,
+  user: ReturnType<typeof useSupabaseUser>["value"],
+  formContact?: any
+) => {
+  if (loggedIn && user) {
+    const firstName = user.user_metadata?.first_name;
+    const lastName = user.user_metadata?.last_name;
+    const fullName = firstName && lastName ? `${firstName} ${lastName}` : null;
+
+    return {
+      name: fullName || user.email?.split("@")[0] || null,
+      email: user.email ?? null,
+      postcode: user.user_metadata?.postcode || null,
+    };
+  }
+
+  return {
+    name: nullIfEmpty(formContact?.name),
+    email: nullIfEmpty(formContact?.email),
+    postcode: nullIfEmpty(formContact?.postcode),
+  };
+};
 
 /* ---------------------------------- */
 /* defaults (keeps initialValues short) */
@@ -86,7 +117,7 @@ const deadDefaults = {
   causeOther: "",
   details: "",
 };
-const contactDefaults = { name: "", email: "", postcode: "" };
+const contactDefaults = { name: null, email: null, postcode: null };
 
 /* ---------------------------------- */
 /* unified schema (discriminated union) */
@@ -98,21 +129,21 @@ const baseUnionSchema = (loggedIn: boolean) =>
       type: z.literal("live"),
       location: locationSchema,
       live: liveSchema,
-      contact: loggedIn ? z.never() : contactSchema,
+      contact: loggedIn ? contactSchema.optional() : contactSchema,
       captcha: z.string().min(0).optional().or(z.literal("")),
     }),
     z.object({
       type: z.literal("site"),
       location: locationSchema,
       site: siteSchema,
-      contact: loggedIn ? z.never() : contactSchema,
+      contact: loggedIn ? contactSchema.optional() : contactSchema,
       captcha: z.string().min(0).optional().or(z.literal("")),
     }),
     z.object({
       type: z.literal("dead"),
       location: locationSchema,
       dead: deadSchema,
-      contact: loggedIn ? z.never() : contactSchema,
+      contact: loggedIn ? contactSchema.optional() : contactSchema,
       captcha: z.string().min(0).optional().or(z.literal("")),
     }),
   ]);
@@ -126,23 +157,8 @@ const dbPayloadSchema = (
   u: ReturnType<typeof useSupabaseUser>["value"]
 ) =>
   baseUnionSchema(loggedIn).transform((v) => {
-    // contact derivation
-    const derivedContact = loggedIn
-      ? {
-          name:
-            ((u?.user_metadata as any)?.full_name ||
-              (u?.user_metadata as any)?.name ||
-              u?.email?.split("@")[0] ||
-              null) ??
-            null,
-          email: u?.email ?? null,
-          postcode: null,
-        }
-      : {
-          name: nullIfEmpty((v as any).contact?.name),
-          email: nullIfEmpty((v as any).contact?.email),
-          postcode: nullIfEmpty((v as any).contact?.postcode),
-        };
+    // Derive contact info for database (prioritize user data if logged in)
+    const derivedContact = deriveContactInfo(loggedIn, u, v.contact);
 
     const base = {
       type: v.type,
@@ -150,14 +166,13 @@ const dbPayloadSchema = (
       // location
       location: point(v.location.lng, v.location.lat),
       location_notes: nullIfEmpty(v.location.notes),
-      // contact
+      // contact - required fields for database
       contact_name: derivedContact.name,
       contact_email: derivedContact.email,
       contact_postcode: derivedContact.postcode,
       // metadata
       status: "pending" as const,
     };
-
     if (v.type === "live") {
       return {
         ...base,
@@ -211,13 +226,14 @@ const validationSchema = computed(() =>
 );
 
 /* initial form values (concise, composable) */
+const derivedContactInfo = deriveContactInfo(isLoggedIn.value, user.value);
 const initialValues = {
   type: "live" as ReportType,
   location: { ...locationDefaults },
   live: { ...liveDefaults },
   site: { ...siteDefaults },
   dead: { ...deadDefaults },
-  contact: { ...contactDefaults },
+  contact: { ...contactDefaults, ...derivedContactInfo },
   captcha: "",
 } as const;
 
@@ -237,7 +253,9 @@ const sections = {
   dead: DeadSection,
 } as const;
 
-const currentSection = computed(() => sections[type.value as ReportType]);
+const currentSection = computed(
+  () => sections[(type.value as ReportType) ?? "live"]
+);
 
 /* -------------- submit -------------- */
 const submit = handleSubmit(
@@ -278,7 +296,8 @@ const submit = handleSubmit(
       });
     }
   },
-  () => {
+  (errors) => {
+    console.error("Validation errors:", errors.errors);
     toast.error("Please fix the errors", {
       description: "Some fields need your attention.",
     });

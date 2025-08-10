@@ -25,6 +25,13 @@ const formSchema = toTypedSchema(
     password: z
       .string({ error: "Password is required" })
       .min(6, "Password must be at least 6 characters"),
+    postcode: z
+      .string()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 20, {
+        message: "Postcode must be under 20 characters",
+      }),
   })
 );
 
@@ -32,11 +39,14 @@ const form = useForm({
   validationSchema: formSchema,
 });
 
+const isLoading = ref(false);
+
 const signUp = async (
   email: string,
   password: string,
   firstName: string,
-  lastName: string
+  lastName: string,
+  postcode?: string
 ) => {
   const { error } = await supabase.auth.signUp({
     email,
@@ -45,7 +55,7 @@ const signUp = async (
       data: {
         first_name: firstName,
         last_name: lastName,
-        display_name: `${firstName} ${lastName}`,
+        postcode: postcode || null,
       },
     },
   });
@@ -61,16 +71,20 @@ const displayError = (error: any) => {
 };
 
 const onSubmit = form.handleSubmit(async (values) => {
-  const success = await signUp(
-    values.email,
-    values.password,
-    values.firstName,
-    values.lastName
-  );
-  if (success) {
-    toast.success(
-      "Account created successfully! Please check your email to verify your account."
+  isLoading.value = true;
+  try {
+    const success = await signUp(
+      values.email,
+      values.password,
+      values.firstName,
+      values.lastName,
+      values.postcode
     );
+    if (success) {
+      await navigateTo("/auth/signup-success");
+    }
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
@@ -133,7 +147,19 @@ const onSubmit = form.handleSubmit(async (values) => {
               </FormItem>
             </FormField>
 
-            <Button type="submit" class="w-full">Create an account</Button>
+            <FormField v-slot="{ componentField }" name="postcode">
+              <FormItem>
+                <FormLabel>Postcode (optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., G2 1AA" v-bind="componentField" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
+
+            <Button type="submit" class="w-full" :disabled="isLoading">
+              {{ isLoading ? "Creating account..." : "Create an account" }}
+            </Button>
             <!-- <Button variant="outline" type="button" class="w-full">
               Sign up with GitHub
             </Button> -->

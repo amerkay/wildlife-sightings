@@ -3,18 +3,28 @@ import * as z from "zod";
 export const contactSchema = z.object({
   name: z
     .string()
-    .min(1, "Name is required")
-    .max(200, "Name must be under 200 characters"),
+    .nullable()
+    .transform((val) => val || "")
+    .pipe(
+      z
+        .string()
+        .min(1, "Name is required")
+        .max(200, "Name must be under 200 characters")
+    ),
   email: z
-    .email("Enter a valid email")
-    .max(320, "Email must be under 320 characters"),
+    .string()
+    .nullable()
+    .transform((val) => val || "")
+    .pipe(
+      z
+        .email("Enter a valid email")
+        .max(320, "Email must be under 320 characters")
+    ),
   postcode: z
     .string()
-    .optional()
-    .or(z.literal(""))
-    .refine((val) => !val || val.length <= 20, {
-      message: "Postcode must be under 20 characters",
-    }),
+    .nullable()
+    .transform((val) => val || "")
+    .pipe(z.string().max(20, "Postcode must be under 20 characters")),
 });
 </script>
 
