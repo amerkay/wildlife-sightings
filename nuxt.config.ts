@@ -7,12 +7,11 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+  ssr: true,
 
   runtimeConfig: {
-    // turnstile: {
-    //   secretKey: process.env.TURNSTILE_SECRET_KEY,
-    // },
     public: {
+      siteUrl: process.env.SITE_URL,
       mapboxAccessToken: process.env.MAPBOX_ACCESS_TOKEN,
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY,
       supabaseUrl: process.env.SUPABASE_URL,

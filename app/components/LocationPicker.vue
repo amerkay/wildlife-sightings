@@ -248,54 +248,54 @@ onBeforeUnmount(() => {
       class="relative rounded-xl overflow-hidden border"
       :style="`width: 100%; height: ${height}; min-height: ${height};`"
     >
-      <ClientOnly>
-        <MapboxMap
-          :access-token="MAPBOX_TOKEN"
-          :map-style="
-            $colorMode.value === 'dark'
-              ? 'mapbox://styles/mapbox/dark-v11'
-              : 'mapbox://styles/mapbox/streets-v12'
-          "
-          :center="[centerLng, centerLat]"
-          :zoom="isGeolocated ? 15 : fallbackZoom"
-          :style="`height: ${height}; width: 100%;`"
-          @mb-created="onMapCreated"
-          @mb-load="onMapLoaded"
-          @mb-moveend="onMoveEnd"
-        >
-          <MapboxGeocoder
-            :collapsed="true"
-            :clearOnBlur="true"
-            :marker="false"
-            types="address,place,postcode,locality,district"
-            countries="GB"
-            :limit="10"
-            placeholder="Search for an address or place..."
-          />
-          <MapboxNavigationControl position="top-right" />
-        </MapboxMap>
+      <!-- <ClientOnly> -->
+      <MapboxMap
+        :access-token="MAPBOX_TOKEN"
+        :map-style="
+          $colorMode.value === 'dark'
+            ? 'mapbox://styles/mapbox/dark-v11'
+            : 'mapbox://styles/mapbox/streets-v12'
+        "
+        :center="[centerLng, centerLat]"
+        :zoom="isGeolocated ? 14 : fallbackZoom"
+        :style="`height: ${height}; width: 100%;`"
+        @mb-created="onMapCreated"
+        @mb-load="onMapLoaded"
+        @mb-moveend="onMoveEnd"
+      >
+        <MapboxGeocoder
+          :collapsed="true"
+          :clearOnBlur="true"
+          :marker="false"
+          types="address,place,postcode,locality,district"
+          countries="GB"
+          :limit="10"
+          placeholder="Search for an address or place..."
+        />
+        <MapboxNavigationControl position="top-right" />
+      </MapboxMap>
 
-        <!-- Centered pin overlay -->
-        <div
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-0 grid place-items-center -mt-10"
+      <!-- Centered pin overlay -->
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 grid place-items-center -mt-10"
+      >
+        <svg
+          class="drop-shadow-md text-red-600"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="currentColor"
         >
-          <svg
-            class="drop-shadow-md text-red-600"
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path
-              d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"
-            />
-          </svg>
-          <span
-            class="absolute top-[calc(50%+16px)] h-2 w-2 rounded-full bg-black/30"
-          ></span>
-        </div>
-      </ClientOnly>
+          <path
+            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"
+          />
+        </svg>
+        <span
+          class="absolute top-[calc(50%+16px)] h-2 w-2 rounded-full bg-black/30"
+        ></span>
+      </div>
+      <!-- </ClientOnly> -->
     </div>
 
     <!-- Hidden lat/lng fields (kept in sync via setFieldValue) -->

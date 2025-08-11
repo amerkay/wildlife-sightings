@@ -11,21 +11,27 @@ const DEAD_CAUSE_VALUES = DEAD_CAUSE_CONST.map((o) => o.value) as [
 
 export const deadSchema = z
   .object({
-    cause: z.enum(DEAD_CAUSE_VALUES).optional().or(z.literal("")),
+    cause: z
+      .enum(DEAD_CAUSE_VALUES)
+      .optional()
+      .or(z.literal(""))
+      .describe("Suspected cause of death"),
     causeOther: z
       .string()
       .optional()
       .or(z.literal(""))
       .refine((val) => !val || val.length <= 200, {
         message: "Cause description must be under 200 characters",
-      }),
+      })
+      .describe("Description of other cause"),
     details: z
       .string()
       .optional()
       .or(z.literal(""))
       .refine((val) => !val || val.length <= 700, {
         message: "Details must be under 700 characters",
-      }),
+      })
+      .describe("Additional details about the discovery"),
   })
   .refine(
     (v) =>

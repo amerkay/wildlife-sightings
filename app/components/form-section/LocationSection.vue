@@ -2,24 +2,27 @@
 import * as z from "zod";
 export const locationSchema = z.object({
   lat: z
-    .number({ error: "Please select a location on the map" })
+    .number({ message: "Please select a location on the map" })
     .nullable()
     .refine((val) => val !== null, {
       message: "Please select a location on the map",
-    }),
+    })
+    .describe("Latitude coordinate of the sighting location"),
   lng: z
-    .number({ error: "Please select a location on the map" })
+    .number({ message: "Please select a location on the map" })
     .nullable()
     .refine((val) => val !== null, {
       message: "Please select a location on the map",
-    }),
+    })
+    .describe("Longitude coordinate of the sighting location"),
   // placeName: z.string().min(1, "Place name / road number is required"),
   // county: z.string().optional().default(""),
   notes: z
     .string()
     .max(700, "Keep location notes under 700 chars")
     .optional()
-    .or(z.literal("")),
+    .or(z.literal(""))
+    .describe("Additional notes about the location"),
 });
 </script>
 
@@ -33,7 +36,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import LocationPicker from "@/components/LocationPicker.vue";
+
+const LocationPicker = defineAsyncComponent(
+  () => import("@/components/LocationPicker.vue")
+);
 
 const props = withDefaults(
   defineProps<{

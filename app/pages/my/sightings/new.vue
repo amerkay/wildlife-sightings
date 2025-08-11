@@ -125,8 +125,9 @@ const baseUnionSchema = (loggedIn: boolean) =>
     z.object({
       type: z.literal("live"),
       sightingDate: z.coerce
-        .date({ error: "Date of sighting is required" })
-        .max(new Date(), "Date cannot be in the future"),
+        .date({ message: "Date of sighting is required" })
+        .max(new Date(), "Date cannot be in the future")
+        .describe("Date when you saw the barn owl"),
       location: locationSchema,
       live: liveSchema,
       contact: loggedIn ? contactSchema.optional() : contactSchema,
@@ -135,8 +136,9 @@ const baseUnionSchema = (loggedIn: boolean) =>
     z.object({
       type: z.literal("site"),
       sightingDate: z.coerce
-        .date({ error: "Date of sighting is required" })
-        .max(new Date(), "Date cannot be in the future"),
+        .date({ message: "Date of sighting is required" })
+        .max(new Date(), "Date cannot be in the future")
+        .describe("Date when you observed the roost/nest site"),
       location: locationSchema,
       site: siteSchema,
       contact: loggedIn ? contactSchema.optional() : contactSchema,
@@ -145,8 +147,9 @@ const baseUnionSchema = (loggedIn: boolean) =>
     z.object({
       type: z.literal("dead"),
       sightingDate: z.coerce
-        .date({ error: "Date found is required" })
-        .max(new Date(), "Date cannot be in the future"),
+        .date({ message: "Date found is required" })
+        .max(new Date(), "Date cannot be in the future")
+        .describe("Date when you found the barn owl"),
       location: locationSchema,
       dead: deadSchema,
       contact: loggedIn ? contactSchema.optional() : contactSchema,
@@ -267,7 +270,7 @@ const currentSection = computed(
 );
 
 /* -------------- submit -------------- */
-const token = ref<string | null>(null);
+const token = ref<string>("");
 
 // Captcha is only required for anonymous users
 const isCaptchaOk = computed(() => (isAnon.value ? !!token.value : true));
@@ -338,8 +341,15 @@ const submit = handleSubmit(
     >
       <header class="space-y-2">
         <h1 class="text-2xl font-semibold">Report an Owl Sighting</h1>
+
         <p class="text-muted-foreground">
-          All fields adjust based on what you’re reporting.
+          Please use this form to record any sightings of a Barn Owl. For help
+          with identification see our
+          <NuxtLink to="#">Identification Guide</NuxtLink>.
+        </p>
+        <p v-if="isAnon" class="text-muted-foreground">
+          If you are already registered with us please
+          <NuxtLink to="/auth/login">Login</NuxtLink> before you start.
         </p>
       </header>
 
@@ -391,6 +401,10 @@ const submit = handleSubmit(
       </section>
 
       <!-- Debug, show JSON formatted values -->
+      <!-- <p>
+        isFormValid {{ isFormValid }}, isCaptchaOk {{ isCaptchaOk }},
+        isSubmitting {{ isSubmitting }}
+      </p> -->
       <!-- <pre>{{ JSON.stringify(values, null, 2) }}</pre> -->
     </form>
   </Container>

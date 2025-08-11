@@ -431,3 +431,9 @@ const signOut = async () => {
     </DisclosurePanel>
   </Disclosure>
 </template>
+
+<style scoped>
+a[href]:hover {
+  text-decoration: none;
+}
+</style>

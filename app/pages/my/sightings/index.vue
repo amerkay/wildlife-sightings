@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { applyReactInVue } from "veaury";
-import KeplerMap from "../../../../react_app/KeplerMap";
 import { useMapDatasets } from "~/composables/dataset-loader";
 import { DATASET_ID as USER_SIGHTINGS_DATASET_ID } from "~/composables/dataset-loader/datasets/user-sightings";
+
+// async component for KeplerMap
+const KeplerMap = defineAsyncComponent(
+  () => import("@/components/KeplerMap.vue")
+);
 
 const {
   public: { mapboxAccessToken },
 } = useRuntimeConfig();
-
-const KeplerMapVue = applyReactInVue(KeplerMap);
 
 // Configure which datasets to load - just specify the IDs!
 const enabledDatasets = [USER_SIGHTINGS_DATASET_ID];
@@ -41,7 +42,7 @@ const handleDatasetError = (error: any) => {
     </div>
     <div v-else>
       <ClientOnly>
-        <KeplerMapVue
+        <KeplerMap
           :mapboxApiAccessToken="mapboxAccessToken"
           :isDarkMode="$colorMode.value === 'dark'"
           :onMapReady="handleMapReady"

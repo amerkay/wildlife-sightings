@@ -5,11 +5,20 @@ import type { DatasetPreset, DatasetLoaderResult } from "../base";
 import { transformDateField } from "../base";
 
 export const useGbifBarnOwlDataset = () => {
+  const {
+    public: { siteUrl },
+  } = useRuntimeConfig();
+
+  // if serverside, prepend the siteUrl to the endpoint
+  const path = "/datasets/gbif-uk-ie-barn-owl.json";
+  // let endpoint =
+  //   import.meta.browser && !import.meta.dev ? path : siteUrl + path;
+
   const preset: DatasetPreset = {
     id: DATASET_ID,
     label: "GBIF Barn Owl Observations",
     kind: "observations",
-    endpoint: "/datasets/gbif-uk-ie-barn-owl.json",
+    endpoint: path,
     layerConfig: {
       id: LAYER_ID,
       type: "heatmap",
@@ -41,14 +50,17 @@ export const useGbifBarnOwlDataset = () => {
   };
 
   const loadData = async (): Promise<DatasetLoaderResult> => {
-    const data = await $fetch<any[]>(preset.endpoint);
+    const { data } = await useFetch<any[]>(preset.endpoint, {
+      server: false,
+      lazy: true,
+    });
 
     // Transform data to ensure consistent date format
-    const transformedData = data.map(transformDateField);
+    const transformedData = data?.value?.map(transformDateField);
 
     return {
       preset,
-      data: transformedData,
+      data: transformedData || [],
     };
   };
 

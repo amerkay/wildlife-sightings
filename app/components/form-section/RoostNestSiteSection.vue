@@ -34,36 +34,56 @@ const CONNECTION_VALUES = CONNECTION_OPTIONS_CONST.map((o) => o.value) as [
 
 export const siteSchema = z
   .object({
-    observed: z.array(z.enum(SITE_OBSERVED_VALUES)).optional().default([]),
-    siteType: z.enum(SITE_TYPE_VALUES).optional().or(z.literal("")),
+    observed: z
+      .array(z.enum(SITE_OBSERVED_VALUES))
+      .optional()
+      .default([])
+      .describe("What you observed at this site"),
+    siteType: z
+      .enum(SITE_TYPE_VALUES)
+      .optional()
+      .or(z.literal(""))
+      .describe("Type of roost or nest site"),
     siteTypeOther: z
       .string()
       .optional()
       .or(z.literal(""))
       .refine((val) => !val || val.length <= 200, {
         message: "Site description must be under 200 characters",
-      }),
-    nestbox: z.enum(NESTBOX_VALUES).optional().or(z.literal("")),
-    connection: z.enum(CONNECTION_VALUES).optional().or(z.literal("")),
+      })
+      .describe("Description of other site type"),
+    nestbox: z
+      .enum(NESTBOX_VALUES)
+      .optional()
+      .or(z.literal(""))
+      .describe("Whether this involves a nestbox"),
+    connection: z
+      .enum(CONNECTION_VALUES)
+      .optional()
+      .or(z.literal(""))
+      .describe("Connection to building or structure"),
     connectionOther: z
       .string()
       .optional()
       .or(z.literal(""))
       .refine((val) => !val || val.length <= 200, {
         message: "Connection description must be under 200 characters",
-      }),
+      })
+      .describe("Description of other connection type"),
     observationPeriodFrom: z
       .union([
         z.coerce.date().max(new Date(), "Date cannot be in the future"),
         z.literal(""),
       ])
-      .optional(),
+      .optional()
+      .describe("Start date of observation period"),
     observationPeriodTo: z
       .union([
         z.coerce.date().max(new Date(), "Date cannot be in the future"),
         z.literal(""),
       ])
-      .optional(),
+      .optional()
+      .describe("End date of observation period"),
   })
   .refine(
     (v) =>

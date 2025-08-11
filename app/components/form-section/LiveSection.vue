@@ -21,27 +21,38 @@ const LIVE_ACTIVITY_VALUES = LIVE_ACTIVITY_CONST.map((o) => o.value) as [
 
 export const liveSchema = z
   .object({
-    frequency: z.enum(LIVE_FREQ_VALUES).optional().or(z.literal("")),
-    activity: z.enum(LIVE_ACTIVITY_VALUES).optional().or(z.literal("")),
+    frequency: z
+      .enum(LIVE_FREQ_VALUES)
+      .optional()
+      .or(z.literal(""))
+      .describe("How often you observed the barn owl"),
+    activity: z
+      .enum(LIVE_ACTIVITY_VALUES)
+      .optional()
+      .or(z.literal(""))
+      .describe("What the barn owl was doing"),
     activityOther: z
       .string()
       .optional()
       .or(z.literal(""))
       .refine((val) => !val || val.length <= 200, {
         message: "Activity description must be under 200 characters",
-      }),
+      })
+      .describe("Description of other activity"),
     observationPeriodFrom: z
       .union([
         z.coerce.date().max(new Date(), "Date cannot be in the future"),
         z.literal(""),
       ])
-      .optional(),
+      .optional()
+      .describe("Start date of observation period"),
     observationPeriodTo: z
       .union([
         z.coerce.date().max(new Date(), "Date cannot be in the future"),
         z.literal(""),
       ])
-      .optional(),
+      .optional()
+      .describe("End date of observation period"),
   })
   .refine(
     (v) =>

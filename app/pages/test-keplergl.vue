@@ -7,7 +7,7 @@
       <div v-else-if="error" class="flex items-center justify-center h-full">
         <div class="text-lg text-red-500">Error loading data: {{ error }}</div>
       </div>
-      <KeplerMapVue
+      <KeplerMap
         v-else
         :mapboxApiAccessToken="mapboxAccessToken"
         :isDarkMode="colorMode.value === 'dark'"
@@ -18,9 +18,12 @@
 </template>
 
 <script setup lang="ts">
-import { applyReactInVue } from "veaury";
-import KeplerMap from "../../react_app/KeplerMap";
 import { processRowObject } from "@kepler.gl/processors";
+
+// async component for KeplerMap
+const KeplerMap = defineAsyncComponent(
+  () => import("@/components/KeplerMap.vue")
+);
 
 const {
   public: { mapboxAccessToken },
@@ -28,10 +31,13 @@ const {
 
 const colorMode = useColorMode();
 
-const KeplerMapVue = applyReactInVue(KeplerMap);
+const path = "/datasets/gbif-uk-ie-barn-owl.json";
 
 // Fetch data from the API
-const { data, pending, error } = await useFetch("/api/observations");
+const { data, pending, error } = await useFetch<any[]>(path, {
+  server: false,
+  lazy: true,
+});
 
 // Handle when the map is ready and we get the addDataToMap function
 const handleMapReady = (addDataToMapFn: (payload: any) => void) => {

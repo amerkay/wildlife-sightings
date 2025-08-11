@@ -10,7 +10,8 @@ export const contactSchema = z.object({
         .string()
         .min(1, "Name is required")
         .max(200, "Name must be under 200 characters")
-    ),
+    )
+    .describe("Your full name"),
   email: z
     .string()
     .nullable()
@@ -19,12 +20,14 @@ export const contactSchema = z.object({
       z
         .email("Enter a valid email")
         .max(320, "Email must be under 320 characters")
-    ),
+    )
+    .describe("Your email address"),
   postcode: z
     .string()
     .nullable()
     .transform((val) => val || "")
-    .pipe(z.string().max(20, "Postcode must be under 20 characters")),
+    .pipe(z.string().max(20, "Postcode must be under 20 characters"))
+    .describe("Your postcode"),
 });
 </script>
 

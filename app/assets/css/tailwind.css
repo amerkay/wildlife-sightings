@@ -168,6 +168,13 @@
   button {
     @apply cursor-pointer;
   }
+
+  a[href] {
+    @apply text-primary;
+    &:hover {
+      @apply underline;
+    }
+  }
 }
 
 input,
