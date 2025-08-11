@@ -6,11 +6,6 @@ const fallbackSiteData = {
   headerNavigation: {
     items: [
       {
-        id: "sighting-my",
-        title: "My Sighting",
-        url: "/my/sightings/",
-      },
-      {
         id: "sighting-new",
         title: "New Sighting",
         url: "/my/sightings/new",
@@ -23,6 +18,11 @@ const fallbackSiteData = {
         id: "home",
         title: "Home",
         url: "/",
+      },
+      {
+        id: "sighting-my",
+        title: "My Sightings",
+        url: "/my/sightings/",
       },
       {
         id: "test-keplergl",

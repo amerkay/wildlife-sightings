@@ -21,7 +21,6 @@ const LIVE_ACTIVITY_VALUES = LIVE_ACTIVITY_CONST.map((o) => o.value) as [
 
 export const liveSchema = z
   .object({
-    sightingDate: z.coerce.date({ error: "Date of sighting is required" }),
     frequency: z.enum(LIVE_FREQ_VALUES).optional().or(z.literal("")),
     activity: z.enum(LIVE_ACTIVITY_VALUES).optional().or(z.literal("")),
     activityOther: z
@@ -31,8 +30,18 @@ export const liveSchema = z
       .refine((val) => !val || val.length <= 200, {
         message: "Activity description must be under 200 characters",
       }),
-    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
-    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
+    observationPeriodFrom: z
+      .union([
+        z.coerce.date().max(new Date(), "Date cannot be in the future"),
+        z.literal(""),
+      ])
+      .optional(),
+    observationPeriodTo: z
+      .union([
+        z.coerce.date().max(new Date(), "Date cannot be in the future"),
+        z.literal(""),
+      ])
+      .optional(),
   })
   .refine(
     (v) =>
@@ -71,7 +80,7 @@ const { values } = useFormContext();
 
     <!-- Date Picker -->
     <SightingDateField
-      field-name="live.sightingDate"
+      field-name="sightingDate"
       label="Date of sighting"
       required
     />

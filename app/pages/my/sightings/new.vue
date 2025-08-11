@@ -93,7 +93,6 @@ const locationDefaults = {
   notes: "",
 };
 const liveDefaults = {
-  sightingDate: "",
   frequency: undefined as string | undefined,
   activity: undefined as string | undefined,
   activityOther: "",
@@ -101,7 +100,6 @@ const liveDefaults = {
   observationPeriodTo: "",
 };
 const siteDefaults = {
-  sightingDate: "",
   observed: [] as string[],
   siteType: undefined as string | undefined,
   siteTypeOther: "",
@@ -112,7 +110,6 @@ const siteDefaults = {
   observationPeriodTo: "",
 };
 const deadDefaults = {
-  sightingDate: "",
   cause: undefined as string | undefined,
   causeOther: "",
   details: "",
@@ -127,6 +124,9 @@ const baseUnionSchema = (loggedIn: boolean) =>
   z.discriminatedUnion("type", [
     z.object({
       type: z.literal("live"),
+      sightingDate: z.coerce
+        .date({ error: "Date of sighting is required" })
+        .max(new Date(), "Date cannot be in the future"),
       location: locationSchema,
       live: liveSchema,
       contact: loggedIn ? contactSchema.optional() : contactSchema,
@@ -134,6 +134,9 @@ const baseUnionSchema = (loggedIn: boolean) =>
     }),
     z.object({
       type: z.literal("site"),
+      sightingDate: z.coerce
+        .date({ error: "Date of sighting is required" })
+        .max(new Date(), "Date cannot be in the future"),
       location: locationSchema,
       site: siteSchema,
       contact: loggedIn ? contactSchema.optional() : contactSchema,
@@ -141,6 +144,9 @@ const baseUnionSchema = (loggedIn: boolean) =>
     }),
     z.object({
       type: z.literal("dead"),
+      sightingDate: z.coerce
+        .date({ error: "Date found is required" })
+        .max(new Date(), "Date cannot be in the future"),
       location: locationSchema,
       dead: deadSchema,
       contact: loggedIn ? contactSchema.optional() : contactSchema,
@@ -176,7 +182,7 @@ const dbPayloadSchema = (
     if (v.type === "live") {
       return {
         ...base,
-        sighting_date: v.live.sightingDate,
+        sighting_date: v.sightingDate,
         observation_period_from: toYMD(v.live.observationPeriodFrom),
         observation_period_to: toYMD(v.live.observationPeriodTo),
         frequency: v.live.frequency ?? null,
@@ -191,7 +197,7 @@ const dbPayloadSchema = (
     if (v.type === "site") {
       return {
         ...base,
-        sighting_date: v.site.sightingDate,
+        sighting_date: v.sightingDate,
         observation_period_from: toYMD(v.site.observationPeriodFrom),
         observation_period_to: toYMD(v.site.observationPeriodTo),
         observed: v.site.observed ?? [],
@@ -212,7 +218,7 @@ const dbPayloadSchema = (
     // dead
     return {
       ...base,
-      sighting_date: v.dead.sightingDate,
+      sighting_date: v.sightingDate,
       cause_of_death: v.dead.cause ?? null,
       cause_of_death_other:
         v.dead.cause === "other" ? nullIfEmpty(v.dead.causeOther) : null,
@@ -229,6 +235,7 @@ const validationSchema = computed(() =>
 const derivedContactInfo = deriveContactInfo(isLoggedIn.value, user.value);
 const initialValues = {
   type: "live" as ReportType,
+  sightingDate: new Date().toISOString().slice(0, 10),
   location: { ...locationDefaults },
   live: { ...liveDefaults },
   site: { ...siteDefaults },
@@ -346,11 +353,12 @@ const submit = handleSubmit(
       </Transition>
 
       <!-- Auth-aware contact section -->
-      <div v-if="isLoggedIn" class="rounded-md border p-4 text-sm">
-        You are logged in as <strong>{{ userDisplayName }}</strong
-        >. We’ll use your account details for contact.
-      </div>
-      <ContactSection v-else />
+      <!-- <div v-if="isLoggedIn" class="rounded-md border p-4 text-sm">
+        Submitting as
+        <strong>{{ userDisplayName }}</strong
+        >.
+      </div> -->
+      <ContactSection v-if="!isLoggedIn" />
 
       <!-- Turnstile widget (anon only) -->
       <div v-if="isAnon">
@@ -366,12 +374,13 @@ const submit = handleSubmit(
         <div class="flex gap-3">
           <Button
             type="submit"
+            size="lg"
             :disabled="submitDisabled"
             :aria-disabled="submitDisabled"
           >
             Submit Sighting
           </Button>
-          <Button type="reset" variant="ghost">Reset Form</Button>
+          <Button type="reset" size="lg" variant="ghost">Reset Form</Button>
         </div>
 
         <p v-if="showNotice" class="mt-2 text-sm text-red-500">

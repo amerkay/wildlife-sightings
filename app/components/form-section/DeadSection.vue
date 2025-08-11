@@ -11,7 +11,6 @@ const DEAD_CAUSE_VALUES = DEAD_CAUSE_CONST.map((o) => o.value) as [
 
 export const deadSchema = z
   .object({
-    sightingDate: z.coerce.date({ error: "Date found is required" }),
     cause: z.enum(DEAD_CAUSE_VALUES).optional().or(z.literal("")),
     causeOther: z
       .string()
@@ -64,11 +63,7 @@ const { values } = useFormContext();
   <section class="space-y-6">
     <h2 class="text-xl font-medium">Observation Details</h2>
 
-    <SightingDateField
-      field-name="dead.sightingDate"
-      label="Date Found"
-      required
-    />
+    <SightingDateField field-name="sightingDate" label="Date Found" required />
 
     <FormField name="dead.cause" v-slot="{ componentField }">
       <FormItem>

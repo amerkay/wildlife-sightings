@@ -34,9 +34,6 @@ const CONNECTION_VALUES = CONNECTION_OPTIONS_CONST.map((o) => o.value) as [
 
 export const siteSchema = z
   .object({
-    sightingDate: z.coerce.date({
-      error: "Approx. date of last Roosted/Nested is required",
-    }),
     observed: z.array(z.enum(SITE_OBSERVED_VALUES)).optional().default([]),
     siteType: z.enum(SITE_TYPE_VALUES).optional().or(z.literal("")),
     siteTypeOther: z
@@ -55,8 +52,18 @@ export const siteSchema = z
       .refine((val) => !val || val.length <= 200, {
         message: "Connection description must be under 200 characters",
       }),
-    observationPeriodFrom: z.union([z.coerce.date(), z.literal("")]).optional(),
-    observationPeriodTo: z.union([z.coerce.date(), z.literal("")]).optional(),
+    observationPeriodFrom: z
+      .union([
+        z.coerce.date().max(new Date(), "Date cannot be in the future"),
+        z.literal(""),
+      ])
+      .optional(),
+    observationPeriodTo: z
+      .union([
+        z.coerce.date().max(new Date(), "Date cannot be in the future"),
+        z.literal(""),
+      ])
+      .optional(),
   })
   .refine(
     (v) =>
@@ -119,7 +126,7 @@ function toggleObserved(v: string) {
 
     <!-- Last Roosted/Nested date -->
     <SightingDateField
-      field-name="site.sightingDate"
+      field-name="sightingDate"
       label="Date of sighting"
       required
     />

@@ -39,12 +39,14 @@ const handleDatasetError = (error: any) => {
     <div v-else-if="error" class="flex items-center justify-center h-full">
       <div class="text-lg text-red-500">Error loading data: {{ error }}</div>
     </div>
-    <ClientOnly v-else>
-      <KeplerMapVue
-        :mapboxApiAccessToken="mapboxAccessToken"
-        :isDarkMode="$colorMode.value === 'dark'"
-        :onMapReady="handleMapReady"
-      />
+    <div v-else>
+      <ClientOnly>
+        <KeplerMapVue
+          :mapboxApiAccessToken="mapboxAccessToken"
+          :isDarkMode="$colorMode.value === 'dark'"
+          :onMapReady="handleMapReady"
+        />
+      </ClientOnly>
 
       <div class="absolute top-2.5 right-16 z-10">
         <MapDatasetLoader
@@ -55,7 +57,9 @@ const handleDatasetError = (error: any) => {
 
       <div
         v-if="
-          !pending && (!userSightingsData || userSightingsData.length === 0)
+          !pending &&
+          !error &&
+          (!userSightingsData || userSightingsData.length === 0)
         "
         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-lg shadow-lg text-center z-10"
       >
@@ -68,6 +72,6 @@ const handleDatasetError = (error: any) => {
           <NuxtLink to="/my/sightings/new">Submit Your First Sighting</NuxtLink>
         </Button>
       </div>
-    </ClientOnly>
+    </div>
   </div>
 </template>
