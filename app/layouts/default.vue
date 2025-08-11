@@ -42,9 +42,28 @@ const fallbackSiteData = {
 
 const finalSiteData = computed(() => fallbackSiteData);
 
-const headerNavigation = computed(
-  () => finalSiteData.value?.headerNavigation || { items: [] }
-);
+// Get user role for admin navigation
+const { data: userRole } = await useUserRole();
+
+const headerNavigation = computed(() => {
+  const baseNavigation = finalSiteData.value?.headerNavigation || { items: [] };
+
+  // Add admin menu item if user is admin
+  if (userRole.value === "admin") {
+    return {
+      items: [
+        ...baseNavigation.items,
+        {
+          id: "admin-map",
+          title: "Admin Map",
+          url: "/admin/map",
+        },
+      ],
+    };
+  }
+
+  return baseNavigation;
+});
 const footerNavigation = computed(
   () => finalSiteData.value?.footerNavigation || { items: [] }
 );

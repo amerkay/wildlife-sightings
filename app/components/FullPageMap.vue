@@ -62,7 +62,7 @@ const allDatasetsMap = allDatasets.reduce<
 watch(
   [pending],
   ([isPending]) => {
-    if (!isPending && keplerLoaded.value) {
+    if (!isPending) {
       // Calculate dataset counts using raw loader data (not filtered data)
       const datasetCounts: Record<string, number> = {};
       props.datasetIds.forEach((datasetId) => {

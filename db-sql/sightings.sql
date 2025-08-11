@@ -1,6 +1,7 @@
 -- Drop existing objects first (in reverse dependency order)
 DROP VIEW IF EXISTS public.sightings_public CASCADE;
 DROP TABLE IF EXISTS public.sightings CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
 
 -- Drop custom types
 DROP TYPE IF EXISTS public.sighting_type CASCADE;
@@ -11,6 +12,8 @@ DROP TYPE IF EXISTS public.observed_type CASCADE;
 DROP TYPE IF EXISTS public.site_type CASCADE;
 DROP TYPE IF EXISTS public.nestbox_type CASCADE;
 DROP TYPE IF EXISTS public.connection_type CASCADE;
+-- NEW: drop roles enum if present
+DROP TYPE IF EXISTS public.user_role CASCADE;
 
 -- Enable PostGIS extension for geography and geometry types
 CREATE EXTENSION IF NOT EXISTS postgis SCHEMA extensions;
@@ -53,6 +56,109 @@ CREATE TYPE public.site_type AS ENUM (
 CREATE TYPE public.nestbox_type AS ENUM ('yes', 'no', 'unknown');
 
 CREATE TYPE public.connection_type AS ENUM ('owner', 'tenant', 'watcher', 'other');
+
+-- NEW: roles enum
+CREATE TYPE public.user_role AS ENUM ('admin','user');
+
+-- NEW: profiles table to store roles (source of truth)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text NOT NULL,
+  role public.user_role NOT NULL DEFAULT 'user',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- NEW: helper function to check admin status without recursion
+create or replace function public.is_admin(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p
+    where p.id = uid and p.role = 'admin'
+  );
+$$;
+
+revoke all on function public.is_admin(uuid) from public;
+
+-- NEW: profiles policies (secure role management, no recursion)
+DROP POLICY IF EXISTS "Users can read their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can read any profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can update any profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile as user" ON public.profiles;
+
+-- users can read their own profile
+CREATE POLICY "Users can read their own profile"
+  ON public.profiles
+  FOR SELECT
+  USING (id = auth.uid());
+
+-- admins can read all profiles
+CREATE POLICY "Admins can read any profile"
+  ON public.profiles
+  FOR SELECT
+  USING (public.is_admin(auth.uid()));
+
+-- admins can update any profile (e.g., promote/demote)
+CREATE POLICY "Admins can update any profile"
+  ON public.profiles
+  FOR UPDATE
+  USING (public.is_admin(auth.uid()))
+  WITH CHECK (public.is_admin(auth.uid()));
+
+-- (optional safety) allow authenticated users to insert their own row only as 'user'
+CREATE POLICY "Users can insert their own profile as user"
+  ON public.profiles
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (id = auth.uid() AND role = 'user');
+
+-- NEW: auto-create a profile row on signup (standard Supabase pattern) and sync email
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email) VALUES (NEW.id, NEW.email)
+  ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+  RETURN NEW;
+END;
+$$;
+
+-- Ensure a fresh trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- NEW: keep email in sync if auth.users.email changes
+CREATE OR REPLACE FUNCTION public.handle_user_email_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.profiles
+    SET email = NEW.email
+    WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;
+CREATE TRIGGER on_auth_user_updated
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW
+  WHEN (OLD.email IS DISTINCT FROM NEW.email)
+  EXECUTE PROCEDURE public.handle_user_email_update();
 
 -- Recreate sightings table with VARCHAR limits and DATE fields
 CREATE TABLE public.sightings (
@@ -149,29 +255,45 @@ ALTER TABLE public.sightings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can insert their own sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Users can view their own sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Users can update their own pending sightings" ON public.sightings;
-DROP POLICY IF EXISTS "Anonymous users can insert sightings" ON public.sightings;
-DROP POLICY IF EXISTS "Public can view approved sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Admins can select any sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Admins can insert any sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Admins can update any sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Admins can delete any sightings" ON public.sightings;
 
 -- Policies
 -- Users can insert their own sightings
 CREATE POLICY "Users can insert their own sightings" ON public.sightings
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+    FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
 
 -- Users can view their own sightings
 CREATE POLICY "Users can view their own sightings" ON public.sightings
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT
+    USING (auth.uid() = user_id);
 
--- Users can update their own pending sightings
+-- Users can update their own pending sightings (explicit WITH CHECK for safety)
 CREATE POLICY "Users can update their own pending sightings" ON public.sightings
-    FOR UPDATE USING (auth.uid() = user_id AND status = 'pending');
+    FOR UPDATE
+    USING (auth.uid() = user_id AND status = 'pending')
+    WITH CHECK (auth.uid() = user_id AND status = 'pending');
 
--- Anonymous users can insert sightings (for public form submission)
-CREATE POLICY "Anonymous users can insert sightings" ON public.sightings
-    FOR INSERT WITH CHECK (auth.uid() IS NULL);
+-- Admin overrides (CRUD on all rows) using helper to avoid recursion
+CREATE POLICY "Admins can select any sightings" ON public.sightings
+  FOR SELECT
+  USING (public.is_admin(auth.uid()));
 
--- Public can view approved sightings (for map display)
-CREATE POLICY "Public can view approved sightings" ON public.sightings
-    FOR SELECT USING (status = 'approved');
+CREATE POLICY "Admins can insert any sightings" ON public.sightings
+  FOR INSERT
+  WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can update any sightings" ON public.sightings
+  FOR UPDATE
+  USING (public.is_admin(auth.uid()))
+  WITH CHECK (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can delete any sightings" ON public.sightings
+  FOR DELETE
+  USING (public.is_admin(auth.uid()));
 
 create or replace function public.lat(s public.sightings)
 returns double precision

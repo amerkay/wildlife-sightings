@@ -41,6 +41,7 @@ const props = defineProps<{
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+// const { data: userRole } = await useUserRole();
 
 const signOut = async () => {
   await supabase.auth.signOut();
@@ -72,31 +73,6 @@ const signOut = async () => {
         >
           <NuxtLink to="/" class="flex shrink-0 items-center" @click="close">
             <img src="/logo.png" alt="Logo" class="h-16 w-auto" />
-            <!-- <DirectusImage
-							v-if="
-								(globals.logo_dark_mode.id && isDark) ||
-								['dark', 'accent-high-contrast'].includes(globals.nav_main_background)
-							"
-							:uuid="globals.logo_dark_mode.id"
-							:width="globals.logo_dark_mode.width"
-							:height="globals.logo_dark_mode.height"
-							alt="globals.logo_dark_mode.description || 'Logo Dark'"
-							class="max-h-12 w-auto max-w-32"
-							fit="contain"
-							loading="eager"
-							sizes="60px"
-						/>
-						<DirectusImage
-							v-else
-							:uuid="globals.logo.id"
-							:width="globals.logo.width"
-							:height="globals.logo.height"
-							:alt="globals.logo.description || 'Logo'"
-							class="max-h-12 w-auto max-w-32"
-							fit="contain"
-							loading="eager"
-							sizes="60px"
-						/> -->
           </NuxtLink>
         </div>
         <div
