@@ -175,6 +175,10 @@
       @apply underline;
     }
   }
+
+  .dark a[href] {
+    @apply text-primary-foreground;
+  }
 }
 
 input,

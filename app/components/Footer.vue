@@ -99,7 +99,7 @@ const props = defineProps<FooterProps>();
               <li v-for="item in props.navigation.items" :key="item.id">
                 <NuxtLink
                   :to="item.url || '#'"
-                  class="text-nav font-medium hover:underline"
+                  class="font-medium hover:underline"
                 >
                   {{ item.title }}
                 </NuxtLink>

@@ -1,78 +1,61 @@
 <script setup lang="ts">
-import { useMapDatasets } from "~/composables/dataset-loader";
 import { DATASET_ID as USER_SIGHTINGS_DATASET_ID } from "~/composables/dataset-loader/datasets/user-sightings";
 
-// async component for KeplerMap
-const KeplerMap = defineAsyncComponent(
-  () => import("@/components/KeplerMap.vue")
-);
+const userSightingsCount = ref<number>(0);
+const datasetsLoaded = ref<boolean>(false);
+const messagedismissed = ref<boolean>(false);
 
-const {
-  public: { mapboxAccessToken },
-} = useRuntimeConfig();
-
-// Configure which datasets to load - just specify the IDs!
-const enabledDatasets = [USER_SIGHTINGS_DATASET_ID];
-
-const { handleMapReady, addDataset, getDatasetData, pending, error } =
-  useMapDatasets(enabledDatasets);
-
-// Get user sightings data for template conditionals
-const userSightingsData = computed(() =>
-  getDatasetData(USER_SIGHTINGS_DATASET_ID)
-);
-
-// Handle dataset loading from MapDatasetLoader
-const handleDatasetLoaded = ({ preset, data }: any) => {
-  addDataset(preset, data);
+const handleDatasetsLoaded = (datasetCounts: Record<string, number>) => {
+  userSightingsCount.value = datasetCounts[USER_SIGHTINGS_DATASET_ID] || 0;
+  datasetsLoaded.value = true;
 };
 
-const handleDatasetError = (error: any) => {
-  console.error("Dataset loading error:", error);
+const dismissMessage = () => {
+  messagedismissed.value = true;
 };
 </script>
 
 <template>
-  <div class="relative w-full min-h-[90vh]">
-    <div v-if="pending" class="flex items-center justify-center h-full">
-      <div class="text-lg">Loading sightings data...</div>
-    </div>
-    <div v-else-if="error" class="flex items-center justify-center h-full">
-      <div class="text-lg text-red-500">Error loading data: {{ error }}</div>
-    </div>
-    <div v-else>
-      <ClientOnly>
-        <KeplerMap
-          :mapboxApiAccessToken="mapboxAccessToken"
-          :isDarkMode="$colorMode.value === 'dark'"
-          :onMapReady="handleMapReady"
-        />
-      </ClientOnly>
+  <div class="relative">
+    <FullPageMap
+      :datasetIds="[USER_SIGHTINGS_DATASET_ID]"
+      @datasetsLoaded="handleDatasetsLoaded"
+    />
 
-      <div class="absolute top-2.5 right-16 z-10">
-        <MapDatasetLoader
-          @datasetLoaded="handleDatasetLoaded"
-          @datasetError="handleDatasetError"
-        />
-      </div>
-
-      <div
-        v-if="
-          !pending &&
-          !error &&
-          (!userSightingsData || userSightingsData.length === 0)
-        "
-        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-lg shadow-lg text-center z-10"
+    <!-- User-specific no sightings message -->
+    <div
+      v-if="datasetsLoaded && userSightingsCount === 0 && !messagedismissed"
+      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-lg shadow-lg text-center z-10"
+    >
+      <!-- X button -->
+      <button
+        @click="dismissMessage"
+        class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        aria-label="Dismiss message"
       >
-        <div class="text-lg mb-4">You haven't submitted any sightings yet</div>
-        <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Add external datasets and submit your own sightings to see them on the
-          map!
-        </div>
-        <Button as-child>
-          <NuxtLink to="/my/sightings/new">Submit Your First Sighting</NuxtLink>
-        </Button>
+        <svg
+          class="w-4 h-4 text-gray-500 dark:text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <div class="text-lg mb-4">You haven't submitted any sightings yet</div>
+      <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Submit your sightings to see them on the map! You can click "Add
+        Dataset" to add curated datasets, like GBIF or other sources.
       </div>
+      <Button as-child>
+        <NuxtLink to="/my/sightings/new">Submit Your First Sighting</NuxtLink>
+      </Button>
     </div>
   </div>
 </template>

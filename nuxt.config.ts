@@ -47,7 +47,7 @@ export default defineNuxtConfig({
   css: ["@/assets/css/tailwind.css"],
   components: [
     { path: "~/components", pathPrefix: false },
-    // { path: "~/components/block", pathPrefix: false, priority: 2 },
+    { path: "~/components/block", pathPrefix: false, priority: 2 },
     // { path: "~/components/shared", pathPrefix: false },
     { path: "~/components/base", pathPrefix: false },
 
