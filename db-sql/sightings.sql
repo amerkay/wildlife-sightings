@@ -76,7 +76,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1 from public.profiles p
@@ -123,7 +123,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 BEGIN
   INSERT INTO public.profiles (id, email) VALUES (NEW.id, NEW.email)
@@ -143,7 +143,7 @@ CREATE OR REPLACE FUNCTION public.handle_user_email_update()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 BEGIN
   UPDATE public.profiles
@@ -235,13 +235,17 @@ CREATE INDEX idx_sightings_observation_period_from ON public.sightings (observat
 CREATE INDEX idx_sightings_observation_period_to ON public.sightings (observation_period_to) WHERE observation_period_to IS NOT NULL;
 
 -- Create updated_at trigger
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
+    -- explicitly schema-qualify everything
     NEW.updated_at = timezone('utc'::text, now());
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$;
 
 CREATE TRIGGER update_sightings_updated_at 
     BEFORE UPDATE ON public.sightings 
@@ -298,18 +302,19 @@ CREATE POLICY "Admins can delete any sightings" ON public.sightings
 create or replace function public.lat(s public.sightings)
 returns double precision
 language sql stable
-set search_path = public, extensions
+set search_path = ''
 as $$
-  select st_y((s.location::geometry));
+  select extensions.st_y((s.location::extensions.geometry));
 $$;
 
 create or replace function public.lng(s public.sightings)
 returns double precision
 language sql stable
-set search_path = public, extensions
+set search_path = ''
 as $$
-  select st_x((s.location::geometry));
+  select extensions.st_x((s.location::extensions.geometry));
 $$;
+
 
 
 -- Create a public view for sightings with limited fields
