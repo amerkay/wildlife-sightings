@@ -29,11 +29,6 @@ const KeplerMap = defineAsyncComponent({
   },
 });
 
-// Handle when the map component is ready
-const onKeplerMapMounted = () => {
-  keplerLoaded.value = true;
-};
-
 const {
   public: { mapboxAccessToken },
 } = useRuntimeConfig();
@@ -41,8 +36,18 @@ const {
 // Use the dataset IDs from props
 const enabledDatasets = props.datasetIds;
 
-const { handleMapReady, addDataset, getDatasetData, pending, error } =
-  useMapDatasets(enabledDatasets);
+const {
+  handleMapReady: originalHandleMapReady,
+  addDataset,
+  pending,
+  error,
+} = useMapDatasets(enabledDatasets);
+
+// Wrap the original handleMapReady to also set keplerLoaded
+const handleMapReady = (addDataToMapFn: any) => {
+  keplerLoaded.value = true;
+  originalHandleMapReady(addDataToMapFn);
+};
 
 // Get access to the raw dataset loaders to check actual data (including empty datasets)
 const { allDatasets } = useDatasetLoaders();
@@ -72,9 +77,6 @@ watch(
   { immediate: true }
 );
 
-// Computed property to determine if we should show loading
-const isLoading = computed(() => pending.value || !keplerLoaded.value);
-
 // Handle dataset loading from MapDatasetLoader
 const handleDatasetLoaded = ({ preset, data }: any) => {
   addDataset(preset, data);
@@ -88,22 +90,22 @@ const handleDatasetError = (error: any) => {
 <template>
   <div class="relative w-full min-h-[90vh]">
     <!-- Loading screen with world map background -->
-    <MapLoadingScreen v-if="isLoading" />
+    <MapLoadingScreen v-if="pending || !keplerLoaded" />
 
     <div v-else-if="error" class="flex items-center justify-center h-full">
       <div class="text-lg text-red-500">Error loading data: {{ error }}</div>
     </div>
-    <div v-else>
+
+    <div v-if="!pending && !error">
       <ClientOnly>
         <KeplerMap
           :mapboxApiAccessToken="mapboxAccessToken"
           :isDarkMode="$colorMode.value === 'dark'"
           :onMapReady="handleMapReady"
-          @vue:mounted="onKeplerMapMounted"
         />
       </ClientOnly>
 
-      <div class="absolute top-2.5 right-16 z-10">
+      <div v-if="keplerLoaded" class="absolute top-2.5 right-16 z-10">
         <MapDatasetLoader
           @datasetLoaded="handleDatasetLoaded"
           @datasetError="handleDatasetError"
