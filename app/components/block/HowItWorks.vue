@@ -5,12 +5,12 @@
         <h2
           class="text-base/7 font-semibold text-primary-600 dark:text-primary-400"
         >
-          How to Report
+          Three Simple Steps
         </h2>
         <p
           class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-5xl lg:text-balance dark:text-white"
         >
-          Three Simple Steps
+          How to Report a Sighting
         </p>
         <!-- <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">
           Please report all Barn Owl nests, roost sites, and sightings (dead or
@@ -55,7 +55,7 @@
 <script setup>
 const steps = [
   {
-    name: "Learn to Identify Barn Owls",
+    name: "1. Learn to Identify Barn Owls",
     description:
       "Just to make sure the bird you saw really was a Barn Owl. Pellet identification and owl sounds included.",
     linkText: "Owl Identification Guide",
@@ -63,7 +63,7 @@ const steps = [
     icon: "lucide:search",
   },
   {
-    name: "Complete the form",
+    name: "2. Complete the form",
     description:
       "Complete our short survey form. Now, mobile friendly, with automatic location detection.",
     linkText: "Survey Form",
@@ -71,7 +71,7 @@ const steps = [
     icon: "lucide:file-text",
   },
   {
-    name: "Signup",
+    name: "3. Signup",
     description:
       "Signup to make your future reporting even quicker and view your submissions.",
     linkText: "Signup",

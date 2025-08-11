@@ -58,7 +58,7 @@ watchEffect(() => {
     </Container>
     <div class="hidden bg-muted lg:block">
       <img
-        src="/signup-owl.jpg"
+        src="/imgs/BAROW-Owlet-on-branch-Richard-Tadman-B-CROPPED-OWLETS-PAGE-scaled-1.jpg"
         alt="Image"
         width="1920"
         height="1080"
