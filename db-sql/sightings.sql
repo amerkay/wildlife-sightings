@@ -145,6 +145,13 @@ CREATE TRIGGER update_sightings_updated_at
 -- Row Level Security (RLS)
 ALTER TABLE public.sightings ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can insert their own sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Users can view their own sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Users can update their own pending sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Anonymous users can insert sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Public can view approved sightings" ON public.sightings;
+
 -- Policies
 -- Users can insert their own sightings
 CREATE POLICY "Users can insert their own sightings" ON public.sightings

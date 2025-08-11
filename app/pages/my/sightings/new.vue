@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useForm } from "vee-validate";
+import { useForm, useIsFormValid } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 
@@ -24,11 +24,11 @@ import DeadSection, {
 import ContactSection, {
   contactSchema,
 } from "@/components/form-section/ContactSection.vue";
-import SubmitSection from "@/components/form-section/SubmitSection.vue";
 
 /* Auth */
 const user = useSupabaseUser();
 const isLoggedIn = computed(() => !!user.value);
+const isAnon = computed(() => !isLoggedIn.value);
 const userDisplayName = computed(() => {
   if (!user.value) return "";
 
@@ -238,10 +238,12 @@ const initialValues = {
 } as const;
 
 /* -------------- useForm -------------- */
-const { handleSubmit, resetForm, values, defineField } = useForm({
+const { handleSubmit, resetForm, values, defineField, isSubmitting } = useForm({
   validationSchema: validationSchema,
   initialValues: initialValues as any,
 });
+// Reactive, schema-aware overall validity
+const isFormValid = useIsFormValid();
 
 // IMPORTANT FIX: no generic here, so it uses the path overload
 const [type] = defineField("type");
@@ -260,6 +262,14 @@ const currentSection = computed(
 /* -------------- submit -------------- */
 const token = ref<string | null>(null);
 
+// Captcha is only required for anonymous users
+const isCaptchaOk = computed(() => (isAnon.value ? !!token.value : true));
+// Final disable state for the button
+const submitDisabled = computed(
+  () => !isFormValid.value || !isCaptchaOk.value || isSubmitting.value
+);
+const showNotice = computed(() => !isFormValid.value || !isCaptchaOk.value);
+
 const submit = handleSubmit(
   async () => {
     try {
@@ -274,7 +284,8 @@ const submit = handleSubmit(
       const { data: fnData, error: fnError } = await supabase.functions.invoke(
         "turnstile-verify",
         {
-          body: { token: isLoggedIn.value ? undefined : token.value, payload },
+          // Send token only when needed; function tolerates undefined
+          body: { token: isAnon.value ? token.value : undefined, payload },
         }
       );
 
@@ -290,7 +301,11 @@ const submit = handleSubmit(
         description: `Your sighting has been submitted successfully! Reference ID: ${referenceId}...`,
       });
 
-      await navigateTo("/my/sightings/");
+      await navigateTo(
+        isLoggedIn.value
+          ? "/my/sightings/"
+          : "/auth/signup?msg=submission-success"
+      );
     } catch (err) {
       console.error("Submission error:", err);
       toast.error("Submission failed ❌", {
@@ -337,12 +352,34 @@ const submit = handleSubmit(
       </div>
       <ContactSection v-else />
 
-      <!-- Turnstile widget -->
-      <div>
-        <NuxtTurnstile v-if="!isLoggedIn" v-model="token" />
+      <!-- Turnstile widget (anon only) -->
+      <div v-if="isAnon">
+        <NuxtTurnstile v-model="token" />
       </div>
 
-      <SubmitSection />
+      <!-- <SubmitSection :disabled="submitDisabled" /> -->
+      <section class="space-y-4">
+        <p class="text-sm text-muted-foreground">
+          By submitting, you agree to our data sharing & confidentiality policy.
+        </p>
+
+        <div class="flex gap-3">
+          <Button
+            type="submit"
+            :disabled="submitDisabled"
+            :aria-disabled="submitDisabled"
+          >
+            Submit Sighting
+          </Button>
+          <Button type="reset" variant="ghost">Reset Form</Button>
+        </div>
+
+        <p v-if="showNotice" class="mt-2 text-sm text-red-500">
+          Please complete fill all fields marked "<span class="text-red-500"
+            >*</span
+          >"<span v-if="isAnon"> and the captcha to enable submit</span>.
+        </p>
+      </section>
 
       <!-- Debug, show JSON formatted values -->
       <!-- <pre>{{ JSON.stringify(values, null, 2) }}</pre> -->
