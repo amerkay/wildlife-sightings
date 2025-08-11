@@ -10,9 +10,6 @@ export interface NavigationItem {
   id: string;
   title: string;
   url?: string | null;
-  page?: {
-    permalink?: string | null;
-  };
 }
 
 export interface FooterProps {
@@ -101,19 +98,11 @@ const props = defineProps<FooterProps>();
             <ul class="space-y-4">
               <li v-for="item in props.navigation.items" :key="item.id">
                 <NuxtLink
-                  v-if="item.page?.permalink"
-                  :to="item.page.permalink"
+                  :to="item.url || '#'"
                   class="text-nav font-medium hover:underline"
                 >
                   {{ item.title }}
                 </NuxtLink>
-                <a
-                  v-else
-                  :href="item.url || '#'"
-                  class="text-nav font-medium hover:underline"
-                >
-                  {{ item.title }}
-                </a>
               </li>
             </ul>
 

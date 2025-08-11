@@ -19,7 +19,6 @@ interface NavigationItem {
   id: string;
   title: string;
   url?: string;
-  page?: { permalink: string };
   children?: NavigationItem[];
 }
 
@@ -138,7 +137,7 @@ const signOut = async () => {
                         v-slot="{ active, close }"
                       >
                         <NuxtLink
-                          :to="child.page?.permalink || child.url || '#'"
+                          :to="child.url || '#'"
                           :class="[
                             active
                               ? 'bg-accent text-accent-foreground'
@@ -156,7 +155,7 @@ const signOut = async () => {
 
                 <NuxtLink
                   v-else
-                  :to="section.page?.permalink || section.url || '#'"
+                  :to="section.url || '#'"
                   custom
                   v-slot="{ isActive, href, navigate }"
                 >
@@ -254,7 +253,7 @@ const signOut = async () => {
                         ]"
                         @click.capture="close"
                       >
-                        Dashboard
+                        My Sightings
                       </NuxtLink>
                     </MenuItem>
                     <MenuItem v-slot="{ active, close }">
@@ -304,7 +303,7 @@ const signOut = async () => {
                 <NuxtLink
                   v-for="child in section.children"
                   :key="child.id"
-                  :to="child.page?.permalink || child.url || '#'"
+                  :to="child.url || '#'"
                   custom
                   v-slot="{ isActive, href, navigate }"
                   @click="close"
@@ -329,7 +328,7 @@ const signOut = async () => {
           </div>
           <NuxtLink
             v-else
-            :to="section.page?.permalink || section.url || '#'"
+            :to="section.url || '#'"
             custom
             v-slot="{ isActive, href, navigate }"
           >
@@ -413,7 +412,7 @@ const signOut = async () => {
               ]"
               :aria-current="isActive ? 'page' : undefined"
             >
-              Dashboard
+              My Sightings
             </DisclosureButton>
           </NuxtLink>
           <DisclosureButton
