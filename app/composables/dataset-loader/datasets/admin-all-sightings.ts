@@ -18,7 +18,7 @@ export const useAdminAllSightingsDataset = () => {
     endpoint: `supabase://${DATASET_ID}`,
     layerConfig: {
       id: LAYER_ID,
-      type: "cluster",
+      type: "point",
       config: {
         dataId: DATASET_ID,
         label: "All User Sightings (Admin)",
@@ -26,37 +26,27 @@ export const useAdminAllSightingsDataset = () => {
         columns: { lat: "lat", lng: "lng" },
         isVisible: true,
         visConfig: {
-          opacity: 0.8,
-          clusterRadius: 40,
+          radius: 15,
+          fixedRadius: false,
+          opacity: 0.9,
+          outline: true,
+          thickness: 2,
+          filled: true,
           radiusRange: [5, 50],
-          colorRange: {
-            colors: [
-              "#440154",
-              "#482878",
-              "#3E4A89",
-              "#31688E",
-              "#26828E",
-              "#1F9E89",
-              "#35B779",
-              "#6DCD59",
-              "#B4DE2C",
-              "#FDE725",
-            ],
-            name: "Viridis",
-            type: "sequential",
-            category: "ColorBrewer",
+          strokeColor: [255, 255, 255],
+          strokeColorRange: {
+            colors: ["#FFFFFF", "#000000"],
           },
-          colorAggregation: "count",
         },
         // @ts-ignore
         textLabel: [
           {
             field: {
-              name: "status",
+              name: "type",
               type: "string",
             },
             color: [255, 255, 255],
-            size: 10,
+            size: 12,
             offset: [0, 0],
             anchor: "middle",
             alignment: "center",
