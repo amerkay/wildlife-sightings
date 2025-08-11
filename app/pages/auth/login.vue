@@ -110,7 +110,7 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     <div class="hidden bg-muted lg:block">
       <img
-        src="/login-owl.jpg"
+        src="/imgs/login-owl.jpg"
         alt="Image"
         width="1920"
         height="1080"

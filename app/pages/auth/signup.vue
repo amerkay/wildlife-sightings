@@ -175,10 +175,10 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     <div class="hidden bg-muted lg:block lg:order-1">
       <img
-        src="/signup-owl.jpg"
+        src="/imgs/BAROW-Owlet-on-branch-Richard-Tadman-B-CROPPED-OWLETS-PAGE-scaled-1.jpg"
         alt="Image"
-        width="1920"
-        height="1080"
+        width="2513"
+        height="2560"
         class="h-full w-full object-cover dark:brightness-[0.8]"
       />
     </div>

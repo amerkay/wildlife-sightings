@@ -11,7 +11,9 @@ import { ArrowRight } from "lucide-vue-next";
             to="#"
             variant="outline"
             class="px-3 py-1.5 text-xs font-normal md:text-sm lg:py-2"
-            >Help us protect Barn Owls <ArrowRight class="ml-3 h-4 w-4"
+            >Help us protect Barn Owls,
+            <NuxtLink to="/auth/signup" class="font-bold">signup now</NuxtLink>
+            <ArrowRight class="ml-1 h-4 w-4"
           /></Badge>
           <h1
             class="mb-4 mt-7 text-4xl font-bold md:text-5xl lg:mb-6 lg:mt-5 xl:text-6xl"
@@ -45,8 +47,17 @@ import { ArrowRight } from "lucide-vue-next";
     >
       <!-- eslint-disable-next-line vue/html-self-closing -->
       <img
-        class="h-full w-full object-cover lg:[clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)]"
-        :src="'/imgs/map-heatmap-screenshot-dark.png'"
+        class="dark:hidden h-full w-full object-cover lg:[clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)]"
+        src="/imgs/map-heatmap-screenshot.png"
+        alt="Heat Map showing Barn Owl sightings"
+        loading="eager"
+        width="1491"
+        height="1785"
+        :title="`BOT hero section two header`"
+      />
+      <img
+        class="hidden dark:block h-full w-full object-cover lg:[clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)]"
+        src="/imgs/map-heatmap-screenshot-dark.png"
         alt="Heat Map showing Barn Owl sightings"
         loading="eager"
         width="1491"

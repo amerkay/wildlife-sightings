@@ -1,6 +1,8 @@
 <template>
   <section>
     <Hero />
+    <Intro />
+    <HowItWorks />
   </section>
 </template>
 

@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     "@nuxt/fonts",
     // docs @ https://github.com/nuxt-modules/turnstile/
     "@nuxtjs/turnstile",
+    "@nuxt/icon",
   ],
 
   // docs @ https://supabase.nuxtjs.org/getting-started/introduction
