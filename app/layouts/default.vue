@@ -2,13 +2,54 @@
 import { useHead } from "#app";
 import { computed } from "vue";
 
-const fallbackSiteData = {
+const siteData = {
   headerNavigation: {
     items: [
       {
         id: "sighting-new",
         title: "New Sighting",
         url: "/my/sightings/new",
+      },
+    ],
+  },
+  authNavigation: {
+    login: {
+      id: "auth-login",
+      title: "Login",
+      url: "/auth/login",
+    },
+    signup: {
+      id: "auth-signup",
+      title: "Sign Up",
+      url: "/auth/signup",
+      variant: "primary",
+    },
+  },
+  userNavigation: {
+    items: [
+      {
+        id: "my-sightings",
+        title: "My Sightings",
+        url: "/my/sightings/",
+      },
+      {
+        id: "my-sightings-map",
+        title: "My Sightings (map)",
+        url: "/my/sightings/map",
+      },
+      {
+        id: "sign-out",
+        title: "Sign Out",
+        action: "signOut",
+      },
+    ],
+  },
+  adminNavigation: {
+    items: [
+      {
+        id: "admin-map-all",
+        title: "Admin Map (All)",
+        url: "/admin/map",
       },
     ],
   },
@@ -24,11 +65,6 @@ const fallbackSiteData = {
         title: "My Sightings",
         url: "/my/sightings/",
       },
-      {
-        id: "test-keplergl",
-        title: "Kepler.gl Test",
-        url: "/test-keplergl",
-      },
     ],
   },
   globals: {
@@ -40,35 +76,19 @@ const fallbackSiteData = {
   },
 };
 
-const finalSiteData = computed(() => fallbackSiteData);
+const finalSiteData = computed(() => siteData);
 
 // Get user role for admin navigation
 const { data: userRole } = await useUserRole();
 
 const headerNavigation = computed(() => {
-  const baseNavigation = finalSiteData.value?.headerNavigation || { items: [] };
-
-  // Add admin menu item if user is admin
-  if (userRole.value === "admin") {
-    return {
-      items: [
-        ...baseNavigation.items,
-        {
-          id: "admin-map",
-          title: "Admin Map",
-          url: "/admin/map",
-        },
-      ],
-    };
-  }
-
-  return baseNavigation;
+  return finalSiteData.value?.headerNavigation || { items: [] };
 });
 const footerNavigation = computed(
   () => finalSiteData.value?.footerNavigation || { items: [] }
 );
 const globals = computed(
-  () => finalSiteData.value?.globals || fallbackSiteData.globals
+  () => finalSiteData.value?.globals || siteData.globals
 );
 
 const siteTitle = computed(() => globals.value?.title || "Unknown");
@@ -95,7 +115,14 @@ useHead({
 
 <template>
   <div>
-    <NavigationBar :navigation="headerNavigation" :globals="globals" />
+    <NavigationBar
+      :navigation="headerNavigation"
+      :globals="globals"
+      :auth-navigation="finalSiteData?.authNavigation"
+      :user-navigation="finalSiteData?.userNavigation"
+      :admin-navigation="finalSiteData?.adminNavigation"
+      :user-role="userRole || undefined"
+    />
 
     <NuxtPage class="min-h-[65vh]" />
 

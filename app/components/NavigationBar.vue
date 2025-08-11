@@ -19,10 +19,25 @@ interface NavigationItem {
   id: string;
   title: string;
   url?: string;
+  action?: string;
+  variant?: string;
   children?: NavigationItem[];
 }
 
 interface Navigation {
+  items: NavigationItem[];
+}
+
+interface AuthNavigation {
+  login: NavigationItem;
+  signup: NavigationItem;
+}
+
+interface UserNavigation {
+  items: NavigationItem[];
+}
+
+interface AdminNavigation {
   items: NavigationItem[];
 }
 
@@ -37,6 +52,10 @@ export interface Globals {
 const props = defineProps<{
   navigation: Navigation;
   globals: Globals;
+  authNavigation?: AuthNavigation;
+  userNavigation?: UserNavigation;
+  adminNavigation?: AdminNavigation;
+  userRole?: string;
 }>();
 
 const supabase = useSupabaseClient();
@@ -46,6 +65,12 @@ const user = useSupabaseUser();
 const signOut = async () => {
   await supabase.auth.signOut();
   await navigateTo("/");
+};
+
+const handleAction = async (action: string) => {
+  if (action === "signOut") {
+    await signOut();
+  }
 };
 </script>
 
@@ -152,9 +177,9 @@ const signOut = async () => {
               </template>
 
               <!-- Authentication Navigation -->
-              <template v-if="!user">
+              <template v-if="!user && props.authNavigation">
                 <NuxtLink
-                  to="/auth/login"
+                  :to="props.authNavigation.login.url || '#'"
                   custom
                   v-slot="{ isActive, href, navigate }"
                 >
@@ -169,11 +194,11 @@ const signOut = async () => {
                     ]"
                     :aria-current="isActive ? 'page' : undefined"
                   >
-                    Login
+                    {{ props.authNavigation.login.title }}
                   </a>
                 </NuxtLink>
                 <NuxtLink
-                  to="/auth/signup"
+                  :to="props.authNavigation.signup.url || '#'"
                   custom
                   v-slot="{ isActive, href, navigate }"
                 >
@@ -188,13 +213,17 @@ const signOut = async () => {
                     ]"
                     :aria-current="isActive ? 'page' : undefined"
                   >
-                    Sign Up
+                    {{ props.authNavigation.signup.title }}
                   </a>
                 </NuxtLink>
               </template>
 
               <!-- User Menu when logged in -->
-              <Menu v-else as="div" class="relative">
+              <Menu
+                v-else-if="user && props.userNavigation"
+                as="div"
+                class="relative"
+              >
                 <div>
                   <MenuButton
                     class="inline-flex items-center justify-center rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none"
@@ -218,9 +247,14 @@ const signOut = async () => {
                   <MenuItems
                     class="absolute right-0 z-10 mt-2 min-w-[200px] origin-top-right rounded-md bg-card py-1 text-card-foreground shadow-lg ring-1 ring-black/5 focus:outline-none"
                   >
-                    <MenuItem v-slot="{ active, close }">
+                    <MenuItem
+                      v-for="item in props.userNavigation.items"
+                      :key="item.id"
+                      v-slot="{ active, close }"
+                    >
                       <NuxtLink
-                        to="/my/sightings/"
+                        v-if="item.url"
+                        :to="item.url"
                         :class="[
                           active
                             ? 'bg-accent text-accent-foreground'
@@ -229,13 +263,12 @@ const signOut = async () => {
                         ]"
                         @click.capture="close"
                       >
-                        My Sightings
+                        {{ item.title }}
                       </NuxtLink>
-                    </MenuItem>
-                    <MenuItem v-slot="{ active, close }">
                       <button
+                        v-else-if="item.action"
                         @click="
-                          signOut();
+                          handleAction(item.action);
                           close();
                         "
                         :class="[
@@ -245,7 +278,75 @@ const signOut = async () => {
                           'block w-full text-left px-4 py-2 text-base',
                         ]"
                       >
-                        Sign Out
+                        {{ item.title }}
+                      </button>
+                    </MenuItem>
+                  </MenuItems>
+                </transition>
+              </Menu>
+
+              <!-- Admin Menu when user is admin -->
+              <Menu
+                v-if="
+                  user && props.userRole === 'admin' && props.adminNavigation
+                "
+                as="div"
+                class="relative"
+              >
+                <div>
+                  <MenuButton
+                    class="inline-flex items-center justify-center rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none"
+                  >
+                    <span>Admin</span>
+                    <ChevronDownIcon
+                      class="-mr-1 ml-1 size-4 text-current/70"
+                      aria-hidden="true"
+                    />
+                  </MenuButton>
+                </div>
+                <transition
+                  enter-active-class="transition ease-out duration-100"
+                  enter-from-class="transform opacity-0 scale-95"
+                  enter-to-class="transform opacity-100 scale-100"
+                  leave-active-class="transition ease-in duration-75"
+                  leave-from-class="transform opacity-100 scale-100"
+                  leave-to-class="transform opacity-0 scale-95"
+                >
+                  <MenuItems
+                    class="absolute right-0 z-10 mt-2 min-w-[200px] origin-top-right rounded-md bg-card py-1 text-card-foreground shadow-lg ring-1 ring-black/5 focus:outline-none"
+                  >
+                    <MenuItem
+                      v-for="item in props.adminNavigation.items"
+                      :key="item.id"
+                      v-slot="{ active, close }"
+                    >
+                      <NuxtLink
+                        v-if="item.url"
+                        :to="item.url"
+                        :class="[
+                          active
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-card-foreground',
+                          'block px-4 py-2 text-base',
+                        ]"
+                        @click.capture="close"
+                      >
+                        {{ item.title }}
+                      </NuxtLink>
+                      <button
+                        v-else-if="item.action"
+                        @click="
+                          handleAction(item.action);
+                          close();
+                        "
+                        :class="[
+                          active
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-card-foreground',
+                          'block w-full text-left px-4 py-2 text-base',
+                        ]"
+                      >
+                        {{ item.title }}
                       </button>
                     </MenuItem>
                   </MenuItems>
@@ -326,9 +427,9 @@ const signOut = async () => {
         </template>
 
         <!-- Mobile Authentication Navigation -->
-        <template v-if="!user">
+        <template v-if="!user && props.authNavigation">
           <NuxtLink
-            to="/auth/login"
+            :to="props.authNavigation.login.url || '#'"
             custom
             v-slot="{ isActive, href, navigate }"
           >
@@ -344,11 +445,11 @@ const signOut = async () => {
               ]"
               :aria-current="isActive ? 'page' : undefined"
             >
-              Login
+              {{ props.authNavigation.login.title }}
             </DisclosureButton>
           </NuxtLink>
           <NuxtLink
-            to="/auth/signup"
+            :to="props.authNavigation.signup.url || '#'"
             custom
             v-slot="{ isActive, href, navigate }"
           >
@@ -364,43 +465,87 @@ const signOut = async () => {
               ]"
               :aria-current="isActive ? 'page' : undefined"
             >
-              Sign Up
+              {{ props.authNavigation.signup.title }}
             </DisclosureButton>
           </NuxtLink>
         </template>
 
         <!-- Mobile User Menu when logged in -->
-        <template v-else>
-          <NuxtLink
-            to="/my/sightings/"
-            custom
-            v-slot="{ isActive, href, navigate }"
-          >
-            <DisclosureButton
-              as="a"
-              :href="href"
-              @click="navigate"
-              :class="[
-                isActive
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-foreground hover:bg-accent hover:text-accent-foreground',
-                'block rounded-md px-3 py-2 text-base font-medium',
-              ]"
-              :aria-current="isActive ? 'page' : undefined"
+        <template v-else-if="user && props.userNavigation">
+          <template v-for="item in props.userNavigation.items" :key="item.id">
+            <NuxtLink
+              v-if="item.url"
+              :to="item.url"
+              custom
+              v-slot="{ isActive, href, navigate }"
             >
-              My Sightings
+              <DisclosureButton
+                as="a"
+                :href="href"
+                @click="navigate"
+                :class="[
+                  isActive
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                  'block rounded-md px-3 py-2 text-base font-medium',
+                ]"
+                :aria-current="isActive ? 'page' : undefined"
+              >
+                {{ item.title }}
+              </DisclosureButton>
+            </NuxtLink>
+            <DisclosureButton
+              v-else-if="item.action"
+              as="button"
+              @click="
+                handleAction(item.action);
+                close();
+              "
+              class="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
+            >
+              {{ item.title }}
             </DisclosureButton>
-          </NuxtLink>
-          <DisclosureButton
-            as="button"
-            @click="
-              signOut();
-              close();
-            "
-            class="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
-          >
-            Sign Out
-          </DisclosureButton>
+          </template>
+        </template>
+
+        <!-- Mobile Admin Menu when user is admin -->
+        <template
+          v-if="user && props.userRole === 'admin' && props.adminNavigation"
+        >
+          <template v-for="item in props.adminNavigation.items" :key="item.id">
+            <NuxtLink
+              v-if="item.url"
+              :to="item.url"
+              custom
+              v-slot="{ isActive, href, navigate }"
+            >
+              <DisclosureButton
+                as="a"
+                :href="href"
+                @click="navigate"
+                :class="[
+                  isActive
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-foreground hover:bg-accent hover:text-accent-foreground',
+                  'block rounded-md px-3 py-2 text-base font-medium',
+                ]"
+                :aria-current="isActive ? 'page' : undefined"
+              >
+                {{ item.title }}
+              </DisclosureButton>
+            </NuxtLink>
+            <DisclosureButton
+              v-else-if="item.action"
+              as="button"
+              @click="
+                handleAction(item.action);
+                close();
+              "
+              class="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
+            >
+              {{ item.title }}
+            </DisclosureButton>
+          </template>
         </template>
       </div>
     </DisclosurePanel>
