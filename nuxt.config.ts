@@ -84,7 +84,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    "/my/sightings/new": { ssr: true, prerender: true },
+    // TODO: Fix so the form is prerendered (github pages erros out)
+    // "/my/sightings/new": { ssr: true, prerender: true },
     "/my/**": { ssr: false, prerender: false },
     "/admin/**": { ssr: false, prerender: false },
   },
