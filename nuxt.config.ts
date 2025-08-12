@@ -89,6 +89,7 @@ export default defineNuxtConfig({
     // "/my/sightings/new/": { ssr: true, prerender: true },
     "/my/**": { ssr: false, prerender: false },
     "/admin/**": { ssr: false, prerender: false },
+    "/public-barn-owl-map/": { ssr: false, prerender: false },
   },
 
   // add vite plugins for Veaury
