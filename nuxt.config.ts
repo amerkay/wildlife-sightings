@@ -84,6 +84,7 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    "/my/sightings/new": { ssr: true, prerender: true },
     "/my/**": { ssr: false, prerender: false },
     "/admin/**": { ssr: false, prerender: false },
   },
