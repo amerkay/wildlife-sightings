@@ -52,6 +52,7 @@
     "@nuxtjs/turnstile": "1.0.0",
     "@studiometa/vue-mapbox-gl": "^2.7.2",
     "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/vue-table": "^8.21.3",
     "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^13.6.0",
     "apache-arrow": "17.0.0",
