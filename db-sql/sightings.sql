@@ -259,6 +259,7 @@ ALTER TABLE public.sightings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can insert their own sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Users can view their own sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Users can update their own pending sightings" ON public.sightings;
+DROP POLICY IF EXISTS "Users can delete their own pending sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Admins can select any sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Admins can insert any sightings" ON public.sightings;
 DROP POLICY IF EXISTS "Admins can update any sightings" ON public.sightings;
@@ -280,6 +281,12 @@ CREATE POLICY "Users can update their own pending sightings" ON public.sightings
     FOR UPDATE
     USING (auth.uid() = user_id AND status = 'pending')
     WITH CHECK (auth.uid() = user_id AND status = 'pending');
+
+-- Users can delete their own pending sightings
+CREATE POLICY "Users can delete their own pending sightings" ON public.sightings
+    FOR DELETE
+    USING (auth.uid() = user_id AND status = 'pending');
+
 
 -- Admin overrides (CRUD on all rows) using helper to avoid recursion
 CREATE POLICY "Admins can select any sightings" ON public.sightings
