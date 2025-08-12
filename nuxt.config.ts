@@ -78,6 +78,11 @@ export default defineNuxtConfig({
     classSuffix: "",
   },
 
+  nitro: {
+    // lets Nuxt emit the correct structure for GitHub Pages
+    preset: "github_pages",
+  },
+
   // add vite plugins for Veaury
   vite: {
     plugins: [
