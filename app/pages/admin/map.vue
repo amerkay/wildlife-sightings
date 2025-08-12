@@ -34,7 +34,7 @@ useHead({
     <!-- Admin info overlay -->
     <div
       v-if="datasetsLoaded"
-      class="absolute top-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-lg shadow-lg z-10"
+      class="hidden sm:block absolute bottom-8 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-lg shadow-lg z-10"
     >
       <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
         Admin View: All User Sightings
