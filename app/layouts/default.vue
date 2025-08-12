@@ -48,7 +48,12 @@ const siteData = {
     items: [
       {
         id: "admin-map-all",
-        title: "Admin Map (All)",
+        title: "Manage Sightings",
+        url: "/admin/",
+      },
+      {
+        id: "admin-map-all",
+        title: "Map (All Sightings)",
         url: "/admin/map",
       },
     ],

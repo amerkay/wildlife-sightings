@@ -8,8 +8,7 @@ import type { Database } from "~~/types/database.types";
 type Sighting = Database["public"]["Tables"]["sightings"]["Row"];
 
 export const useUserSightingsDataset = () => {
-  const supabase = useSupabaseClient();
-  const user = useSupabaseUser();
+  const { loadData: loadTableData } = useSightingsTable();
 
   const preset: DatasetPreset = {
     id: DATASET_ID,
@@ -57,21 +56,11 @@ export const useUserSightingsDataset = () => {
   };
 
   const loadData = async (): Promise<DatasetLoaderResult | null> => {
-    if (!user.value) return null;
+    const result = await loadTableData();
+    if (!result.data.length) return null;
 
-    const { data, error } = await supabase
-      .from("sightings")
-      .select(`id, created_at, status, lat, lng, sighting_date`)
-      .eq("user_id", user.value.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching user sightings:", error);
-      throw error;
-    }
-
-    // Transform sighting_date to UTC string for consistency
-    const transformedData = data?.map(transformDateField) || [];
+    // Transform data for map display
+    const transformedData = result.data.map(transformDateField);
 
     return {
       preset,
