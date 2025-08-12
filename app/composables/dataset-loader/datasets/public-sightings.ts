@@ -67,7 +67,11 @@ export const usePublicSightingsDataset = () => {
 
   const { data, pending, error } = useAsyncData(
     "public-sightings-map",
-    loadData
+    loadData,
+    {
+      server: false,
+      lazy: true,
+    }
   );
 
   return {

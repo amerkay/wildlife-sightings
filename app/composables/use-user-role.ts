@@ -23,7 +23,8 @@ export function useUserRole() {
         | null;
     },
     {
-      watch: [user], // This makes it reactive to user changes
+      watch: [user],
+      server: false,
     }
   );
 }

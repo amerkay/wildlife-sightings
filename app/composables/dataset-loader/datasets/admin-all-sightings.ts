@@ -85,7 +85,11 @@ export const useAdminAllSightingsDataset = () => {
 
   const { data, pending, error } = useAsyncData(
     "admin-all-sightings-map",
-    loadData
+    loadData,
+    {
+      server: false,
+      lazy: true,
+    }
   );
 
   return {

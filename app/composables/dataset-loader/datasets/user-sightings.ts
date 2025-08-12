@@ -68,7 +68,14 @@ export const useUserSightingsDataset = () => {
     };
   };
 
-  const { data, pending, error } = useAsyncData("user-sightings-map", loadData);
+  const { data, pending, error } = useAsyncData(
+    "user-sightings-map",
+    loadData,
+    {
+      server: false,
+      lazy: true,
+    }
+  );
 
   return {
     preset,
