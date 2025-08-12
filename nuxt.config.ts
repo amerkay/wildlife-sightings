@@ -36,7 +36,7 @@ export default defineNuxtConfig({
       login: "/auth/login",
       callback: "/auth/confirm",
       include: ["/my/*", "/admin/*"],
-      exclude: ["/my/sightings/new"],
+      exclude: ["/my/sightings/new", "/my/sightings/new/"],
       saveRedirectToCookie: true,
     },
   },
@@ -85,7 +85,8 @@ export default defineNuxtConfig({
 
   routeRules: {
     // TODO: Fix so the form is prerendered (github pages erros out)
-    // "/my/sightings/new": { ssr: true, prerender: true },
+    "/my/sightings/new": { ssr: true, prerender: true },
+    "/my/sightings/new/": { ssr: true, prerender: true },
     "/my/**": { ssr: false, prerender: false },
     "/admin/**": { ssr: false, prerender: false },
   },

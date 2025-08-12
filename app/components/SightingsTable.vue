@@ -19,7 +19,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   showNewSightingButton: true,
   showViewOnMapButton: true,
-  newSightingRoute: "/my/sightings/new",
+  newSightingRoute: "/my/sightings/new/",
   mapRoute: "/public-barn-owl-map",
   isAdminMode: false,
 });
