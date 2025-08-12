@@ -79,7 +79,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    // lets Nuxt emit the correct structure for GitHub Pages
+    // lets Nuxt emit the correct structure for GitHub  Pages
     preset: "github_pages",
   },
 
