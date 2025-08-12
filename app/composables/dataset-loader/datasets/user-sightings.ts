@@ -73,7 +73,6 @@ export const useUserSightingsDataset = () => {
     loadData,
     {
       server: false,
-      lazy: true,
     }
   );
 

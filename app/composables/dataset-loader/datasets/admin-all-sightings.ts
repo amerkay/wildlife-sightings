@@ -88,7 +88,6 @@ export const useAdminAllSightingsDataset = () => {
     loadData,
     {
       server: false,
-      lazy: true,
     }
   );
 

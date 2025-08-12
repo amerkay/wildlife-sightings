@@ -70,7 +70,6 @@ export const usePublicSightingsDataset = () => {
     loadData,
     {
       server: false,
-      lazy: true,
     }
   );
 

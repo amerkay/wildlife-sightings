@@ -52,7 +52,6 @@ export const useGbifBarnOwlDataset = () => {
   const loadData = async (): Promise<DatasetLoaderResult> => {
     const { data } = await useFetch<any[]>(preset.endpoint, {
       server: false,
-      lazy: true,
     });
 
     // Transform data to ensure consistent date format
@@ -66,7 +65,6 @@ export const useGbifBarnOwlDataset = () => {
 
   const { data, pending, error } = useAsyncData("gbif-barn-owl-map", loadData, {
     server: false,
-    lazy: true,
   });
 
   return {
