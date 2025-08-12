@@ -46,7 +46,7 @@ jobs:
     env:
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+      MAPBOX_ACCESS_TOKEN: ${{ vars.MAPBOX_ACCESS_TOKEN }}
       TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
       NUXT_APP_BASE_URL: "/${{ github.event.repository.name }}/"
     steps:
