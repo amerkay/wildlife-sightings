@@ -1,41 +1,87 @@
-# https://github.com/actions/deploy-pages#usage
-name: Deploy to GitHub Pages
+name: Deploy (Supabase + GitHub Pages)
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  build:
+  supabase:
+    name: Deploy Supabase Edge Function
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+      TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: supabase/setup-cli@v1
         with:
-          node-version: "20"
-      # Pick your own package manager and build script
-      - run: pnpm install
-      - run: pnpm generate --preset github_pages
-      - name: Upload artifact
+          version: latest
+      - name: Set production secrets in Supabase (idempotent)
+        run: |
+          supabase secrets set \
+            TURNSTILE_SITE_KEY="$TURNSTILE_SITE_KEY" \
+            TURNSTILE_SECRET_KEY="$TURNSTILE_SECRET_KEY" \
+            --project-ref "$PROJECT_ID"
+      - name: Deploy turnstile-verify
+        run: |
+          supabase functions deploy turnstile-verify --project-ref "$PROJECT_ID"
+
+  pages:
+    name: Build static site
+    needs: supabase
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+      TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
+      NUXT_APP_BASE_URL: "/${{ github.event.repository.name }}/"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Use Node.js 22 (with pnpm cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate static site
+        run: pnpm generate
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./.output/public
-  # Deployment job
+
   deploy:
-    # Add a dependency to the build job
-    needs: build
-    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-    permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
-    # Deploy to the github_pages environment
+    name: Deploy to GitHub Pages
+    needs: pages
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    # Specify runner + deployment step
-    runs-on: ubuntu-latest
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
