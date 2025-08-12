@@ -83,6 +83,11 @@ export default defineNuxtConfig({
     preset: "github_pages",
   },
 
+  routeRules: {
+    "/my/**": { ssr: false, prerender: false },
+    "/admin/**": { ssr: false, prerender: false },
+  },
+
   // add vite plugins for Veaury
   vite: {
     plugins: [
