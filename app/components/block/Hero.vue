@@ -29,7 +29,7 @@ import { ArrowRight } from "lucide-vue-next";
             <NuxtLink to="/public-barn-owl-map">
               <Button size="lg" variant="outline">View Public Map</Button>
             </NuxtLink>
-            <NuxtLink to="/my/sightings/new/">
+            <NuxtLink to="/my/sightings/new">
               <Button size="lg" class="min-w-56">Report a Sighting</Button>
             </NuxtLink>
           </div>

@@ -54,7 +54,7 @@ const dismissMessage = () => {
         Dataset" to add curated datasets, like GBIF or other sources.
       </div>
       <Button as-child>
-        <NuxtLink to="/my/sightings/new/">Submit Your First Sighting</NuxtLink>
+        <NuxtLink to="/my/sightings/new">Submit Your First Sighting</NuxtLink>
       </Button>
     </div>
   </div>

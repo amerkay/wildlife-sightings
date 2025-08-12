@@ -8,7 +8,7 @@ const siteData = {
       {
         id: "sighting-new",
         title: "New Sighting",
-        url: "/my/sightings/new/",
+        url: "/my/sightings/new",
       },
     ],
   },
