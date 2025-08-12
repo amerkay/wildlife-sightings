@@ -108,8 +108,10 @@ export const useSightingsTable = (options: TableOptions = {}) => {
   };
 
   // Use asyncData for caching and reactivity
-  const cacheKey = options.isAdminMode ? "admin-sightings-table" : "user-sightings-table";
-  
+  const cacheKey = options.isAdminMode
+    ? "admin-sightings-table"
+    : "user-sightings-table";
+
   const {
     data: tableData,
     pending,
