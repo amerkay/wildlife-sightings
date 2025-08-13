@@ -11,7 +11,6 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      siteUrl: process.env.SITE_URL,
       mapboxAccessToken: process.env.MAPBOX_ACCESS_TOKEN,
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY,
       supabaseUrl: process.env.SUPABASE_URL,

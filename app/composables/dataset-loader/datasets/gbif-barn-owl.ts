@@ -5,14 +5,7 @@ import type { DatasetPreset, DatasetLoaderResult } from "../base";
 import { transformDateField } from "../base";
 
 export const useGbifBarnOwlDataset = () => {
-  const {
-    public: { siteUrl },
-  } = useRuntimeConfig();
-
-  // if serverside, prepend the siteUrl to the endpoint
   const path = "/datasets/gbif-uk-ie-barn-owl.json";
-  // let endpoint =
-  //   import.meta.browser && !import.meta.dev ? path : siteUrl + path;
 
   const preset: DatasetPreset = {
     id: DATASET_ID,
