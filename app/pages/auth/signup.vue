@@ -61,6 +61,7 @@ const signUp = async (
         last_name: lastName,
         postcode: postcode || null,
       },
+
       emailRedirectTo: `${cdnURL}${baseURL}auth/confirm`,
     },
   });
