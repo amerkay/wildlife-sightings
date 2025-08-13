@@ -53,6 +53,11 @@ const centerLng = ref<number>(props.defaultLng);
 const centerLat = ref<number>(props.defaultLat);
 const isGeolocated = ref(false);
 
+/** Geolocation UI state */
+const geoState = ref<'idle' | 'requesting' | 'locating' | 'success' | 'error'>('idle');
+const geoError = ref<string>('');
+let geoTimeout: NodeJS.Timeout | null = null;
+
 /** Check if current position is at default */
 const isAtDefault = computed(
   () =>
@@ -143,6 +148,21 @@ function updateFieldsFromFeature(feature: any | undefined) {
   syncFormFields(placeName, county);
 }
 
+/** Convert geolocation error to user-friendly message */
+function getGeolocationErrorMessage(error: any): string {
+  const code = error?.code || error?.PERMISSION_DENIED;
+  
+  if (code === 1 || error?.message?.includes('denied')) {
+    return 'Location access denied. Please enable location permissions in your browser.';
+  } else if (code === 2) {
+    return 'Location unavailable. Please check your device settings.';
+  } else if (code === 3) {
+    return 'Location request timed out. Please try again.';
+  } else {
+    return 'Unable to get your location. Please try again or enter manually.';
+  }
+}
+
 /** Reverse geocode current center using the SDK (maintained library) */
 async function reverseWithSdk(lng: number, lat: number) {
   if (!props.showReverseGeoFields) return;
@@ -190,7 +210,18 @@ function onMapCreated(map: any) {
     console.debug("GeolocateControl geolocate event", ev);
     onUserGeolocate(ev);
   });
-  geoControl.on("error", (err) => console.debug("GeolocateControl error", err));
+  geoControl.on("error", (err) => {
+    console.debug("GeolocateControl error", err);
+    
+    // Clear any pending timeout
+    if (geoTimeout) {
+      clearTimeout(geoTimeout);
+      geoTimeout = null;
+    }
+    
+    geoState.value = 'error';
+    geoError.value = getGeolocationErrorMessage(err);
+  });
 }
 
 function onMapLoaded() {
@@ -208,13 +239,53 @@ function onMoveEnd() {
 function onUserGeolocate(ev: any) {
   const coords = ev?.coords ?? ev;
   if (!coords?.longitude || !coords?.latitude) return;
+  
+  // Clear any pending timeout
+  if (geoTimeout) {
+    clearTimeout(geoTimeout);
+    geoTimeout = null;
+  }
+  
   centerLng.value = coords.longitude;
   centerLat.value = coords.latitude;
   isGeolocated.value = true;
+  geoState.value = 'success';
+  geoError.value = '';
+  
+  // Reset to idle state after showing success for 2 seconds
+  setTimeout(() => {
+    if (geoState.value === 'success') {
+      geoState.value = 'idle';
+    }
+  }, 2000);
 }
 
 /** Button: trigger native Mapbox geolocation control */
 function requestGeolocation() {
+  geoState.value = 'requesting';
+  geoError.value = '';
+  
+  // Clear any existing timeout
+  if (geoTimeout) {
+    clearTimeout(geoTimeout);
+  }
+  
+  // Set locating state after a brief delay to show "requesting" state
+  setTimeout(() => {
+    if (geoState.value === 'requesting') {
+      geoState.value = 'locating';
+    }
+  }, 100);
+  
+  // Set a timeout to handle cases where geolocation hangs
+  geoTimeout = setTimeout(() => {
+    if (geoState.value === 'requesting' || geoState.value === 'locating') {
+      geoState.value = 'error';
+      geoError.value = 'Location request timed out. Please try again.';
+    }
+    geoTimeout = null;
+  }, 15000); // 15 second timeout
+  
   geoControl.trigger();
 }
 
@@ -224,15 +295,62 @@ onBeforeUnmount(() => {
       inflightReq.abort();
     } catch {}
   }
+  
+  // Clear geolocation timeout
+  if (geoTimeout) {
+    clearTimeout(geoTimeout);
+    geoTimeout = null;
+  }
 });
 </script>
 
 <template>
   <div class="w-full space-y-4">
-    <div>
-      <Button type="button" variant="secondary" @click="requestGeolocation">
-        📍 Use My Current Location
+    <div class="space-y-2">
+      <Button 
+        type="button" 
+        variant="secondary" 
+        @click="requestGeolocation"
+        :disabled="geoState === 'requesting' || geoState === 'locating'"
+        class="flex items-center gap-2"
+      >
+        <!-- Loading spinner -->
+        <svg
+          v-if="geoState === 'requesting' || geoState === 'locating'"
+          class="animate-spin h-4 w-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        
+        <!-- Location icon for idle/success/error states -->
+        <span v-else>📍</span>
+        
+        <!-- Button text based on state -->
+        <span v-if="geoState === 'requesting'">Requesting Permission...</span>
+        <span v-else-if="geoState === 'locating'">Finding Your Location...</span>
+        <span v-else-if="geoState === 'success'">Location Found!</span>
+        <span v-else>Use My Current Location</span>
       </Button>
+      
+      <!-- Error message -->
+      <p v-if="geoState === 'error' && geoError" class="text-sm text-destructive">
+        {{ geoError }}
+      </p>
     </div>
 
     <!-- Location selection label -->
