@@ -15,6 +15,7 @@ export default defineNuxtConfig({
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY,
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
+      siteUrl: process.env.SITE_URL,
     },
   },
 
