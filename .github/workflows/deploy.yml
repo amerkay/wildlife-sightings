@@ -50,6 +50,7 @@ jobs:
       TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
       NUXT_APP_BASE_URL: "/${{ github.event.repository.name }}/"
       NUXT_APP_CDN_URL: ${{ vars.NUXT_APP_CDN_URL }}
+      SITE_URL: ${{ vars.SITE_URL }}
     steps:
       - uses: actions/checkout@v4
 
