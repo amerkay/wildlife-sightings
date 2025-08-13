@@ -62,7 +62,7 @@ const signUp = async (
         postcode: postcode || null,
       },
 
-      emailRedirectTo: new URL("/auth/confirm", siteUrl).toString(),
+      emailRedirectTo: new URL("auth/confirm", siteUrl).toString(),
     },
   });
   if (error) {
