@@ -259,7 +259,7 @@ function onUserGeolocate(ev: any) {
     if (geoState.value === "success") {
       geoState.value = "idle";
     }
-  }, 2000);
+  }, 4000);
 }
 
 /** Button: trigger native Mapbox geolocation control */

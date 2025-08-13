@@ -49,7 +49,7 @@ const signUp = async (
   postcode?: string
 ) => {
   const {
-    app: { baseURL, siteUrl },
+    app: { baseURL, cdnURL },
   } = useRuntimeConfig();
 
   const { error } = await supabase.auth.signUp({
@@ -61,7 +61,7 @@ const signUp = async (
         last_name: lastName,
         postcode: postcode || null,
       },
-      emailRedirectTo: `${siteUrl}${baseURL}auth/confirm`,
+      emailRedirectTo: `${cdnURL}${baseURL}auth/confirm`,
     },
   });
   if (error) {
