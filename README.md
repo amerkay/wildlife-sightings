@@ -45,3 +45,10 @@ pnpm generate && pnpm preview
 # Don't forget to run to stop
 pnpm supabase:stop
 ```
+
+---
+
+## To deploy to production
+
+Configure redirects in Supabase Auth settings:
+https://supabase.com/dashboard/project/zmlzutmqeacsgjsdealn/auth/url-configuration
