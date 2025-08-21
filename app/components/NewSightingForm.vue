@@ -29,18 +29,18 @@ import ContactSection, {
 const user = useSupabaseUser();
 const isLoggedIn = computed(() => !!user.value);
 const isAnon = computed(() => !isLoggedIn.value);
-const userDisplayName = computed(() => {
-  if (!user.value) return "";
+// const userDisplayName = computed(() => {
+//   if (!user.value) return "";
 
-  const firstName = (user.value.user_metadata as any)?.first_name;
-  const lastName = (user.value.user_metadata as any)?.last_name;
+//   const firstName = (user.value.user_metadata as any)?.first_name;
+//   const lastName = (user.value.user_metadata as any)?.last_name;
 
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  }
+//   if (firstName && lastName) {
+//     return `${firstName} ${lastName}`;
+//   }
 
-  return user.value.email || "";
-});
+//   return user.value.email || "";
+// });
 
 /* ---------------------------------- */
 /* tiny helpers (UI -> DB normalization) */
@@ -179,8 +179,6 @@ const dbPayloadSchema = (
       contact_name: derivedContact.name,
       contact_email: derivedContact.email,
       contact_postcode: derivedContact.postcode,
-      // metadata
-      status: "pending" as const,
     };
     if (v.type === "live") {
       return {

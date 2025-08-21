@@ -12,7 +12,7 @@ DROP TYPE IF EXISTS public.observed_type CASCADE;
 DROP TYPE IF EXISTS public.site_type CASCADE;
 DROP TYPE IF EXISTS public.nestbox_type CASCADE;
 DROP TYPE IF EXISTS public.connection_type CASCADE;
--- NEW: drop roles enum if present
+DROP TYPE IF EXISTS public.status_type CASCADE;
 DROP TYPE IF EXISTS public.user_role CASCADE;
 
 -- Enable PostGIS extension for geography and geometry types
@@ -56,6 +56,9 @@ CREATE TYPE public.site_type AS ENUM (
 CREATE TYPE public.nestbox_type AS ENUM ('yes', 'no', 'unknown');
 
 CREATE TYPE public.connection_type AS ENUM ('owner', 'tenant', 'watcher', 'other');
+
+-- Status enum for sightings
+CREATE TYPE public.status_type AS ENUM ('pending', 'rejected', 'approved');
 
 -- NEW: roles enum
 CREATE TYPE public.user_role AS ENUM ('admin','user');
@@ -117,6 +120,35 @@ CREATE POLICY "Users can insert their own profile as user"
   FOR INSERT
   TO authenticated
   WITH CHECK (id = auth.uid() AND role = 'user');
+
+-- NEW: Configuration table for site-wide settings
+CREATE TABLE IF NOT EXISTS public.config (
+  -- Enforce a single row in this table
+  id bool PRIMARY KEY DEFAULT TRUE,
+  is_auto_approve_new_sightings BOOLEAN NOT NULL DEFAULT TRUE,
+  CONSTRAINT config_singleton CHECK (id = TRUE)
+);
+
+-- RLS for config table
+ALTER TABLE public.config ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies
+DROP POLICY IF EXISTS "Anyone can read config" ON public.config;
+DROP POLICY IF EXISTS "Admins can update config" ON public.config;
+
+-- Policies for config table
+CREATE POLICY "Anyone can read config" ON public.config
+  FOR SELECT
+  USING (true);
+  
+CREATE POLICY "Admins can update config" ON public.config
+  FOR UPDATE
+  USING (public.is_admin(auth.uid()))
+  WITH CHECK (public.is_admin(auth.uid()));
+
+-- Insert the default configuration
+INSERT INTO public.config (is_auto_approve_new_sightings) VALUES (TRUE)
+ON CONFLICT (id) DO NOTHING;
 
 -- NEW: auto-create a profile row on signup (standard Supabase pattern) and sync email
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -205,7 +237,7 @@ CREATE TABLE public.sightings (
     death_details VARCHAR(700),
     
     -- Metadata
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    status public.status_type DEFAULT 'pending' NOT NULL,
     admin_notes VARCHAR(700),
     
     -- Constraints for conditional required fields
@@ -288,6 +320,40 @@ CREATE POLICY "Users can delete their own pending sightings" ON public.sightings
     USING (auth.uid() = user_id AND status = 'pending');
 
 
+-- NEW: Trigger to enforce status on insert
+CREATE OR REPLACE FUNCTION public.enforce_pending_status_on_insert()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  auto_approve_enabled BOOLEAN;
+BEGIN
+  -- Get the global auto-approval setting
+  SELECT is_auto_approve_new_sightings INTO auto_approve_enabled FROM public.config WHERE id = TRUE;
+
+  -- If global auto-approval is on, or if the user is an admin, approve it.
+  IF auto_approve_enabled OR (NEW.user_id IS NOT NULL AND public.is_admin(NEW.user_id)) THEN
+    NEW.status = 'approved';
+  ELSE
+    -- Otherwise, force to 'pending' and clear admin notes.
+    NEW.status = 'pending';
+    NEW.admin_notes = NULL;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+-- Ensure a fresh trigger
+DROP TRIGGER IF EXISTS on_sighting_insert_set_status ON public.sightings;
+CREATE TRIGGER on_sighting_insert_set_status
+  BEFORE INSERT ON public.sightings
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.enforce_pending_status_on_insert();
+
+
 -- Admin overrides (CRUD on all rows) using helper to avoid recursion
 CREATE POLICY "Admins can select any sightings" ON public.sightings
   FOR SELECT
@@ -348,7 +414,7 @@ WITH g AS (
       4326
     ) AS geom_5km
   FROM public.sightings
-  -- WHERE status = 'approved'
+  WHERE status = 'approved'
 )
 SELECT
   id,              -- omit if you don’t want stable IDs public
