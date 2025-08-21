@@ -11,8 +11,8 @@ export const TYPE_OPTIONS = [
 export const LIVE_FREQ = [
   { value: "once", label: "Just this once" },
   { value: "weekly", label: "More than once a week" },
-  { value: "monthly", label: "More than once a month" },
   { value: "less-monthly", label: "Less than once a month" },
+  { value: "monthly", label: "More than once a month" },
 ] as const;
 
 export const LIVE_ACTIVITY = [

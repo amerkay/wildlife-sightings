@@ -305,17 +305,13 @@ const submit = handleSubmit(
         return;
       }
 
-      const referenceId =
-        (fnData as any)?.id?.toString().slice(0, 8) || "unknown";
+      const referenceId = (fnData as any)?.id?.toString() || "unknown";
+      const displayRefId = referenceId.slice(0, 8);
       toast.success("Sighting submitted ✅", {
-        description: `Your sighting has been submitted successfully! Reference ID: ${referenceId}...`,
+        description: `Your sighting has been submitted successfully! Reference ID: ${displayRefId}...`,
       });
 
-      await navigateTo(
-        isLoggedIn.value
-          ? "/my/sightings/"
-          : "/auth/signup?msg=submission-success"
-      );
+      await navigateTo(`/my/sightings/new-success?type=${type.value}`);
     } catch (err) {
       console.error("Submission error:", err);
       toast.error("Submission failed ❌", {
@@ -345,7 +341,16 @@ const submit = handleSubmit(
         <p class="text-muted-foreground">
           Please use this form to record any sightings of a Barn Owl. For help
           with identification see our
-          <NuxtLink to="#">Identification Guide</NuxtLink>.
+          <NuxtLink to="#">Identification Guide</NuxtLink>. Here is a link to
+          our
+          <a
+            href="https://www.barnowltrust.org.uk/barn-owl-contact-directory/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >online directory</a
+          >
+          to find a local Barn Owl group in your area (who may offer nestbox
+          installation/monitoring services).
         </p>
         <p v-if="isAnon" class="text-muted-foreground">
           If you are already registered with us please

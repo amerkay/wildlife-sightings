@@ -52,11 +52,7 @@ export const siteSchema = z
         message: "Site description must be under 200 characters",
       })
       .describe("Description of other site type"),
-    nestbox: z
-      .enum(NESTBOX_VALUES)
-      .optional()
-      .or(z.literal(""))
-      .describe("Whether this involves a nestbox"),
+    nestbox: z.enum(NESTBOX_VALUES).describe("Whether this involves a nestbox"),
     connection: z
       .enum(CONNECTION_VALUES)
       .optional()
@@ -96,7 +92,11 @@ export const siteSchema = z
       v.connection !== "other" ||
       (v.connectionOther && v.connectionOther.trim().length > 0),
     { path: ["connectionOther"], message: "Please describe your connection" }
-  );
+  )
+  .refine((v) => v.observed.length > 0, {
+    path: ["observed"],
+    message: "Please select at least one observed item",
+  });
 </script>
 
 <script setup lang="ts">
@@ -154,7 +154,9 @@ function toggleObserved(v: string) {
     <!-- Observations (wrapped in FormField to provide context for FormLabel) -->
     <FormField name="site.observed" v-slot>
       <FormItem>
-        <FormLabel>What did you observe? (optional)</FormLabel>
+        <FormLabel
+          >What did you observe? <span class="text-red-500">*</span></FormLabel
+        >
         <FormControl>
           <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label
@@ -219,7 +221,10 @@ function toggleObserved(v: string) {
     <!-- Nestbox -->
     <FormField name="site.nestbox" v-slot="{ componentField }">
       <FormItem>
-        <FormLabel>Is there a nestbox at the site? (optional)</FormLabel>
+        <FormLabel
+          >Is there a nestbox at the site?
+          <span class="text-red-500">*</span></FormLabel
+        >
         <FormControl>
           <RadioGroup v-bind="componentField" class="flex gap-4">
             <RadioCard
