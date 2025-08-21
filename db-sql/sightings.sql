@@ -254,17 +254,9 @@ CREATE TABLE public.sightings (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_sightings_location ON public.sightings USING GIST (location);
-CREATE INDEX idx_sightings_type ON public.sightings (type);
 CREATE INDEX idx_sightings_user_id ON public.sightings (user_id);
-CREATE INDEX idx_sightings_sighting_date ON public.sightings (sighting_date);
 CREATE INDEX idx_sightings_created_at ON public.sightings (created_at);
 CREATE INDEX idx_sightings_status ON public.sightings (status);
-
--- Additional indexes for query performance
-CREATE INDEX idx_sightings_contact_email ON public.sightings (contact_email);
-CREATE INDEX idx_sightings_observation_period_from ON public.sightings (observation_period_from) WHERE observation_period_from IS NOT NULL;
-CREATE INDEX idx_sightings_observation_period_to ON public.sightings (observation_period_to) WHERE observation_period_to IS NOT NULL;
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()

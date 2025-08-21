@@ -61,8 +61,10 @@ export const useSightingsTable = (options: TableOptions = {}) => {
       throw new Error("Access denied: Admin role required");
     }
 
-    let query = supabase.from("sightings").select(
-      `
+    let query = supabase
+      .from("sightings")
+      .select(
+        `
         id,
         created_at,
         updated_at,
@@ -75,8 +77,9 @@ export const useSightingsTable = (options: TableOptions = {}) => {
         lng,
         user_id
         `,
-      { count: "exact" }
-    );
+        { count: "exact" }
+      )
+      .order("created_at", { ascending: false });
 
     // Only filter by user_id if not in admin mode
     if (!options.isAdminMode) {
