@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       mapboxAccessToken: process.env.MAPBOX_ACCESS_TOKEN,
+      osApiKey: process.env.OS_API_KEY,
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY,
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
@@ -96,7 +97,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [
       // Example usage @ https://github.com/devilwjp/veaury_in_nuxtjs
-      // @ts-ignore
       veauryVitePlugins({
         type: "vue",
         isNuxt: true,

@@ -6,9 +6,9 @@
 :root {
   --background: hsl(36 29% 99%);
   --foreground: hsl(40 81% 21%);
-  --card: hsl(39 57% 97%);
+  --card: hsl(36, 45%, 98%);
   --card-foreground: hsl(37 77% 22%);
-  --popover: hsl(39 57% 91%);
+  --popover: hsl(36, 45%, 98%);
   --popover-foreground: hsl(37 77% 22%);
   --primary: hsl(90 58% 31%);
   --primary-foreground: hsl(347 100% 98%);

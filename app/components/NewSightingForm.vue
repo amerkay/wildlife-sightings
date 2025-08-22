@@ -332,6 +332,7 @@ const submit = handleSubmit(
       class="mx-auto w-full max-w-3xl space-y-10"
       @submit.prevent="submit"
       @reset="resetForm()"
+      @keydown.enter.prevent
     >
       <header class="space-y-2">
         <h1 class="text-2xl font-semibold">Report an Owl Sighting</h1>
