@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from "vue";
 import { Label } from "@/components/ui/label";
+import { Icon } from "#components";
 import LocationPickerMap from "./LocationPickerMap.vue";
 import LocationSearch from "./LocationSearch.vue";
 import GeolocationButton from "./GeolocationButton.vue";
 import LocationFields from "./LocationFields.vue";
 import { useLocationForm } from "./composables/useLocationForm";
 import { useGeocoding } from "./composables/useGeocoding";
+import { useWaterValidation } from "./composables/useWaterValidation";
 
 const props = withDefaults(
   defineProps<{
@@ -32,13 +34,19 @@ const centerLng = ref<number>(props.defaultLng);
 const centerLat = ref<number>(props.defaultLat);
 
 // Composables
-const { syncFormFields, isAtDefault } = useLocationForm(centerLat, centerLng, {
-  name: props.name,
-  defaultLat: props.defaultLat,
-  defaultLng: props.defaultLng,
-});
+const { syncFormFields, updateWaterValidation, isAtDefault } = useLocationForm(
+  centerLat,
+  centerLng,
+  {
+    name: props.name,
+    defaultLat: props.defaultLat,
+    defaultLng: props.defaultLng,
+  }
+);
 
 const { cleanup: cleanupGeocoding } = useGeocoding();
+const { validationState, validationResult, validateLocation, resetValidation } =
+  useWaterValidation();
 
 // Geolocation state (managed by LocationPickerMap)
 const isGeolocated = ref(false);
@@ -54,6 +62,9 @@ const mapRef = ref<InstanceType<typeof LocationPickerMap> | null>(null);
 function onMapMoveEnd(coords: { lat: number; lng: number }) {
   centerLat.value = coords.lat;
   centerLng.value = coords.lng;
+
+  // Trigger water validation
+  validateLocation(coords.lng, coords.lat);
 }
 
 // Handle location found from geolocation
@@ -61,6 +72,9 @@ function onLocationFound(coords: { lat: number; lng: number }) {
   centerLat.value = coords.lat;
   centerLng.value = coords.lng;
   isGeolocated.value = true;
+
+  // Trigger water validation
+  validateLocation(coords.lng, coords.lat);
 }
 
 // Handle location selection from search
@@ -69,6 +83,9 @@ function onLocationSelect(feature: any) {
     const [lng, lat] = feature.center;
     centerLng.value = lng;
     centerLat.value = lat;
+
+    // Trigger water validation
+    validateLocation(lng, lat);
   }
 }
 
@@ -97,9 +114,19 @@ watch([centerLat, centerLng], () => {
   syncFormFields();
 });
 
+// Watch validation result and update form
+watch(
+  () => validationResult.value,
+  (result) => {
+    updateWaterValidation(result.isValid);
+  },
+  { deep: true }
+);
+
 // Cleanup
 onBeforeUnmount(() => {
   cleanupGeocoding();
+  resetValidation();
 });
 </script>
 
@@ -138,6 +165,15 @@ onBeforeUnmount(() => {
       @geo-state-change="onGeoStateChange"
       @geo-error-change="onGeoErrorChange"
     />
+
+    <!-- Water validation Loading status -->
+    <div
+      v-if="validationState === 'checking'"
+      class="flex items-center gap-2 text-muted-foreground"
+    >
+      <Icon name="lucide:loader-2" class="h-4 w-4 animate-spin" />
+      <span>Checking location...</span>
+    </div>
 
     <!-- Form fields -->
     <LocationFields :name="name" />

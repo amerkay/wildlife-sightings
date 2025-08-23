@@ -91,6 +91,7 @@ const locationDefaults = {
   lat: null as number | null,
   lng: null as number | null,
   notes: "",
+  isOnLand: true, // Default to true, will be validated by LocationPicker
 };
 const liveDefaults = {
   frequency: undefined as string | undefined,

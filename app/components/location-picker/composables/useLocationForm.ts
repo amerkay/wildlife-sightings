@@ -34,8 +34,14 @@ export function useLocationForm(
     setFieldTouched(field("lng"), true);
   }
 
+  function updateWaterValidation(isOnLand: boolean) {
+    setFieldValue(field("isOnLand"), isOnLand);
+    setFieldTouched(field("isOnLand"), true);
+  }
+
   return {
     syncFormFields,
+    updateWaterValidation,
     isAtDefault,
     field,
   };

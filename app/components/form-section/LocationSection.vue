@@ -23,6 +23,13 @@ export const locationSchema = z.object({
     .optional()
     .or(z.literal(""))
     .describe("Additional notes about the location"),
+  // Water validation field - set by the LocationPicker component
+  isOnLand: z
+    .boolean()
+    .refine((val) => val === true, {
+      message: "Please select a location on land",
+    })
+    .describe("Indicates if the location is on land (not water)"),
 });
 </script>
 
