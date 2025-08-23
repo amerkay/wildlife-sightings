@@ -7,6 +7,11 @@ export const TYPE_OPTIONS = [
   { value: "dead", label: "Dead owl ⚰️" },
 ] as const;
 
+export const SPECIES_OPTIONS = [
+  { value: "barn", label: "Barn Owl 🦉" },
+  { value: "little", label: "Little Owl 🦉" },
+] as const;
+
 // Live section
 export const LIVE_FREQ = [
   { value: "once", label: "Just this once" },

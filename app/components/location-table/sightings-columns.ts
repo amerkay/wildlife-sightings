@@ -5,6 +5,7 @@ import SortableHeader from "~/components/location-table/columns/SortableHeader.v
 import StatusBadge from "~/components/location-table/columns/StatusBadge.vue";
 import ContactInfo from "~/components/location-table/columns/ContactInfo.vue";
 import TypeCell from "~/components/location-table/columns/TypeCell.vue";
+import SpeciesCell from "~/components/location-table/columns/SpeciesCell.vue";
 import DateCell from "~/components/location-table/columns/DateCell.vue";
 import SightingActions from "~/components/location-table/SightingActions.vue";
 
@@ -25,6 +26,7 @@ interface TableSighting
   > {
   lat: number;
   lng: number;
+  species?: string; // Added temporarily until database types are regenerated
 }
 
 export const createSightingsColumns = (
@@ -39,6 +41,21 @@ export const createSightingsColumns = (
   } = {}
 ): ColumnDef<TableSighting>[] => {
   const baseColumns: ColumnDef<TableSighting>[] = [
+    {
+      accessorKey: "species",
+      header: ({ column }) => {
+        return h(SortableHeader, {
+          title: "Species",
+          isSorted: column.getIsSorted(),
+          onToggleSort: () =>
+            column.toggleSorting(column.getIsSorted() === "asc"),
+        });
+      },
+      cell: ({ row }) => {
+        const species = row.getValue("species") as string;
+        return h(SpeciesCell, { species: species || "barn" }); // Default to barn owl for backward compatibility
+      },
+    },
     {
       accessorKey: "type",
       header: ({ column }) => {

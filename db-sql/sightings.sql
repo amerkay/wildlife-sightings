@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS public.profiles CASCADE;
 
 -- Drop custom types
 DROP TYPE IF EXISTS public.sighting_type CASCADE;
+DROP TYPE IF EXISTS public.species_type CASCADE;
 DROP TYPE IF EXISTS public.frequency_type CASCADE;
 DROP TYPE IF EXISTS public.activity_type CASCADE;
 DROP TYPE IF EXISTS public.cause_of_death_type CASCADE;
@@ -19,6 +20,8 @@ DROP TYPE IF EXISTS public.user_role CASCADE;
 CREATE EXTENSION IF NOT EXISTS postgis SCHEMA extensions;
 
 -- Create ENUM types for form values
+CREATE TYPE public.species_type AS ENUM ('barn', 'little');
+
 CREATE TYPE public.sighting_type AS ENUM ('live', 'site', 'dead');
 
 CREATE TYPE public.frequency_type AS ENUM ('once', 'weekly', 'monthly', 'less-monthly');
@@ -201,7 +204,8 @@ CREATE TABLE public.sightings (
     -- User information (from auth.users)
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     
-    -- Form type
+    -- Species and form type
+    species public.species_type NOT NULL DEFAULT 'barn',
     type public.sighting_type NOT NULL,
     
     -- Location information (PostGIS)

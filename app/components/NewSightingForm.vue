@@ -9,6 +9,7 @@ import { toast } from "vue-sonner";
 
 /* Sections */
 import TypeSection from "@/components/form-section/TypeSection.vue";
+import SpeciesSection from "@/components/form-section/SpeciesSection.vue";
 import LocationSection, {
   locationSchema,
 } from "@/components/form-section/LocationSection.vue";
@@ -122,6 +123,7 @@ type ReportType = "live" | "site" | "dead";
 const baseUnionSchema = (loggedIn: boolean) =>
   z.discriminatedUnion("type", [
     z.object({
+      species: z.enum(["barn", "little"]),
       type: z.literal("live"),
       sightingDate: z.coerce
         .date({ message: "Date of sighting is required" })
@@ -133,6 +135,7 @@ const baseUnionSchema = (loggedIn: boolean) =>
       captcha: z.string().min(0).optional().or(z.literal("")),
     }),
     z.object({
+      species: z.enum(["barn", "little"]),
       type: z.literal("site"),
       sightingDate: z.coerce
         .date({ message: "Date of sighting is required" })
@@ -144,6 +147,7 @@ const baseUnionSchema = (loggedIn: boolean) =>
       captcha: z.string().min(0).optional().or(z.literal("")),
     }),
     z.object({
+      species: z.enum(["barn", "little"]),
       type: z.literal("dead"),
       sightingDate: z.coerce
         .date({ message: "Date found is required" })
@@ -169,6 +173,7 @@ const dbPayloadSchema = (
     const derivedContact = deriveContactInfo(loggedIn, u, v.contact);
 
     const base = {
+      species: v.species,
       type: v.type,
       user_id: u?.id ?? null,
       // location
@@ -232,6 +237,7 @@ const validationSchema = computed(() =>
 /* initial form values (concise, composable) */
 const derivedContactInfo = deriveContactInfo(isLoggedIn.value, user.value);
 const initialValues = {
+  species: "barn" as "barn" | "little",
   type: "live" as ReportType,
   sightingDate: new Date().toISOString().slice(0, 10),
   location: { ...locationDefaults },
@@ -251,6 +257,7 @@ const { handleSubmit, resetForm, values, defineField, isSubmitting } = useForm({
 const isFormValid = useIsFormValid();
 
 // IMPORTANT FIX: no generic here, so it uses the path overload
+const [species] = defineField("species");
 const [type] = defineField("type");
 
 /* Section component map (no if/else chain) */
@@ -355,6 +362,7 @@ const submit = handleSubmit(
       </header>
 
       <LocationSection :show-reverse-geo-fields="false" />
+      <SpeciesSection v-model="species" />
       <TypeSection v-model="type" />
 
       <Transition name="section-fade" mode="out-in">
