@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/vue-table";
-import type { Database } from "~~/types/database.types";
+import type { Database } from "~/types/database.types";
 import { h } from "vue";
 import SortableHeader from "~/components/location-table/columns/SortableHeader.vue";
 import StatusBadge from "~/components/location-table/columns/StatusBadge.vue";
@@ -19,6 +19,7 @@ interface TableSighting
     | "updated_at"
     | "status"
     | "type"
+    | "species"
     | "sighting_date"
     | "contact_name"
     | "contact_email"
@@ -26,7 +27,6 @@ interface TableSighting
   > {
   lat: number;
   lng: number;
-  species?: string; // Added temporarily until database types are regenerated
 }
 
 export const createSightingsColumns = (

@@ -67,8 +67,7 @@ export const useAdminAllSightingsDataset = () => {
 
     const { data, error } = await supabase
       .from("sightings")
-      .select(`id, *, lat, lng`)
-      .order("created_at", { ascending: false });
+      .select(`id, *, lat, lng`);
 
     if (error) {
       console.error("Error fetching all sightings:", error);

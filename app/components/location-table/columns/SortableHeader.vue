@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from "~/components/ui/button";
-import { ArrowUpDown } from "lucide-vue-next";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-vue-next";
 
 interface Props {
   isSorted?: "asc" | "desc" | false;
@@ -18,6 +18,8 @@ const emit = defineEmits<Emits>();
 <template>
   <Button variant="ghost" @click="emit('toggle-sort')">
     {{ title }}
-    <ArrowUpDown class="ml-2 h-4 w-4" />
+    <ArrowUp v-if="props.isSorted === 'asc'" class="ml-2 h-4 w-4" />
+    <ArrowDown v-else-if="props.isSorted === 'desc'" class="ml-2 h-4 w-4" />
+    <ArrowUpDown v-else class="ml-2 h-4 w-4" />
   </Button>
 </template>

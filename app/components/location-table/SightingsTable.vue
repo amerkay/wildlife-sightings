@@ -180,9 +180,9 @@ if (error.value) {
         @search-change="handleSearchChange"
       />
 
-      <div class="space-y-4 md:grid md:grid-cols-3 gap-4">
+      <div class="space-y-4 md:grid md:grid-cols-10 gap-4">
         <!-- Table -->
-        <div class="md:col-span-2">
+        <div class="md:col-span-7">
           <DataTable
             :columns="columns"
             :data="data"
@@ -202,6 +202,7 @@ if (error.value) {
         </div>
 
         <SightingsMap
+          class="col-span-3"
           :data="data"
           :loading="pending"
           height="275px"

@@ -8,8 +8,8 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-  <div class="space-y-1">
+  <div class="space-y-0.5">
     <div class="font-medium">{{ name }}</div>
-    <div class="text-sm text-muted-foreground">{{ email }}</div>
+    <div class="text-xs text-muted-foreground">{{ email }}</div>
   </div>
 </template>

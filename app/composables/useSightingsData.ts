@@ -32,7 +32,10 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
   });
 
   const sorting = ref<SortingState[]>([
-    { id: options.sortBy || "created_at", desc: options.sortOrder === "desc" },
+    {
+      id: options.sortBy || "created_at",
+      desc: options.sortOrder === "desc" ? true : options.sortBy ? false : true,
+    },
   ]);
 
   const searchTerm = ref("");
@@ -59,15 +62,14 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
       throw new Error("Access denied: Admin role required");
     }
 
-    let query = supabase
-      .from("sightings")
-      .select(
-        `
+    let query = supabase.from("sightings").select(
+      `
         id,
         created_at,
         updated_at,
         status,
         type,
+        species,
         sighting_date,
         contact_name,
         contact_email,
@@ -75,9 +77,8 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
         lng,
         user_id
         `,
-        { count: "exact" }
-      )
-      .order("created_at", { ascending: false });
+      { count: "exact" }
+    );
 
     // Only filter by user_id if not in admin mode
     if (!options.isAdminMode) {
