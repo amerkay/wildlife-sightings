@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import Container from "~/components/base/Container.vue";
-import SightingsTable from "~/components/SightingsTable.vue";
-
 // Page metadata
 useHead({
   title: "My Sightings",
@@ -10,6 +7,26 @@ useHead({
 
 <template>
   <Container>
+    <!-- Header -->
+    <div class="md:flex md:justify-between md:items-start mb-10">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Your Sightings</h1>
+        <p class="text-muted-foreground">View all of your owl sightings.</p>
+      </div>
+
+      <div class="flex items-center gap-3 mt-4 sm:mt-0">
+        <NuxtLink to="/my/sightings/map">
+          <Button variant="outline">
+            <Icon name="lucide:map" size="20" />
+            View all on Map
+          </Button>
+        </NuxtLink>
+        <NuxtLink to="/my/sightings/new">
+          <Button>New Sighting</Button>
+        </NuxtLink>
+      </div>
+    </div>
+
     <SightingsTable
       title="My Sightings"
       description="Manage your barn owl sightings and track their status"

@@ -5,8 +5,8 @@ import LocationPickerMap from "./LocationPickerMap.vue";
 import LocationSearch from "./LocationSearch.vue";
 import GeolocationButton from "./GeolocationButton.vue";
 import LocationFields from "./LocationFields.vue";
-import { useLocationForm } from "./useLocationForm";
-import { useGeocoding } from "./useGeocoding";
+import { useLocationForm } from "./composables/useLocationForm";
+import { useGeocoding } from "./composables/useGeocoding";
 
 const props = withDefaults(
   defineProps<{

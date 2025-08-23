@@ -3,8 +3,8 @@ import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.locatecontrol/dist/L.Control.Locate.css";
-import { useMapBaselayers } from "./useMapBaselayers";
-import { useGeolocation } from "./useGeolocation";
+import { useMapBaselayers } from "../../composables/useMapBaselayers";
+import { useGeolocation } from "./composables/useGeolocation";
 
 interface Props {
   centerLat: number;

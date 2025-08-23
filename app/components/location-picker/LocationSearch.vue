@@ -10,7 +10,7 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { Icon } from "#components";
-import { useGeocoding } from "./useGeocoding";
+import { useGeocoding } from "./composables/useGeocoding";
 
 interface Props {
   modelValue?: any;

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { SortingState } from "@tanstack/vue-table";
-import { createSightingsColumns } from "~/components/sightings-table-columns";
-import SightingsDataTable from "~/components/SightingsDataTable.vue";
-import { Button } from "~/components/ui/button";
+import { createSightingsColumns } from "~/components/location-table/sightings-columns";
 import { toast } from "vue-sonner";
-import { Map } from "lucide-vue-next";
+import DataTableHeader from "./DataTableHeader.vue";
+import DataTablePagination from "./DataTablePagination.vue";
+import SightingsMap from "./map/SightingsMap.vue";
+import { useDataTable } from "./composables/useDataTable";
+import { useTableMapInteraction } from "~/composables/useTableMapInteraction";
 
 interface Props {
   title: string;
@@ -56,6 +58,16 @@ const {
   canDeleteSighting,
   canUpdateStatus,
 } = useExternalData.value ? props.externalData : internalTableData;
+
+// Initialize table-map interaction
+const {
+  hoveredSightingId,
+  selectedSightingId,
+  onTableRowHover,
+  onTableRowSelect,
+  onMapMarkerHover,
+  onMapMarkerClick,
+} = useTableMapInteraction();
 
 // Handle delete with confirmation
 const handleDelete = async (id: string) => {
@@ -120,6 +132,33 @@ const handleSortingChange = (newSorting: SortingState) => {
   setSorting(newSorting);
 };
 
+// Setup table composable for pagination controls
+// Note: We need to pass the reactive values directly, not wrap them in ref() again
+const {
+  totalPages,
+  canPreviousPage,
+  canNextPage,
+  previousPage,
+  nextPage,
+  setPageSize: setPageSizeComposable,
+} = useDataTable({
+  data: computed(() => data.value),
+  columns: columns,
+  totalCount: computed(() => totalCount.value),
+  pageIndex: computed(() => pagination.value.pageIndex),
+  pageSize: computed(() => pagination.value.pageSize),
+  sorting: computed(() => sorting.value),
+  onPageChange: setPageIndex,
+  onPageSizeChange: setPageSize,
+  onSortingChange: setSorting,
+  loading: computed(() => pending.value),
+});
+
+const handlePageSizeChange = (size: number) => {
+  setPageSizeComposable(size);
+  setPageSize(size);
+};
+
 // Error handling
 if (error.value) {
   throw createError({
@@ -131,40 +170,62 @@ if (error.value) {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">{{ title }}</h1>
-        <p class="text-muted-foreground">{{ description }}</p>
+    <div class="w-full space-y-4">
+      <!-- Header with Search -->
+      <DataTableHeader
+        v-if="isAdminMode"
+        :search-term="''"
+        placeholder="Filter contacts..."
+        :show-search="isAdminMode"
+        @search-change="handleSearchChange"
+      />
+
+      <div class="space-y-4 md:grid md:grid-cols-3 gap-4">
+        <!-- Table -->
+        <div class="md:col-span-2">
+          <DataTable
+            :columns="columns"
+            :data="data"
+            :total-count="totalCount"
+            :page-index="pagination.pageIndex"
+            :page-size="pagination.pageSize"
+            :sorting="sorting"
+            :loading="pending"
+            :hovered-sighting-id="hoveredSightingId"
+            :selected-sighting-id="selectedSightingId"
+            @page-change="setPageIndex"
+            @page-size-change="setPageSize"
+            @sorting-change="handleSortingChange"
+            @row-hover="onTableRowHover"
+            @row-click="onTableRowSelect"
+          />
+        </div>
+
+        <SightingsMap
+          :data="data"
+          :loading="pending"
+          height="275px"
+          :hovered-sighting-id="hoveredSightingId"
+          :selected-sighting-id="selectedSightingId"
+          @marker-hover="onMapMarkerHover"
+          @marker-click="onMapMarkerClick"
+        />
       </div>
 
-      <div class="flex items-center gap-3 mt-4 sm:mt-0">
-        <NuxtLink v-if="showViewOnMapButton" :to="mapRoute">
-          <Button variant="outline">
-            <Map class="mr-2 h-4 w-4" />
-            View on Map
-          </Button>
-        </NuxtLink>
-        <NuxtLink v-if="showNewSightingButton" :to="newSightingRoute">
-          <Button>New Sighting</Button>
-        </NuxtLink>
-      </div>
+      <!-- Pagination -->
+      <DataTablePagination
+        :page-index="pagination.pageIndex"
+        :page-size="pagination.pageSize"
+        :total-count="totalCount"
+        :total-pages="totalPages"
+        :can-previous-page="canPreviousPage"
+        :can-next-page="canNextPage"
+        :loading="pending"
+        :result-count="data.length"
+        @previous-page="previousPage"
+        @next-page="nextPage"
+        @page-size-change="handlePageSizeChange"
+      />
     </div>
-
-    <!-- Table -->
-    <SightingsDataTable
-      :columns="columns"
-      :data="data"
-      :total-count="totalCount"
-      :page-index="pagination.pageIndex"
-      :page-size="pagination.pageSize"
-      :sorting="sorting"
-      :loading="pending"
-      :show-contact-filter="isAdminMode"
-      @page-change="setPageIndex"
-      @page-size-change="setPageSize"
-      @sorting-change="handleSortingChange"
-      @search-change="handleSearchChange"
-    />
   </div>
 </template>

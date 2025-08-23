@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { RadioGroup } from "~/components/ui/radio-group";
-import { RadioCard } from "~/components/radio-card";
 import { TYPE_OPTIONS } from "./constants";
 
 interface Props {
