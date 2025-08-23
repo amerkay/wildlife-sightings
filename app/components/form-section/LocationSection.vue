@@ -38,7 +38,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 const LocationPicker = defineAsyncComponent(
-  () => import("@/components/LocationPicker.vue")
+  () => import("~/components/location-picker/LocationPicker.vue")
 );
 
 const props = withDefaults(

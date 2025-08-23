@@ -118,7 +118,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio-group";
-import { RadioCard } from "@/components/ui/radio-card";
+import { RadioCard } from "~/components/radio-card";
 import { SightingDateField, ObservationPeriodField } from "./fields";
 import {
   SITE_OBSERVED,

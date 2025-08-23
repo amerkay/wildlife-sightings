@@ -75,13 +75,18 @@ const KeplerMap: React.FC<{
     const reducers = combineReducers({
       keplerGl: keplerGlReducer.initialState({
         uiState: { readOnly: false, currentModal: null, activeSidePanel: null },
-        mapStyle: { styleType: isDarkMode ? "dark" : "light" }, // dark-matter
+        mapStyle: { styleType: isDarkMode ? "dark-matter" : "positron" },
         // UK default center
         mapState: {
           latitude: 52.029347152354966,
           longitude: -3.3639196875002217,
           zoom: 4,
         },
+        // visState: {
+        //   interactionConfig: {
+        //     geocoder: { enabled: true },
+        //   },
+        // },
       }),
     });
     const middleWares = enhanceReduxMiddleware([]);
