@@ -31,6 +31,17 @@
               valuable information that enables us to promote their conservation
               during a critical time.
             </p>
+            <p class="mt-4 text-lg/8 text-gray-700 dark:text-gray-300">
+              Here is a link to our
+              <a
+                href="https://www.barnowltrust.org.uk/barn-owl-contact-directory/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >online directory</a
+              >
+              to find a local Barn Owl group in your area (who may offer nestbox
+              installation/monitoring services).
+            </p>
             <p class="mt-4">
               <NuxtLink to="/auth/signup">
                 <Button size="lg"> Sign Up to Report Sightings </Button>

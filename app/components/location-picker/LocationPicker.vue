@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { Label } from "@/components/ui/label";
 import { Icon } from "#components";
 import LocationPickerMap from "./LocationPickerMap.vue";
@@ -18,6 +18,7 @@ const props = withDefaults(
     defaultLat?: number;
     defaultLng?: number;
     required?: boolean;
+    isRequestGeoOnLoad?: boolean;
   }>(),
   {
     name: "location",
@@ -26,6 +27,7 @@ const props = withDefaults(
     defaultLat: 53.4808,
     defaultLng: -2.2426,
     required: false,
+    isRequestGeoOnLoad: true,
   }
 );
 
@@ -127,6 +129,13 @@ watch(
 onBeforeUnmount(() => {
   cleanupGeocoding();
   resetValidation();
+});
+
+// Request geolocation on mount if enabled
+onMounted(() => {
+  if (props.isRequestGeoOnLoad) {
+    onRequestLocation();
+  }
 });
 </script>
 

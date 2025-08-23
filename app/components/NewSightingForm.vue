@@ -342,18 +342,7 @@ const submit = handleSubmit(
         <h1 class="text-2xl font-semibold">Report an Owl Sighting</h1>
 
         <p class="text-muted-foreground">
-          Please use this form to record any sightings of a Barn Owl. For help
-          with identification see our
-          <NuxtLink to="#">Identification Guide</NuxtLink>. Here is a link to
-          our
-          <a
-            href="https://www.barnowltrust.org.uk/barn-owl-contact-directory/"
-            target="_blank"
-            rel="noopener noreferrer"
-            >online directory</a
-          >
-          to find a local Barn Owl group in your area (who may offer nestbox
-          installation/monitoring services).
+          Please use this form to record any sightings of a Barn or Little Owl.
         </p>
         <p v-if="isAnon" class="text-muted-foreground">
           If you are already registered with us please

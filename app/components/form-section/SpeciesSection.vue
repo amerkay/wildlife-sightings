@@ -28,5 +28,10 @@ const emit = defineEmits<{
         :label="opt.label"
       />
     </RadioGroup>
+
+    <p class="text-sm text-muted-foreground">
+      For help with identification see our
+      <NuxtLink to="#">Identification Guide</NuxtLink>.
+    </p>
   </section>
 </template>
