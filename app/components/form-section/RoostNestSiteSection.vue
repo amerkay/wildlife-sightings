@@ -66,20 +66,16 @@ export const siteSchema = z
         message: "Connection description must be under 200 characters",
       })
       .describe("Description of other connection type"),
-    observationPeriodFrom: z
-      .union([
-        z.coerce.date().max(new Date(), "Date cannot be in the future"),
-        z.literal(""),
-      ])
+    observationPeriod: z
+      .string()
       .optional()
-      .describe("Start date of observation period"),
-    observationPeriodTo: z
-      .union([
-        z.coerce.date().max(new Date(), "Date cannot be in the future"),
-        z.literal(""),
-      ])
-      .optional()
-      .describe("End date of observation period"),
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 30, {
+        message: "Observation period must be under 30 characters",
+      })
+      .describe(
+        "Time period of observation (e.g., May 2008 to Winter 2012/13)"
+      ),
   })
   .refine(
     (v) =>
@@ -118,7 +114,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio-group";
-import { SightingDateField, ObservationPeriodField } from "./fields";
+import { SightingDateField, ToggleableObservationPeriodField } from "./fields";
 import {
   SITE_OBSERVED,
   SITE_TYPES,
@@ -148,6 +144,14 @@ function toggleObserved(v: string) {
       field-name="sightingDate"
       label="Date of sighting"
       required
+    />
+
+    <!-- Observation period -->
+    <ToggleableObservationPeriodField
+      field-name="site.observationPeriod"
+      label="Observation Period"
+      description="If you have observed this roost or nest site for some time please enter the approx. time period of observation (e.g May 2008 to Winter 2012/13)"
+      class="-mt-2"
     />
 
     <!-- Observations (wrapped in FormField to provide context for FormLabel) -->
@@ -280,13 +284,5 @@ function toggleObserved(v: string) {
         <FormMessage />
       </FormItem>
     </FormField>
-
-    <!-- Observation period -->
-    <ObservationPeriodField
-      field-name-from="site.observationPeriodFrom"
-      field-name-to="site.observationPeriodTo"
-      label="Observation Period (optional)"
-      description="If you have observed this roost or nest site for some time please enter the approx. time period of observation"
-    />
   </section>
 </template>

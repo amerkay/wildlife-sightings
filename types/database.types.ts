@@ -9,6 +9,21 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      config: {
+        Row: {
+          id: boolean
+          is_auto_approve_new_sightings: boolean
+        }
+        Insert: {
+          id?: boolean
+          is_auto_approve_new_sightings?: boolean
+        }
+        Update: {
+          id?: boolean
+          is_auto_approve_new_sightings?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -51,13 +66,12 @@ export type Database = {
           location: unknown
           location_notes: string | null
           nestbox: Database["public"]["Enums"]["nestbox_type"] | null
-          observation_period_from: string | null
-          observation_period_to: string | null
+          observation_period: string | null
           observed: Database["public"]["Enums"]["observed_type"][] | null
           sighting_date: string
           site_type: Database["public"]["Enums"]["site_type"] | null
           site_type_other: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["status_type"]
           type: Database["public"]["Enums"]["sighting_type"]
           updated_at: string
           user_id: string | null
@@ -82,13 +96,12 @@ export type Database = {
           location: unknown
           location_notes?: string | null
           nestbox?: Database["public"]["Enums"]["nestbox_type"] | null
-          observation_period_from?: string | null
-          observation_period_to?: string | null
+          observation_period?: string | null
           observed?: Database["public"]["Enums"]["observed_type"][] | null
           sighting_date: string
           site_type?: Database["public"]["Enums"]["site_type"] | null
           site_type_other?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
           type: Database["public"]["Enums"]["sighting_type"]
           updated_at?: string
           user_id?: string | null
@@ -113,13 +126,12 @@ export type Database = {
           location?: unknown
           location_notes?: string | null
           nestbox?: Database["public"]["Enums"]["nestbox_type"] | null
-          observation_period_from?: string | null
-          observation_period_to?: string | null
+          observation_period?: string | null
           observed?: Database["public"]["Enums"]["observed_type"][] | null
           sighting_date?: string
           site_type?: Database["public"]["Enums"]["site_type"] | null
           site_type_other?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["status_type"]
           type?: Database["public"]["Enums"]["sighting_type"]
           updated_at?: string
           user_id?: string | null
@@ -181,6 +193,7 @@ export type Database = {
         | "mixed-farm"
         | "tree-hole"
         | "other"
+      status_type: "pending" | "rejected" | "approved"
       user_role: "admin" | "user"
     }
     CompositeTypes: {
@@ -339,6 +352,7 @@ export const Constants = {
         "tree-hole",
         "other",
       ],
+      status_type: ["pending", "rejected", "approved"],
       user_role: ["admin", "user"],
     },
   },

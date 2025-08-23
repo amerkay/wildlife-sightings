@@ -97,8 +97,7 @@ const liveDefaults = {
   frequency: undefined as string | undefined,
   activity: undefined as string | undefined,
   activityOther: "",
-  observationPeriodFrom: "",
-  observationPeriodTo: "",
+  observationPeriod: "",
 };
 const siteDefaults = {
   observed: [] as string[],
@@ -107,8 +106,7 @@ const siteDefaults = {
   nestbox: "unknown",
   connection: undefined as string | undefined,
   connectionOther: "",
-  observationPeriodFrom: "",
-  observationPeriodTo: "",
+  observationPeriod: "",
 };
 const deadDefaults = {
   cause: undefined as string | undefined,
@@ -185,8 +183,7 @@ const dbPayloadSchema = (
       return {
         ...base,
         sighting_date: v.sightingDate,
-        observation_period_from: toYMD(v.live.observationPeriodFrom),
-        observation_period_to: toYMD(v.live.observationPeriodTo),
+        observation_period: nullIfEmpty(v.live.observationPeriod),
         frequency: v.live.frequency ?? null,
         activity: v.live.activity ?? null,
         activity_other:
@@ -200,8 +197,7 @@ const dbPayloadSchema = (
       return {
         ...base,
         sighting_date: v.sightingDate,
-        observation_period_from: toYMD(v.site.observationPeriodFrom),
-        observation_period_to: toYMD(v.site.observationPeriodTo),
+        observation_period: nullIfEmpty(v.site.observationPeriod),
         observed: v.site.observed ?? [],
         site_type: v.site.siteType ?? null,
         site_type_other:

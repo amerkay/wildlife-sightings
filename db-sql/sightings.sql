@@ -215,8 +215,7 @@ CREATE TABLE public.sightings (
     
     -- Common fields
     sighting_date DATE NOT NULL,
-    observation_period_from DATE,
-    observation_period_to DATE,
+    observation_period VARCHAR(30),
     
     -- Live sighting specific fields
     frequency public.frequency_type,
@@ -248,9 +247,7 @@ CREATE TABLE public.sightings (
     CONSTRAINT site_sighting_connection_other_check 
         CHECK (type != 'site' OR connection != 'other' OR (connection_other IS NOT NULL AND length(trim(connection_other)) > 0)),
     CONSTRAINT dead_sighting_cause_other_check 
-        CHECK (type != 'dead' OR cause_of_death != 'other' OR (cause_of_death_other IS NOT NULL AND length(trim(cause_of_death_other)) > 0)),
-    CONSTRAINT observation_period_order_check
-        CHECK (observation_period_from IS NULL OR observation_period_to IS NULL OR observation_period_from <= observation_period_to)
+        CHECK (type != 'dead' OR cause_of_death != 'other' OR (cause_of_death_other IS NOT NULL AND length(trim(cause_of_death_other)) > 0))
 );
 
 -- Create indexes for performance

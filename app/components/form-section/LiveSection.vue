@@ -39,20 +39,16 @@ export const liveSchema = z
         message: "Activity description must be under 200 characters",
       })
       .describe("Description of other activity"),
-    observationPeriodFrom: z
-      .union([
-        z.coerce.date().max(new Date(), "Date cannot be in the future"),
-        z.literal(""),
-      ])
+    observationPeriod: z
+      .string()
       .optional()
-      .describe("Start date of observation period"),
-    observationPeriodTo: z
-      .union([
-        z.coerce.date().max(new Date(), "Date cannot be in the future"),
-        z.literal(""),
-      ])
-      .optional()
-      .describe("End date of observation period"),
+      .or(z.literal(""))
+      .refine((val) => !val || val.length <= 30, {
+        message: "Observation period must be under 30 characters",
+      })
+      .describe(
+        "Time period of observation (e.g., May 2008 to Winter 2012/13)"
+      ),
   })
   .refine(
     (v) =>
@@ -79,7 +75,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { SightingDateField, ObservationPeriodField } from "./fields";
+import { SightingDateField, ToggleableObservationPeriodField } from "./fields";
 import { LIVE_FREQ, LIVE_ACTIVITY } from "./constants";
 
 const { values } = useFormContext();
@@ -94,6 +90,14 @@ const { values } = useFormContext();
       field-name="sightingDate"
       label="Date of sighting"
       required
+    />
+
+    <!-- Observation Period -->
+    <ToggleableObservationPeriodField
+      field-name="live.observationPeriod"
+      label="Observation Period"
+      description="If you have noted Barn Owls in this location before, please enter the time period of your sightings (for example May 2008 to Winter 2012/13)"
+      class="-mt-2"
     />
 
     <!-- Frequency -->
@@ -158,12 +162,5 @@ const { values } = useFormContext();
         <FormMessage />
       </FormItem>
     </FormField>
-
-    <!-- Observation Period Range Picker -->
-    <ObservationPeriodField
-      field-name-from="live.observationPeriodFrom"
-      field-name-to="live.observationPeriodTo"
-      label="Observation Period (optional)"
-    />
   </section>
 </template>
