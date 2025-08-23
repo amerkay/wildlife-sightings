@@ -52,6 +52,11 @@ export function useMapBaselayers() {
   function initializeBaselayers(mapInstance: L.Map) {
     map = mapInstance;
 
+    // Setup custom attribution control without Ukrainian flag
+    const customAttribution = L.control.attribution();
+    customAttribution.setPrefix('<a href="https://leafletjs.com/">Leaflet</a>');
+    customAttribution.addTo(map);
+
     // Initialize with appropriate theme
     createCartoLayers();
     const initialLayer = colorMode.value === "dark" ? cartoDark! : cartoLight!;

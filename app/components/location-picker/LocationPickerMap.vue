@@ -101,7 +101,7 @@ function mountMap() {
     maxBoundsViscosity: 1,
     minZoom: 1,
     zoomControl: true,
-    attributionControl: true,
+    attributionControl: false,
   }).setView(
     [props.centerLat, props.centerLng],
     props.isGeolocated ? 14 : props.fallbackZoom
