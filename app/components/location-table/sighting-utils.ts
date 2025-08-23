@@ -3,9 +3,25 @@
  */
 
 /**
- * Get color for sighting status
+ * Get color for sighting type (for map markers)
  */
-export const getMarkerColor = (status: string): string => {
+export const getMarkerColor = (type: string): string => {
+  switch (type) {
+    case "live":
+      return "#22c55e"; // green-500
+    case "site":
+      return "#3b82f6"; // blue-500
+    case "dead":
+      return "#ef4444"; // red-500
+    default:
+      return "#6b7280"; // gray-500
+  }
+};
+
+/**
+ * Get color for sighting status (legacy - keeping for backwards compatibility)
+ */
+export const getStatusColor = (status: string): string => {
   switch (status) {
     case "approved":
       return "#22c55e"; // green
@@ -24,11 +40,11 @@ export const getMarkerColor = (status: string): string => {
 export const getTypeLabel = (type: string): string => {
   switch (type) {
     case "live":
-      return "Live Sighting";
+      return "Live";
     case "site":
-      return "Site/Roost/Nest";
+      return "Roost/Nest";
     case "dead":
-      return "Dead Sighting";
+      return "Dead";
     default:
       return type;
   }

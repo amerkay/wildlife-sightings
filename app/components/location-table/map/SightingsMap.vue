@@ -77,7 +77,10 @@ onMounted(() => {
 watch(activeSightingId, (sightingId) => {
   if (sightingId) {
     highlightMarker(sightingId);
-    openSightingPopup(sightingId);
+    // Only open popup for selected sightings (persistent), not hovered ones (temporary)
+    if (props.selectedSightingId === sightingId) {
+      openSightingPopup(sightingId);
+    }
   } else {
     highlightMarker(null);
   }

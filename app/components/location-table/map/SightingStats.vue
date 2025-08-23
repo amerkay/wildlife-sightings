@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { getTypeLabel } from "../sighting-utils";
+
 interface Stats {
   total: number;
-  approved: number;
-  pending: number;
-  rejected: number;
+  live: number;
+  dead: number;
+  site: number;
 }
 
 interface Props {
@@ -17,27 +19,30 @@ const props = withDefaults(defineProps<Props>(), {
   compact: false,
 });
 
-const statusItems = computed(() => [
+const typeItems = computed(() => [
   {
-    label: "Approved",
-    count: props.stats.approved,
-    color: "bg-green-500",
-    textColor: "text-green-700",
-    bgColor: "bg-green-50",
+    type: "live" as const,
+    label: getTypeLabel("live"),
+    count: props.stats.live,
+    colorClass: "bg-green-500",
+    textClass: "text-green-700",
+    bgClass: "bg-green-50",
   },
   {
-    label: "Pending",
-    count: props.stats.pending,
-    color: "bg-yellow-500",
-    textColor: "text-yellow-700",
-    bgColor: "bg-yellow-50",
+    type: "site" as const,
+    label: getTypeLabel("site"),
+    count: props.stats.site,
+    colorClass: "bg-blue-500",
+    textClass: "text-blue-700",
+    bgClass: "bg-blue-50",
   },
   {
-    label: "Rejected",
-    count: props.stats.rejected,
-    color: "bg-red-500",
-    textColor: "text-red-700",
-    bgColor: "bg-red-50",
+    type: "dead" as const,
+    label: getTypeLabel("dead"),
+    count: props.stats.dead,
+    colorClass: "bg-red-500",
+    textClass: "text-red-700",
+    bgClass: "bg-red-50",
   },
 ]);
 </script>
@@ -49,24 +54,24 @@ const statusItems = computed(() => [
       Total: {{ stats.total }} sightings
     </div>
 
-    <!-- Status breakdown -->
+    <!-- Type breakdown -->
     <div
       :class="['flex', compact ? 'flex-col space-y-2' : 'flex-wrap space-x-4']"
     >
       <div
-        v-for="item in statusItems"
-        :key="item.label"
+        v-for="item in typeItems"
+        :key="item.type"
         :class="[
           'flex items-center',
           compact ? 'justify-between px-3 py-2 rounded-md' : 'space-x-1',
-          compact ? item.bgColor : '',
+          compact ? item.bgClass : '',
         ]"
       >
         <div class="flex items-center space-x-1">
-          <div :class="['w-3 h-3 rounded-full', item.color]"></div>
-          <span :class="compact ? item.textColor : ''">{{ item.label }}:</span>
+          <div :class="['w-3 h-3 rounded-full', item.colorClass]"></div>
+          <span :class="compact ? item.textClass : ''">{{ item.label }}:</span>
         </div>
-        <span :class="['font-medium', compact ? item.textColor : '']">
+        <span :class="['font-medium', compact ? item.textClass : '']">
           {{ item.count }}
         </span>
       </div>

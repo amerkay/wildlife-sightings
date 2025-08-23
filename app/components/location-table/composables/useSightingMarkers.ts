@@ -3,6 +3,7 @@ import type { Ref } from "vue";
 import * as L from "leaflet";
 import {
   getMarkerColor,
+  getStatusColor,
   getTypeLabel,
   formatSightingDate,
   capitalizeFirst,
@@ -32,10 +33,10 @@ export const useSightingMarkers = (
   const markersMap = new Map<string, L.Marker>();
 
   /**
-   * Create a custom marker icon for a sighting status
+   * Create a custom marker icon for a sighting type
    */
-  const createMarkerIcon = (status: string) => {
-    const color = getMarkerColor(status);
+  const createMarkerIcon = (type: string) => {
+    const color = getMarkerColor(type);
     return L.divIcon({
       className: "custom-marker",
       html: `
@@ -57,8 +58,8 @@ export const useSightingMarkers = (
   /**
    * Create a highlighted marker icon for hover/selection states
    */
-  const createHighlightedMarkerIcon = (status: string) => {
-    const color = getMarkerColor(status);
+  const createHighlightedMarkerIcon = (type: string) => {
+    const color = getMarkerColor(type);
     return L.divIcon({
       className: "custom-marker highlighted",
       html: `
@@ -93,8 +94,8 @@ export const useSightingMarkers = (
           )}</div>
           <div><strong>Status:</strong> 
             <span class="px-2 py-1 rounded text-xs" style="
-              background-color: ${getMarkerColor(status)}20;
-              color: ${getMarkerColor(status)};
+              background-color: ${getStatusColor(status)}20;
+              color: ${getStatusColor(status)};
             ">
               ${capitalizeFirst(status)}
             </span>
@@ -138,7 +139,7 @@ export const useSightingMarkers = (
     data.value.forEach((sighting) => {
       if (sighting.lat && sighting.lng && sighting.id) {
         const marker = L.marker([sighting.lat, sighting.lng], {
-          icon: createMarkerIcon(sighting.status || "pending"),
+          icon: createMarkerIcon(sighting.type || "live"),
         });
 
         // Add interaction handlers
@@ -165,7 +166,7 @@ export const useSightingMarkers = (
     // Fit map to show all markers if there are any
     if (markersLayer.getLayers().length > 0) {
       const group = L.featureGroup(markersLayer.getLayers() as L.Layer[]);
-      map.fitBounds(group.getBounds(), { padding: [20, 20], maxZoom: 15 });
+      map.fitBounds(group.getBounds(), { padding: [20, 20], maxZoom: 7 });
     }
   };
 
@@ -207,7 +208,7 @@ export const useSightingMarkers = (
     markersMap.forEach((marker, id) => {
       const sighting = data.value.find((s) => s.id === id);
       if (sighting) {
-        marker.setIcon(createMarkerIcon(sighting.status || "pending"));
+        marker.setIcon(createMarkerIcon(sighting.type || "live"));
       }
     });
 
@@ -216,9 +217,7 @@ export const useSightingMarkers = (
       const marker = markersMap.get(sightingId);
       const sighting = data.value.find((s) => s.id === sightingId);
       if (marker && sighting) {
-        marker.setIcon(
-          createHighlightedMarkerIcon(sighting.status || "pending")
-        );
+        marker.setIcon(createHighlightedMarkerIcon(sighting.type || "live"));
       }
     }
   };

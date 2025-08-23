@@ -12,23 +12,17 @@ type Sighting = Database["public"]["Tables"]["sightings"]["Row"] & {
 export const useSightingStats = (data: Ref<Sighting[]>) => {
   const stats = computed(() => {
     const total = data.value.length;
-    const approved = data.value.filter((s) => s.status === "approved").length;
-    const pending = data.value.filter((s) => s.status === "pending").length;
-    const rejected = data.value.filter((s) => s.status === "rejected").length;
+    const live = data.value.filter((s) => s.type === "live").length;
+    const dead = data.value.filter((s) => s.type === "dead").length;
+    const site = data.value.filter((s) => s.type === "site").length;
 
-    return { total, approved, pending, rejected };
+    return { total, live, dead, site };
   });
 
   const hasData = computed(() => data.value.length > 0);
 
-  const approvalRate = computed(() => {
-    if (stats.value.total === 0) return 0;
-    return Math.round((stats.value.approved / stats.value.total) * 100);
-  });
-
   return {
     stats,
     hasData,
-    approvalRate,
   };
 };

@@ -56,14 +56,7 @@ const handleAction = (action: string) => {
 
 const hasActions = computed(() => {
   if (props.showDelete) return true;
-  if (props.showStatusActions) {
-    return (
-      props.status !== "approved" &&
-      props.status !== "rejected" &&
-      props.status !== "pending"
-    );
-  }
-  return false;
+  return props.showStatusActions ? true : false;
 });
 </script>
 

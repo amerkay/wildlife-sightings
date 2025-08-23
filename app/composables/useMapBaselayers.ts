@@ -3,10 +3,6 @@ import { useColorMode } from "#imports";
 import * as L from "leaflet";
 import "leaflet-providers";
 
-/**
- * Simplified basemap composable using free CARTO basemaps
- * No API tokens required - uses CartoCDN public basemaps
- */
 export function useMapBaselayers() {
   const colorMode = useColorMode();
 
