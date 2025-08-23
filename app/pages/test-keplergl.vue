@@ -22,7 +22,7 @@ import { processRowObject } from "@kepler.gl/processors";
 
 // async component for KeplerMap
 const KeplerMap = defineAsyncComponent(
-  () => import("@/components/KeplerMap.vue")
+  () => import("~/components/kepler-map/KeplerMap.vue")
 );
 
 const {

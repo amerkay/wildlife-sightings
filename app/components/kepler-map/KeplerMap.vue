@@ -8,7 +8,7 @@
 
 <script lang="ts" setup>
 import { applyReactInVue } from "veaury";
-import KeplerMap from "../../react_app/KeplerMap";
+import KeplerMap from "../../../react_app/KeplerMap";
 
 interface Props {
   mapboxApiAccessToken: string;

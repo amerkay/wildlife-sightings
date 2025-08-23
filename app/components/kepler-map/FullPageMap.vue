@@ -23,7 +23,7 @@ const keplerLoaded = ref(false);
 
 // async component for KeplerMap
 const KeplerMap = defineAsyncComponent({
-  loader: () => import("@/components/KeplerMap.vue"),
+  loader: () => import("~/components/kepler-map/KeplerMap.vue"),
   onError: (error) => {
     console.error("Error loading KeplerMap:", error);
   },

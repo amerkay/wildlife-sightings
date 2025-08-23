@@ -14,6 +14,7 @@ interface Props {
   newSightingRoute?: string;
   mapRoute?: string;
   isAdminMode?: boolean;
+  externalData?: any; // External data source to share with other components
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -24,7 +25,19 @@ const props = withDefaults(defineProps<Props>(), {
   isAdminMode: false,
 });
 
-// Initialize the table composable
+// Initialize the table composable or use external data
+const useExternalData = computed(() => !!props.externalData);
+
+// Use either external data or create our own table data
+const internalTableData = useSightingsData({
+  isAdminMode: props.isAdminMode,
+  enableSearch: props.isAdminMode, // Enable search for admin mode
+});
+
+// Choose the data source
+const tableData = computed(() => props.externalData || internalTableData);
+
+// Destructure the data and methods
 const {
   data,
   totalCount,
@@ -42,10 +55,7 @@ const {
   setSearchTerm,
   canDeleteSighting,
   canUpdateStatus,
-} = useSightingsTable({
-  isAdminMode: props.isAdminMode,
-  enableSearch: props.isAdminMode, // Enable search for admin mode
-});
+} = useExternalData.value ? props.externalData : internalTableData;
 
 // Handle delete with confirmation
 const handleDelete = async (id: string) => {

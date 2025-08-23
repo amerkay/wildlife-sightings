@@ -2,7 +2,7 @@ import type { Database } from "~~/types/database.types";
 
 type Sighting = Database["public"]["Tables"]["sightings"]["Row"];
 
-interface TableOptions {
+interface SightingsDataOptions {
   pageSize?: number;
   sortBy?: keyof Sighting;
   sortOrder?: "asc" | "desc";
@@ -20,7 +20,7 @@ interface SortingState {
   desc: boolean;
 }
 
-export const useSightingsTable = (options: TableOptions = {}) => {
+export const useSightingsData = (options: SightingsDataOptions = {}) => {
   const supabase = useSupabaseClient();
   const user = useSupabaseUser();
   const { data: userRole } = useUserRole();
@@ -36,8 +36,6 @@ export const useSightingsTable = (options: TableOptions = {}) => {
   ]);
 
   const searchTerm = ref("");
-  const isDeleting = ref(false);
-  const isUpdating = ref(false);
 
   // Computed values
   const offset = computed(
@@ -112,11 +110,11 @@ export const useSightingsTable = (options: TableOptions = {}) => {
 
   // Use asyncData for caching and reactivity
   const cacheKey = options.isAdminMode
-    ? "admin-sightings-table"
-    : "user-sightings-table";
+    ? "admin-sightings-data"
+    : "user-sightings-data";
 
   const {
-    data: tableData,
+    data: sightingsData,
     pending,
     error,
     refresh,
@@ -130,6 +128,30 @@ export const useSightingsTable = (options: TableOptions = {}) => {
     ],
     default: () => ({ data: [], count: 0 }),
   });
+
+  // Helper functions for controls
+  const setPageIndex = (index: number) => {
+    pagination.value.pageIndex = index;
+  };
+
+  const setPageSize = (size: number) => {
+    pagination.value.pageSize = size;
+    pagination.value.pageIndex = 0; // Reset to first page
+  };
+
+  const setSorting = (newSorting: SortingState[]) => {
+    sorting.value = newSorting;
+    pagination.value.pageIndex = 0; // Reset to first page when sorting changes
+  };
+
+  const setSearchTerm = (term: string) => {
+    searchTerm.value = term;
+    pagination.value.pageIndex = 0; // Reset to first page when searching
+  };
+
+  // Additional state for UI operations
+  const isDeleting = ref(false);
+  const isUpdating = ref(false);
 
   // Delete sighting function
   const deleteSighting = async (id: string) => {
@@ -190,21 +212,6 @@ export const useSightingsTable = (options: TableOptions = {}) => {
     }
   };
 
-  // Helper functions for table controls
-  const setPageIndex = (index: number) => {
-    pagination.value.pageIndex = index;
-  };
-
-  const setPageSize = (size: number) => {
-    pagination.value.pageSize = size;
-    pagination.value.pageIndex = 0; // Reset to first page
-  };
-
-  const setSorting = (newSorting: SortingState[]) => {
-    sorting.value = newSorting;
-    pagination.value.pageIndex = 0; // Reset to first page when sorting changes
-  };
-
   const canDeleteSighting = (sighting: {
     status: string | null;
     user_id?: string | null;
@@ -224,15 +231,10 @@ export const useSightingsTable = (options: TableOptions = {}) => {
     return Boolean(options.isAdminMode && userRole.value === "admin");
   };
 
-  const setSearchTerm = (term: string) => {
-    searchTerm.value = term;
-    pagination.value.pageIndex = 0; // Reset to first page when searching
-  };
-
   return {
     // Data
-    data: computed(() => tableData.value.data),
-    totalCount: computed(() => tableData.value.count),
+    data: computed(() => sightingsData.value.data),
+    totalCount: computed(() => sightingsData.value.count),
 
     // State
     pagination: readonly(pagination),
@@ -240,21 +242,23 @@ export const useSightingsTable = (options: TableOptions = {}) => {
     searchTerm: readonly(searchTerm),
     pending,
     error,
+
+    // UI State
     isDeleting: readonly(isDeleting),
     isUpdating: readonly(isUpdating),
 
     // Actions
-    deleteSighting,
-    updateSightingStatus,
     refresh,
     setPageIndex,
     setPageSize,
     setSorting,
     setSearchTerm,
+    deleteSighting,
+    updateSightingStatus,
     canDeleteSighting,
     canUpdateStatus,
 
-    // For backward compatibility with existing dataset loader
+    // For backward compatibility
     loadData: loadSightings,
   };
 };

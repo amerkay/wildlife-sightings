@@ -8,7 +8,7 @@ import type { Database } from "~~/types/database.types";
 type Sighting = Database["public"]["Tables"]["sightings"]["Row"];
 
 export const useUserSightingsDataset = () => {
-  const { loadData: loadTableData } = useSightingsTable();
+  const { loadData: loadTableData } = useSightingsData();
 
   const preset: DatasetPreset = {
     id: DATASET_ID,
