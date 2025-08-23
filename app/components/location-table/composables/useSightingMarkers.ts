@@ -1,11 +1,12 @@
-import { watch } from "vue";
+import { watch, ref } from "vue";
+import type { Ref } from "vue";
 import * as L from "leaflet";
 import {
   getMarkerColor,
   getTypeLabel,
   formatSightingDate,
   capitalizeFirst,
-} from "../../../../lib/sighting-utils";
+} from "~/components/location-table/sighting-utils";
 import type { Database } from "~~/types/database.types";
 
 type Sighting = Database["public"]["Tables"]["sightings"]["Row"] & {
@@ -13,14 +14,22 @@ type Sighting = Database["public"]["Tables"]["sightings"]["Row"] & {
   lng: number;
 };
 
+interface MarkerInteractionCallbacks {
+  onMarkerHover?: (sightingId: string | null) => void;
+  onMarkerClick?: (sightingId: string | null) => void;
+}
+
 /**
  * Composable for managing sighting markers on a Leaflet map
  */
 export const useSightingMarkers = (
   getMap: () => L.Map | null,
-  data: Ref<Sighting[]>
+  data: Ref<Sighting[]>,
+  callbacks?: MarkerInteractionCallbacks
 ) => {
   let markersLayer: L.LayerGroup | null = null;
+  // Store markers by sighting ID for easy access
+  const markersMap = new Map<string, L.Marker>();
 
   /**
    * Create a custom marker icon for a sighting status
@@ -42,6 +51,31 @@ export const useSightingMarkers = (
       iconSize: [24, 24],
       iconAnchor: [12, 12],
       popupAnchor: [0, -12],
+    });
+  };
+
+  /**
+   * Create a highlighted marker icon for hover/selection states
+   */
+  const createHighlightedMarkerIcon = (status: string) => {
+    const color = getMarkerColor(status);
+    return L.divIcon({
+      className: "custom-marker highlighted",
+      html: `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background-color: ${color};
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+          transform: scale(1.1);
+          z-index: 1000;
+        "></div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16],
     });
   };
 
@@ -98,16 +132,33 @@ export const useSightingMarkers = (
 
     // Clear existing markers
     markersLayer.clearLayers();
+    markersMap.clear();
 
     // Add new markers
     data.value.forEach((sighting) => {
-      if (sighting.lat && sighting.lng) {
+      if (sighting.lat && sighting.lng && sighting.id) {
         const marker = L.marker([sighting.lat, sighting.lng], {
           icon: createMarkerIcon(sighting.status || "pending"),
         });
 
+        // Add interaction handlers
+        marker.on("mouseover", () => {
+          callbacks?.onMarkerHover?.(sighting.id);
+        });
+
+        marker.on("mouseout", () => {
+          callbacks?.onMarkerHover?.(null);
+        });
+
+        marker.on("click", () => {
+          callbacks?.onMarkerClick?.(sighting.id);
+        });
+
         marker.bindPopup(createPopupContent(sighting));
         markersLayer!.addLayer(marker);
+
+        // Store marker for easy access
+        markersMap.set(sighting.id, marker);
       }
     });
 
@@ -125,6 +176,51 @@ export const useSightingMarkers = (
     if (markersLayer) {
       markersLayer.clearLayers();
     }
+    markersMap.clear();
+  };
+
+  /**
+   * Open popup for a specific sighting
+   */
+  const openSightingPopup = (sightingId: string) => {
+    const marker = markersMap.get(sightingId);
+    if (marker) {
+      marker.openPopup();
+    }
+  };
+
+  /**
+   * Close all popups
+   */
+  const closeAllPopups = () => {
+    const map = getMap();
+    if (map) {
+      map.closePopup();
+    }
+  };
+
+  /**
+   * Highlight a specific marker
+   */
+  const highlightMarker = (sightingId: string | null) => {
+    // Reset all markers to normal style
+    markersMap.forEach((marker, id) => {
+      const sighting = data.value.find((s) => s.id === id);
+      if (sighting) {
+        marker.setIcon(createMarkerIcon(sighting.status || "pending"));
+      }
+    });
+
+    // Highlight the selected marker
+    if (sightingId) {
+      const marker = markersMap.get(sightingId);
+      const sighting = data.value.find((s) => s.id === sightingId);
+      if (marker && sighting) {
+        marker.setIcon(
+          createHighlightedMarkerIcon(sighting.status || "pending")
+        );
+      }
+    }
   };
 
   /**
@@ -138,6 +234,7 @@ export const useSightingMarkers = (
       }
       markersLayer = null;
     }
+    markersMap.clear();
   };
 
   // Watch for data changes
@@ -154,5 +251,8 @@ export const useSightingMarkers = (
     updateMarkers,
     clearMarkers,
     destroyMarkersLayer,
+    openSightingPopup,
+    closeAllPopups,
+    highlightMarker,
   };
 };

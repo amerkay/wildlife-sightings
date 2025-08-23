@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, toRef, nextTick, watch } from "vue";
+import { onMounted, toRef, nextTick, watch, computed } from "vue";
 import { useLeafletMap } from "~/components/location-table/composables/useLeafletMap";
-import { useSightingMarkers } from "~/composables/useSightingMarkers";
+import { useSightingMarkers } from "../composables/useSightingMarkers";
 import { useSightingStats } from "~/components/location-table/composables/useSightingStats";
 import MapLoadingOverlay from "./MapLoadingOverlay.vue";
 import SightingStats from "./SightingStats.vue";
@@ -48,50 +48,40 @@ const { mapEl, getMap } = useLeafletMap({
 });
 
 // Initialize markers composable
+const markersComposable = useSightingMarkers(getMap, dataRef, {
+  onMarkerHover: (sightingId: string | null) =>
+    emit("marker-hover", sightingId),
+  onMarkerClick: (sightingId: string | null) =>
+    emit("marker-click", sightingId),
+});
+
 const { initializeMarkersLayer, openSightingPopup, highlightMarker } =
-  useSightingMarkers(getMap, dataRef, {
-    onMarkerHover: (sightingId: string | null) =>
-      emit("marker-hover", sightingId),
-    onMarkerClick: (sightingId: string | null) =>
-      emit("marker-click", sightingId),
-  });
+  markersComposable;
 
 // Initialize stats composable
 const { stats } = useSightingStats(dataRef);
 
+// Compute the currently active sighting (hover takes priority, fallback to selection)
+const activeSightingId = computed(
+  () => props.hoveredSightingId || props.selectedSightingId
+);
+
 // Initialize markers when map is ready
 onMounted(() => {
-  // Small delay to ensure map is fully initialized
   nextTick(() => {
     initializeMarkersLayer();
   });
 });
 
-// Watch for hover state changes
-watch(
-  () => props.hoveredSightingId,
-  (sightingId) => {
-    if (sightingId) {
-      highlightMarker(sightingId);
-      openSightingPopup(sightingId);
-    } else {
-      highlightMarker(null);
-    }
+// Handle active sighting changes
+watch(activeSightingId, (sightingId) => {
+  if (sightingId) {
+    highlightMarker(sightingId);
+    openSightingPopup(sightingId);
+  } else {
+    highlightMarker(null);
   }
-);
-
-// Watch for selection state changes
-watch(
-  () => props.selectedSightingId,
-  (sightingId) => {
-    if (sightingId) {
-      highlightMarker(sightingId);
-      openSightingPopup(sightingId);
-    } else {
-      highlightMarker(null);
-    }
-  }
-);
+});
 </script>
 
 <template>

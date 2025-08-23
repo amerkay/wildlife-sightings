@@ -6,7 +6,7 @@ import DataTableHeader from "./DataTableHeader.vue";
 import DataTablePagination from "./DataTablePagination.vue";
 import SightingsMap from "./map/SightingsMap.vue";
 import { useDataTable } from "./composables/useDataTable";
-import { useTableMapInteraction } from "~/composables/useTableMapInteraction";
+import { useTableMapInteraction } from "~/components/location-table/composables/useTableMapInteraction";
 
 interface Props {
   title: string;
