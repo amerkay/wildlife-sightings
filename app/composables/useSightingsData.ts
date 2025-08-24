@@ -75,7 +75,7 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
         contact_email,
         lat,
         lng,
-        user_id
+        user_id${options.isAdminMode ? ",\n        admin_notes" : ""}
         `,
       { count: "exact" }
     );
@@ -213,6 +213,33 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
     }
   };
 
+  // Update admin notes function (admin only)
+  const updateAdminNotes = async (id: string, notes: string) => {
+    if (!user.value || !options.isAdminMode || userRole.value !== "admin") {
+      throw new Error("Access denied: Admin role required");
+    }
+
+    isUpdating.value = true;
+    try {
+      const { error } = await (supabase as any)
+        .from("sightings")
+        .update({ admin_notes: notes })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Refresh the table data
+      await refresh();
+
+      console.log("Admin notes updated successfully");
+    } catch (err) {
+      console.error("Error updating admin notes:", err);
+      throw err;
+    } finally {
+      isUpdating.value = false;
+    }
+  };
+
   const canDeleteSighting = (sighting: {
     status: string | null;
     user_id?: string | null;
@@ -256,6 +283,7 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
     setSearchTerm,
     deleteSighting,
     updateSightingStatus,
+    updateAdminNotes,
     canDeleteSighting,
     canUpdateStatus,
 

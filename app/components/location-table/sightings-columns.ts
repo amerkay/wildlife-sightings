@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/vue-table";
-import type { Database } from "~/types/database.types";
+import type { Database } from "~~/types/database.types";
 import { h } from "vue";
 import SortableHeader from "~/components/location-table/columns/SortableHeader.vue";
 import StatusBadge from "~/components/location-table/columns/StatusBadge.vue";
@@ -7,6 +7,7 @@ import ContactInfo from "~/components/location-table/columns/ContactInfo.vue";
 import TypeCell from "~/components/location-table/columns/TypeCell.vue";
 import SpeciesCell from "~/components/location-table/columns/SpeciesCell.vue";
 import DateCell from "~/components/location-table/columns/DateCell.vue";
+import AdminNotesCell from "~/components/location-table/columns/AdminNotesCell.vue";
 import SightingActions from "~/components/location-table/SightingActions.vue";
 
 type Sighting = Database["public"]["Tables"]["sightings"]["Row"];
@@ -24,6 +25,7 @@ interface TableSighting
     | "contact_name"
     | "contact_email"
     | "user_id"
+    | "admin_notes"
   > {
   lat: number;
   lng: number;
@@ -38,24 +40,26 @@ export const createSightingsColumns = (
   options: {
     hideContactColumn?: boolean;
     showStatusActions?: boolean;
+    isAdminMode?: boolean;
+    onAdminNotesUpdate?: (id: string, notes: string) => Promise<void>;
   } = {}
 ): ColumnDef<TableSighting>[] => {
   const baseColumns: ColumnDef<TableSighting>[] = [
-    {
-      accessorKey: "species",
-      header: ({ column }) => {
-        return h(SortableHeader, {
-          title: "Species",
-          isSorted: column.getIsSorted(),
-          onToggleSort: () =>
-            column.toggleSorting(column.getIsSorted() === "asc"),
-        });
-      },
-      cell: ({ row }) => {
-        const species = row.getValue("species") as string;
-        return h(SpeciesCell, { species: species || "barn" }); // Default to barn owl for backward compatibility
-      },
-    },
+    // {
+    //   accessorKey: "species",
+    //   header: ({ column }) => {
+    //     return h(SortableHeader, {
+    //       title: "Species",
+    //       isSorted: column.getIsSorted(),
+    //       onToggleSort: () =>
+    //         column.toggleSorting(column.getIsSorted() === "asc"),
+    //     });
+    //   },
+    //   cell: ({ row }) => {
+    //     const species = row.getValue("species") as string;
+    //     return h(SpeciesCell, { species: species || "barn" }); // Default to barn owl for backward compatibility
+    //   },
+    // },
     {
       accessorKey: "type",
       header: ({ column }) => {
@@ -118,6 +122,25 @@ export const createSightingsColumns = (
         return h(DateCell, { date, isSmall: true });
       },
     },
+    // Admin notes column (only for admin mode)
+    ...(options.isAdminMode && options.onAdminNotesUpdate
+      ? [
+          {
+            accessorKey: "admin_notes" as const,
+            header: "Admin Notes",
+            cell: ({ row }: { row: any }) => {
+              const notes = row.getValue("admin_notes") as string | null;
+              const sighting = row.original;
+              return h(AdminNotesCell, {
+                sightingId: sighting.id,
+                notes: notes,
+                onUpdate: options.onAdminNotesUpdate!,
+                disabled: isDeleting,
+              });
+            },
+          },
+        ]
+      : []),
     {
       id: "actions",
       enableHiding: false,

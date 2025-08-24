@@ -51,6 +51,7 @@ const {
   isUpdating,
   deleteSighting,
   updateSightingStatus,
+  updateAdminNotes,
   setPageIndex,
   setPageSize,
   setSorting,
@@ -107,6 +108,21 @@ const handleStatusUpdate = async (id: string, newStatus: string) => {
   }
 };
 
+// Handle admin notes update
+const handleAdminNotesUpdate = async (id: string, notes: string) => {
+  try {
+    await updateAdminNotes(id, notes);
+    toast.success("Admin notes updated successfully", {
+      description: "The admin notes have been saved.",
+    });
+  } catch (err) {
+    console.error("Failed to update admin notes:", err);
+    toast.error("Failed to update admin notes", {
+      description: "Could not update the admin notes. Please try again later.",
+    });
+  }
+};
+
 // Handle search
 const handleSearchChange = (searchTerm: string) => {
   setSearchTerm(searchTerm);
@@ -123,6 +139,10 @@ const columns = computed(() =>
     {
       hideContactColumn: !props.isAdminMode,
       showStatusActions: props.isAdminMode,
+      isAdminMode: props.isAdminMode,
+      onAdminNotesUpdate: props.isAdminMode
+        ? handleAdminNotesUpdate
+        : undefined,
     }
   )
 );
