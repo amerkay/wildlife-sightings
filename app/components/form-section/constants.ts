@@ -8,8 +8,8 @@ export const TYPE_OPTIONS = [
 ] as const;
 
 export const SPECIES_OPTIONS = [
-  { value: "barn", label: "Barn Owl 🦉" },
-  { value: "little", label: "Little Owl 🦉" },
+  { value: "barn", label: "Barn Owl" },
+  { value: "little", label: "Little Owl" },
 ] as const;
 
 // Live section

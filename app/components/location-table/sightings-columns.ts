@@ -23,8 +23,23 @@ interface TableSighting
     | "sighting_date"
     | "contact_name"
     | "contact_email"
+    | "contact_postcode"
     | "user_id"
     | "admin_notes"
+    | "location_notes"
+    | "observation_period"
+    | "frequency"
+    | "activity"
+    | "activity_other"
+    | "observed"
+    | "site_type"
+    | "site_type_other"
+    | "nestbox"
+    | "connection"
+    | "connection_other"
+    | "cause_of_death"
+    | "cause_of_death_other"
+    | "death_details"
   > {
   lat: number;
   lng: number;

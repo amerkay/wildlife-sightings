@@ -73,9 +73,24 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
         sighting_date,
         contact_name,
         contact_email,
+        contact_postcode,
         lat,
         lng,
-        user_id${options.isAdminMode ? ",\n        admin_notes" : ""}
+        user_id,
+        location_notes,
+        observation_period,
+        frequency,
+        activity,
+        activity_other,
+        observed,
+        site_type,
+        site_type_other,
+        nestbox,
+        connection,
+        connection_other,
+        cause_of_death,
+        cause_of_death_other,
+        death_details${options.isAdminMode ? ",\n        admin_notes" : ""}
         `,
       { count: "exact" }
     );

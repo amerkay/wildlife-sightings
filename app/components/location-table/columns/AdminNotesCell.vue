@@ -40,7 +40,7 @@ const handleUpdate = async (notes: string) => {
     class="flex items-center justify-between group min-w-[140px] cursor-pointer"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
-    @click="handleCellClick"
+    @click.stop="handleCellClick"
   >
     <span
       class="text-xs text-muted-foreground flex-1 mr-2"
@@ -68,7 +68,7 @@ const handleUpdate = async (notes: string) => {
       class="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
       :class="[isHovered ? 'visible' : 'invisible']"
       :disabled="disabled"
-      @click.stop="handleEdit"
+      @click.stop.prevent="handleEdit"
     >
       <Icon name="lucide:pencil" class="size-3" />
     </Button>

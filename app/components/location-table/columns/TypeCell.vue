@@ -33,7 +33,7 @@ const getSpeciesLabel = (species?: string) => {
 
 <template>
   <div class="font-medium">
-    <p class="text-xs text-muted-foreground mb-1 font-bold">
+    <p class="text-xs text-muted-foreground mb-1 font-extrabold">
       {{ getSpeciesLabel(species) }}
     </p>
     <p>

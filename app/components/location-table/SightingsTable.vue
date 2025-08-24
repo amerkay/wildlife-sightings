@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import type { SortingState } from "@tanstack/vue-table";
-import { createSightingsColumns } from "~/components/location-table/sightings-columns";
+import {
+  createSightingsColumns,
+  type TableSighting,
+} from "~/components/location-table/sightings-columns";
 import { toast } from "vue-sonner";
 import DataTableHeader from "./DataTableHeader.vue";
 import DataTablePagination from "./DataTablePagination.vue";
 import SightingsMap from "./map/SightingsMap.vue";
+import SightingDetailsDialog from "./SightingDetailsDialog.vue";
 import { useDataTable } from "./composables/useDataTable";
 import { useTableMapInteraction } from "~/components/location-table/composables/useTableMapInteraction";
 
@@ -70,7 +74,23 @@ const {
   onMapMarkerClick,
 } = useTableMapInteraction();
 
-// Handle delete with confirmation
+// Dialog state for sighting details
+const isDetailsDialogOpen = ref(false);
+const selectedSightingForDetails = ref<TableSighting | null>(null);
+
+// Handle row selection for both map interaction and details dialog
+const handleRowSelect = (sightingId: string | null) => {
+  onTableRowSelect(sightingId);
+
+  if (sightingId) {
+    // Find the full sighting data
+    const sighting = data.value.find((s: any) => s.id === sightingId);
+    if (sighting) {
+      selectedSightingForDetails.value = sighting;
+      isDetailsDialogOpen.value = true;
+    }
+  }
+}; // Handle delete with confirmation
 const handleDelete = async (id: string) => {
   if (
     confirm(
@@ -217,7 +237,7 @@ if (error.value) {
             @page-size-change="setPageSize"
             @sorting-change="handleSortingChange"
             @row-hover="onTableRowHover"
-            @row-click="onTableRowSelect"
+            @row-click="handleRowSelect"
           />
         </div>
 
@@ -248,5 +268,11 @@ if (error.value) {
         @page-size-change="handlePageSizeChange"
       />
     </div>
+
+    <!-- Sighting Details Dialog -->
+    <SightingDetailsDialog
+      v-model:open="isDetailsDialogOpen"
+      :sighting="selectedSightingForDetails"
+    />
   </div>
 </template>
