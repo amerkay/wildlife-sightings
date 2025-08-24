@@ -5,7 +5,6 @@ import SortableHeader from "~/components/location-table/columns/SortableHeader.v
 import StatusBadge from "~/components/location-table/columns/StatusBadge.vue";
 import ContactInfo from "~/components/location-table/columns/ContactInfo.vue";
 import TypeCell from "~/components/location-table/columns/TypeCell.vue";
-import SpeciesCell from "~/components/location-table/columns/SpeciesCell.vue";
 import DateCell from "~/components/location-table/columns/DateCell.vue";
 import AdminNotesCell from "~/components/location-table/columns/AdminNotesCell.vue";
 import SightingActions from "~/components/location-table/SightingActions.vue";
@@ -72,7 +71,8 @@ export const createSightingsColumns = (
       },
       cell: ({ row }) => {
         const type = row.getValue("type") as string;
-        return h(TypeCell, { type });
+        const species = row.original.species as string;
+        return h(TypeCell, { type, species });
       },
     },
     {

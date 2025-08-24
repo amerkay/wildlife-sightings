@@ -1,6 +1,7 @@
 <script setup lang="ts">
 interface Props {
   type: string;
+  species?: string;
 }
 
 const props = defineProps<Props>();
@@ -10,17 +11,33 @@ const getTypeLabel = (type: string) => {
     case "live":
       return "Live Sighting";
     case "site":
-      return "Site/Roost/Nest";
+      return "Roost/Nest";
     case "dead":
       return "Dead Sighting";
     default:
       return type;
   }
 };
+
+const getSpeciesLabel = (species?: string) => {
+  switch (species) {
+    case "barn":
+      return "Barn Owl";
+    case "little":
+      return "Little Owl";
+    default:
+      return species;
+  }
+};
 </script>
 
 <template>
   <div class="font-medium">
-    {{ getTypeLabel(type) }}
+    <p class="text-xs text-muted-foreground mb-1 font-bold">
+      {{ getSpeciesLabel(species) }}
+    </p>
+    <p>
+      {{ getTypeLabel(type) }}
+    </p>
   </div>
 </template>
