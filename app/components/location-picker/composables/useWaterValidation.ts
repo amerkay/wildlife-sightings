@@ -72,11 +72,11 @@ export function useWaterValidation() {
    * Debounced validation function to avoid excessive API calls
    */
   const debouncedValidate = useDebounceFn(async (lng: number, lat: number) => {
-    // Skip if coordinates haven't changed significantly (within ~10m)
+    // Skip if coordinates haven't changed significantly (within ~100m)
     if (lastValidatedCoords.value) {
       const deltaLat = Math.abs(lat - lastValidatedCoords.value.lat);
       const deltaLng = Math.abs(lng - lastValidatedCoords.value.lng);
-      if (deltaLat < 0.0001 && deltaLng < 0.0001) {
+      if (deltaLat < 0.001 && deltaLng < 0.001) {
         return;
       }
     }
