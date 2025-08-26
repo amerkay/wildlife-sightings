@@ -412,14 +412,23 @@ const {
   stop: stopCam,
 } = useUserMedia({
   constraints: computed(() => ({
-    video: currentCameraId.value 
-      ? { deviceId: currentCameraId.value } 
-      : { facingMode: 'environment' }, // Prefer back camera
+    video: currentCameraId.value
+      ? { deviceId: currentCameraId.value }
+      : { facingMode: "environment" }, // Prefer back camera
   })),
 });
 
 // Auto-start camera when camera tab is selected and document is visible
 const currentTab = ref("upload"); // Track current tab
+
+// Stop camera when document becomes hidden or when leaving camera tab
+watchEffect(() => {
+  if (documentVisible.value === "hidden" || currentTab.value !== "camera") {
+    stopCam();
+  }
+});
+
+// Start camera when camera tab is selected and document is visible
 watchEffect(async () => {
   if (currentTab.value === "camera" && documentVisible.value === "visible") {
     // Request permissions on first camera tab activation
@@ -438,8 +447,6 @@ watchEffect(async () => {
     startCam().catch((e: any) => {
       error.value = e?.message || String(e);
     });
-  } else {
-    stopCam();
   }
 });
 
