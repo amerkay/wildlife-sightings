@@ -283,8 +283,8 @@ const props = withDefaults(
     speciesFilter?: string;
   }>(),
   {
-    audioApiBase: "http://localhost:8080",
-    imageApiBase: "http://localhost:8081",
+    audioApiBase: "http://localhost:8020",
+    imageApiBase: "http://localhost:8021",
     topK: 5,
     minConf: 0,
     speciesFilter: "",

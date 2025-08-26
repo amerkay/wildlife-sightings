@@ -1,22 +1,21 @@
-version: "3.9"
+# To test audio API:
+# curl -v -X POST -F "file=@./api/birdnet/examples/barnowl.mp3"   "http://localhost:8020/predict?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/birdnet/examples/littleowl.mp3"   "http://localhost:8020/predict?top_k=5&min_conf=0.0" | jq
+
+# To test image API:
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-1.jpg" "http://localhost:8021/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-2.jpg" "http://localhost:8021/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-3.jpg" "http://localhost:8021/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/littleowl-1.jpg" "http://localhost:8021/classify?top_k=5&min_conf=0.0" | jq
+# curl -s "http://localhost:8021/healthz" | jq  # health check
 
 services:
-  # To test audio API:
-  # curl -v -X POST -F "file=@./api/birdnet/examples/barnowl.mp3"   "http://localhost:8080/predict?top_k=5&min_conf=0.0" | jq
-  # curl -v -X POST -F "file=@./api/birdnet/examples/littleowl.mp3"   "http://localhost:8080/predict?top_k=5&min_conf=0.0" | jq
-
-  # To test image API:
-  # curl -v -X POST -F "file=@./api/inat21/examples/barnowl-1.jpg" "http://localhost:8081/classify?top_k=5&min_conf=0.0" | jq
-  # curl -v -X POST -F "file=@./api/inat21/examples/barnowl-2.jpg" "http://localhost:8081/classify?top_k=5&min_conf=0.0" | jq
-  # curl -v -X POST -F "file=@./api/inat21/examples/barnowl-3.jpg" "http://localhost:8081/classify?top_k=5&min_conf=0.0" | jq
-  # curl -v -X POST -F "file=@./api/inat21/examples/littleowl-1.jpg" "http://localhost:8081/classify?top_k=5&min_conf=0.0" | jq
-  # curl -s "http://localhost:8081/healthz" | jq  # health check
   bird-audio-api:
     build: ./api/birdnet
     image: birdnet-fastapi:latest
     container_name: bird-audio-api
     ports:
-      - "8080:8080"
+      - "8020:8020"
     environment:
       # tweak defaults as you like
       - TOP_K=5
@@ -30,7 +29,7 @@ services:
     image: birdimg-fastapi-yolo:latest
     container_name: bird-img-api
     ports:
-      - "8081:8081"
+      - "8021:8021"
     environment:
       # Classifier
       - MODEL_ID=timm/convnext_large_mlp.laion2b_ft_augreg_inat21
