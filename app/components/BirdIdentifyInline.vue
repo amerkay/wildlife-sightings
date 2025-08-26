@@ -1,7 +1,7 @@
 <!-- BirdIdentifyInlineTabs.vue -->
 <template>
   <Card
-    class="w-full rounded-2xl border border-border bg-card text-card-foreground shadow-sm relative gap-2"
+    class="w-full rounded-2xl border border-border bg-card text-card-foreground relative gap-0 py-4 md:py-6"
   >
     <!-- Full overlay loader -->
     <div
@@ -42,27 +42,27 @@
       </div>
     </CardHeader>
 
-    <CardContent class="space-y-4">
+    <CardContent class="space-y-4 px-4 md:px-6">
       <!-- Tabs - only show when no file is loaded -->
       <Tabs v-if="!previewUrl" class="w-full">
         <TabsList class="grid w-full grid-cols-3 h-20 gap-1">
           <TabsTrigger
             value="upload"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors"
           >
             <Icon name="lucide:upload" size="24" />
             <span class="text-xs">Upload</span>
           </TabsTrigger>
           <TabsTrigger
             value="camera"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors"
           >
             <Icon name="lucide:camera" size="24" />
             <span class="text-xs">Camera</span>
           </TabsTrigger>
           <TabsTrigger
             value="record"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors"
           >
             <Icon name="lucide:mic" size="24" />
             <span class="text-xs">Record</span>
