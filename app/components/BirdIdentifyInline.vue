@@ -114,17 +114,6 @@
             >
               Camera starting...
             </div>
-
-            <!-- Camera switch button - only show when camera is active and multiple cameras available -->
-            <button
-              v-if="videoStream && availableCameras.length > 1"
-              @click="switchCamera"
-              class="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-              type="button"
-              aria-label="Switch camera"
-            >
-              <Icon name="lucide:refresh-ccw" size="20" />
-            </button>
           </div>
           <div class="flex items-center gap-2">
             <Button
@@ -332,7 +321,6 @@ import {
   onBeforeUnmount,
   watchEffect,
   nextTick,
-  reactive,
 } from "vue";
 import {
   useDropZone,
@@ -341,7 +329,6 @@ import {
   useUserMedia,
   useNow,
   useDocumentVisibility,
-  useDevicesList,
 } from "@vueuse/core";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -393,16 +380,10 @@ watchEffect(() => {
 const videoEl = shallowRef<HTMLVideoElement | null>(null);
 const documentVisible = useDocumentVisibility();
 
-const facingMode = ref<"environment" | "user">("environment");
-const { videoInputs: availableCameras } = useDevicesList({
-  requestPermissions: false,
-});
 const permissionsRequested = ref(false);
 
 const { stream: videoStream, enabled: cameraEnabled } = useUserMedia({
-  constraints: reactive({
-    video: computed(() => ({ facingMode: facingMode.value })),
-  }),
+  constraints: { video: { facingMode: "environment" } },
 });
 
 const currentTab = ref(undefined);
@@ -432,11 +413,6 @@ watchEffect(() => {
   }
 });
 
-// Switch between front and back cameras
-function switchCamera() {
-  facingMode.value =
-    facingMode.value === "environment" ? "user" : "environment";
-}
 async function capturePhoto() {
   if (!videoEl.value) return;
   const v = videoEl.value;
