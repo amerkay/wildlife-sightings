@@ -23,3 +23,8 @@ logs
 .env.*
 !.env.example
 supabase-docker/volumes/
+
+cache/
+
+# Docker / Traefik
+letsencrypt/

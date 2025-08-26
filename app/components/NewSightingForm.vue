@@ -350,8 +350,10 @@ const submit = handleSubmit(
         </p>
       </header>
 
-      <LocationSection :show-reverse-geo-fields="false" />
       <SpeciesSection v-model="species" />
+
+      <LocationSection :show-reverse-geo-fields="false" />
+
       <TypeSection v-model="type" />
 
       <Transition name="section-fade" mode="out-in">

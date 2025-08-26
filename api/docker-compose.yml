@@ -1,0 +1,103 @@
+# To test audio API (via Traefik):
+# curl -v -X POST -F "file=@./api/birdnet/examples/barnowl.mp3"   "http://localhost:8028/api/audio/predict?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/birdnet/examples/littleowl.mp3"   "http://localhost:8028/api/audio/predict?top_k=5&min_conf=0.0" | jq
+
+# To test image API (via Traefik):
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-1.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-2.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-3.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/littleowl-1.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
+# curl -s "http://localhost:8028/api/image/healthz" | jq  # health check
+
+# Traefik Dashboard: http://localhost:8029 (dev mode only)
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    command:
+      - "--api.dashboard=${TRAEFIK_DASHBOARD:-true}"
+      - "--api.insecure=true" # Dashboard on :8080, disabled in prod
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+    ports:
+      - "8028:80"
+      - "8029:8080" # Dashboard (dev only)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik
+    restart: unless-stopped
+
+  bird-audio-api:
+    build: ./birdnet
+    image: birdnet-fastapi:latest
+    container_name: bird-audio-api
+    environment:
+      # tweak defaults as you like
+      - TOP_K=${TOP_K:-5}
+      - MIN_CONF=${MIN_CONF:-0.0}
+      # In production, set a specific origin or leave blank if you proxy via Nuxt
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-api.rule=PathPrefix(`/api/audio`)"
+      - "traefik.http.routers.audio-api.entrypoints=web"
+      - "traefik.http.services.audio-api.loadbalancer.server.port=8020"
+      - "traefik.http.middlewares.audio-strip.stripprefix.prefixes=/api/audio"
+      - "traefik.http.routers.audio-api.middlewares=audio-strip"
+    restart: unless-stopped
+
+  bird-img-api:
+    build: ./inat21
+    image: birdimg-fastapi-yolo:latest
+    container_name: bird-img-api
+    environment:
+      # Classifier
+      - MODEL_ID=timm/convnext_large_mlp.laion2b_ft_augreg_inat21
+      - TOP_K=${TOP_K:-5}
+      - MIN_CONF=${MIN_CONF:-0.0}
+      - TORCH_NUM_THREADS=${TORCH_NUM_THREADS:-4}
+      # Detector
+      - DETECTOR_WEIGHTS=${DETECTOR_WEIGHTS:-/home/appuser/models/yolov8s.pt}
+      - DETECTOR_CONF=${DETECTOR_CONF:-0.25}
+      - DETECTOR_IOU=${DETECTOR_IOU:-0.5}
+      - DETECTOR_MARGIN=${DETECTOR_MARGIN:-0.05}
+      - CLASSIFY_ALL_DETS=${CLASSIFY_ALL_DETS:-false}
+      # Ultralytics config dir (writable, persistent)
+      - YOLO_CONFIG_DIR=/home/appuser/.config/Ultralytics
+      # CORS (lock down behind Nuxt proxy in prod)
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
+    volumes:
+      - hf_cache:/home/appuser/.cache/huggingface
+      - torch_cache:/home/appuser/.cache/torch
+      - ultralytics_cache:/home/appuser/.cache/ultralytics
+      - ultralytics_config:/home/appuser/.config/Ultralytics
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.image-api.rule=PathPrefix(`/api/image`)"
+      - "traefik.http.routers.image-api.entrypoints=web"
+      - "traefik.http.services.image-api.loadbalancer.server.port=8021"
+      - "traefik.http.middlewares.image-strip.stripprefix.prefixes=/api/image"
+      - "traefik.http.routers.image-api.middlewares=image-strip"
+    restart: unless-stopped
+
+networks:
+  traefik:
+    driver: bridge
+
+volumes:
+  hf_cache:
+    driver: local
+  torch_cache:
+    driver: local
+  ultralytics_cache:
+    driver: local
+  ultralytics_config:
+    driver: local
