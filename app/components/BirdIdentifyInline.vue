@@ -46,27 +46,27 @@
     <CardContent class="space-y-4 px-4 md:px-6">
       <!-- Tabs - only show when no file is loaded -->
       <Tabs v-if="!previewUrl" v-model="currentTab" class="w-full">
-        <TabsList class="grid w-full grid-cols-3 h-20 gap-1">
+        <TabsList class="grid w-full grid-cols-3 h-20 md:h-14 gap-1">
           <TabsTrigger
             value="upload"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3"
           >
-            <Icon name="lucide:upload" size="24" />
-            <span class="text-xs">Upload</span>
+            <Icon name="lucide:upload" class="size-5 md:size-4" mode="svg" />
+            <span class="text-sm">Upload</span>
           </TabsTrigger>
           <TabsTrigger
             value="camera"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3"
           >
-            <Icon name="lucide:camera" size="24" />
-            <span class="text-xs">Camera</span>
+            <Icon name="lucide:camera" class="size-5 md:size-4" mode="svg" />
+            <span class="text-sm">Camera</span>
           </TabsTrigger>
           <TabsTrigger
             value="record"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3"
           >
-            <Icon name="lucide:mic" size="24" />
-            <span class="text-xs">Record</span>
+            <Icon name="lucide:mic" class="size-5 md:size-4" mode="svg" />
+            <span class="text-sm">Record</span>
           </TabsTrigger>
         </TabsList>
 
@@ -332,6 +332,7 @@ import {
   onBeforeUnmount,
   watchEffect,
   nextTick,
+  reactive,
 } from "vue";
 import {
   useDropZone,
@@ -392,49 +393,61 @@ watchEffect(() => {
 const videoEl = shallowRef<HTMLVideoElement | null>(null);
 const documentVisible = useDocumentVisibility();
 
-// Get available cameras - don't request permissions on load
+const currentCamera = shallowRef<string>();
 const { videoInputs: availableCameras } = useDevicesList({
   requestPermissions: false,
+  onUpdated() {
+    if (!availableCameras.value.find((i) => i.deviceId === currentCamera.value))
+      currentCamera.value = availableCameras.value[0]?.deviceId;
+  },
 });
 
-const currentCameraIndex = ref(0);
 const permissionsRequested = ref(false);
 
-const {
-  stream: videoStream,
-  start: startCam,
-  stop: stopCam,
-} = useUserMedia({
-  constraints: computed(() => ({
-    video: { facingMode: "environment" }, // Prefer back camera
-  })),
+const { stream: videoStream, enabled: cameraEnabled } = useUserMedia({
+  constraints: reactive({
+    video: computed(() =>
+      currentCamera.value
+        ? { deviceId: currentCamera.value }
+        : { facingMode: "environment" }
+    ),
+  }),
 });
 
-const currentTab = ref("upload");
+const currentTab = ref(undefined);
 
+// Control camera based on tab and document visibility
+watchEffect(() => {
+  const shouldEnable =
+    currentTab.value === "camera" && documentVisible.value === "visible";
+  cameraEnabled.value = shouldEnable;
+});
+
+// Request permissions when first switching to camera tab
 watchEffect(async () => {
-  if (documentVisible.value === "hidden" || currentTab.value !== "camera") {
-    stopCam();
-    return;
-  }
-
-  if (currentTab.value === "camera" && documentVisible.value === "visible") {
-    if (!permissionsRequested.value) {
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        permissionsRequested.value = true;
-      } catch (e: any) {
-        error.value = e?.message || String(e);
-        stopCam();
-        return;
+  if (currentTab.value === "camera" && !permissionsRequested.value) {
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      permissionsRequested.value = true;
+      // Only set camera if still on camera tab after async operation
+      if (
+        currentTab.value === "camera" &&
+        !currentCamera.value &&
+        availableCameras.value.length > 0
+      ) {
+        currentCamera.value = availableCameras.value[0]?.deviceId;
       }
-    }
-
-    startCam().catch((e: any) => {
+    } catch (e: any) {
       error.value = e?.message || String(e);
-      stopCam();
-    });
+    }
+  }
+});
+
+// Set video srcObject
+watchEffect(() => {
+  if (videoEl.value && videoStream.value) {
+    videoEl.value.srcObject = videoStream.value;
   }
 });
 
@@ -442,18 +455,11 @@ watchEffect(async () => {
 function switchCamera() {
   if (availableCameras.value.length <= 1) return;
 
-  currentCameraIndex.value =
-    (currentCameraIndex.value + 1) % availableCameras.value.length;
-
-  // Restart camera with new device
-  if (videoStream.value) {
-    stopCam();
-    nextTick(() => {
-      startCam().catch((e: any) => {
-        error.value = e?.message || String(e);
-      });
-    });
-  }
+  const currentIndex = availableCameras.value.findIndex(
+    (c) => c.deviceId === currentCamera.value
+  );
+  const nextIndex = (currentIndex + 1) % availableCameras.value.length;
+  currentCamera.value = availableCameras.value[nextIndex]?.deviceId;
 }
 async function capturePhoto() {
   if (!videoEl.value) return;
@@ -470,7 +476,7 @@ async function capturePhoto() {
   });
 
   // Stop camera after taking photo
-  stopCam();
+  cameraEnabled.value = false;
 
   previewFile(file);
   await submitImage(file);
@@ -611,7 +617,7 @@ function clearPreview() {
   previewUrl.value && URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
   // Stop camera if active
-  if (videoStream.value) stopCam();
+  cameraEnabled.value = false;
   // Stop recording if active
   if (isRecording.value) {
     mediaRecorder?.stop();
@@ -634,9 +640,7 @@ function clearPreview() {
   // Restart camera if user is still on camera tab after clearing
   nextTick(() => {
     if (currentTab.value === "camera" && documentVisible.value === "visible") {
-      startCam().catch((e: any) => {
-        error.value = e?.message || String(e);
-      });
+      cameraEnabled.value = true;
     }
   });
 } /** Helpers */
@@ -755,7 +759,7 @@ async function submitImage(file: File) {
 onBeforeUnmount(() => {
   previewUrl.value && URL.revokeObjectURL(previewUrl.value);
   // Stop camera and microphone streams
-  stopCam();
+  cameraEnabled.value = false;
   stopMic();
   stopWave();
 });
