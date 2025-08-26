@@ -48,7 +48,7 @@ function handleClick() {
 
     <p
       v-if="props.geoState === 'error' && props.geoError"
-      class="text-sm text-destructive"
+      class="text-xs text-destructive"
     >
       {{ props.geoError }}
     </p>

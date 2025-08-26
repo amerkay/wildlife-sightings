@@ -16,7 +16,7 @@ export function useGeolocation() {
   function getGeolocationErrorMessage(error: any): string {
     const code = error?.code || error?.PERMISSION_DENIED;
     if (code === 1 || error?.message?.includes("denied")) {
-      return "Location access denied. Please enable location permissions in your browser.";
+      return "Location access denied. Please enable browser location permissions.";
     } else if (code === 2) {
       return "Location unavailable. Please check your device settings.";
     } else if (code === 3) {
