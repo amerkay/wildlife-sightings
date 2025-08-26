@@ -17,7 +17,26 @@
     </div>
 
     <CardHeader>
-      <CardTitle>Identify using AI</CardTitle>
+      <div class="flex items-center justify-between">
+        <CardTitle>Identify using AI</CardTitle>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Icon
+                name="lucide:info"
+                size="16"
+                class="text-muted-foreground cursor-help"
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                Uses BirdNET model weights (CC BY-NC-SA 4.0)<br />and timm
+                ConvNeXt weights (CC BY-NC 4.0).
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <!-- <CardDescription class="text-sm text-muted-foreground">
         {{ currentKindLabel }}
       </CardDescription> -->
@@ -26,24 +45,24 @@
     <CardContent class="space-y-4">
       <!-- Tabs - only show when no file is loaded -->
       <Tabs v-if="!previewUrl" class="w-full">
-        <TabsList class="grid w-full grid-cols-3 h-20">
+        <TabsList class="grid w-full grid-cols-3 h-20 gap-1">
           <TabsTrigger
             value="upload"
-            class="flex flex-col items-center gap-1 p-3"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background"
           >
             <Icon name="lucide:upload" size="24" />
             <span class="text-xs">Upload</span>
           </TabsTrigger>
           <TabsTrigger
             value="camera"
-            class="flex flex-col items-center gap-1 p-3"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background"
           >
             <Icon name="lucide:camera" size="24" />
             <span class="text-xs">Camera</span>
           </TabsTrigger>
           <TabsTrigger
             value="record"
-            class="flex flex-col items-center gap-1 p-3"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background"
           >
             <Icon name="lucide:mic" size="24" />
             <span class="text-xs">Record</span>
@@ -321,6 +340,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const busy = ref(false);
 const error = ref("");
