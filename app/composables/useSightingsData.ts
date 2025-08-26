@@ -28,7 +28,7 @@ export const useSightingsData = (options: SightingsDataOptions = {}) => {
   // Reactive state
   const pagination = ref<PaginationState>({
     pageIndex: 0,
-    pageSize: options.pageSize || 5,
+    pageSize: options.pageSize || 10,
   });
 
   const sorting = ref<SortingState[]>([
