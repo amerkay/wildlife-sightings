@@ -19,14 +19,17 @@
     <CardHeader>
       <div class="flex items-center justify-between">
         <CardTitle>Identify using AI</CardTitle>
+
         <TooltipProvider>
-          <Tooltip>
+          <Tooltip v-model:open="tooltipOpen">
             <TooltipTrigger as-child>
-              <Icon
-                name="lucide:info"
-                size="16"
-                class="text-muted-foreground cursor-help"
-              />
+              <button
+                @click="toggleTooltip"
+                class="text-muted-foreground cursor-help p-1 -m-1"
+                type="button"
+              >
+                <Icon name="lucide:info" size="16" />
+              </button>
             </TooltipTrigger>
             <TooltipContent>
               <p>
@@ -37,9 +40,6 @@
           </Tooltip>
         </TooltipProvider>
       </div>
-      <!-- <CardDescription class="text-sm text-muted-foreground">
-        {{ currentKindLabel }}
-      </CardDescription> -->
     </CardHeader>
 
     <CardContent class="space-y-4">
@@ -349,6 +349,11 @@ import {
 
 const busy = ref(false);
 const error = ref("");
+const tooltipOpen = ref(false);
+
+function toggleTooltip() {
+  tooltipOpen.value = !tooltipOpen.value;
+}
 
 /** Drop + dialog */
 const dropEl = shallowRef<HTMLElement | null>(null);
