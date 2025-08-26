@@ -123,7 +123,7 @@
               type="button"
               aria-label="Switch camera"
             >
-              <Icon name="lucide:flip-horizontal" size="20" />
+              <Icon name="lucide:refresh-ccw" size="20" />
             </button>
           </div>
           <div class="flex items-center gap-2">
@@ -374,7 +374,7 @@ const { isOverDropZone: isOver } = useDropZone(dropEl, {
 });
 const { files, open: openFileDialog } = useFileDialog({
   multiple: false,
-  accept: "image/*,audio/*,.ogg,.wav,.mp3,.m4a,.aac,.flac,.webm,.opus",
+  accept: "image/*,audio/*,.ogg",
 });
 
 let lastProcessedFile: File | null = null;

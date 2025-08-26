@@ -32,7 +32,7 @@ services:
       - "traefik.http.middlewares.audio-strip.stripprefix.prefixes=/api/audio"
       - "traefik.http.routers.audio-api.middlewares=audio-strip"
     environment:
-      - CORS_ALLOW_ORIGINS=https://${DOMAIN}
+      - CORS_ALLOW_ORIGINS=https://${DOMAIN},${CORS_ALLOW_ORIGINS}
 
   bird-img-api:
     labels:
@@ -44,4 +44,4 @@ services:
       - "traefik.http.middlewares.image-strip.stripprefix.prefixes=/api/image"
       - "traefik.http.routers.image-api.middlewares=image-strip"
     environment:
-      - CORS_ALLOW_ORIGINS=https://${DOMAIN}
+      - CORS_ALLOW_ORIGINS=https://${DOMAIN},${CORS_ALLOW_ORIGINS}
