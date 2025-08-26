@@ -410,34 +410,30 @@ const {
   })),
 });
 
-// Auto-start camera when camera tab is selected and document is visible
-const currentTab = ref("upload"); // Track current tab
+const currentTab = ref("upload");
 
-// Stop camera when document becomes hidden or when leaving camera tab
-watchEffect(() => {
+watchEffect(async () => {
   if (documentVisible.value === "hidden" || currentTab.value !== "camera") {
     stopCam();
+    return;
   }
-});
 
-// Start camera when camera tab is selected and document is visible
-watchEffect(async () => {
   if (currentTab.value === "camera" && documentVisible.value === "visible") {
-    // Request permissions on first camera tab activation
     if (!permissionsRequested.value) {
       try {
         await navigator.mediaDevices.getUserMedia({ video: true });
-        // Re-enumerate devices after permission is granted
         const devices = await navigator.mediaDevices.enumerateDevices();
         permissionsRequested.value = true;
       } catch (e: any) {
         error.value = e?.message || String(e);
+        stopCam();
         return;
       }
     }
 
     startCam().catch((e: any) => {
       error.value = e?.message || String(e);
+      stopCam();
     });
   }
 });
