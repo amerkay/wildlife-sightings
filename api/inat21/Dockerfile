@@ -35,5 +35,7 @@ ENV HF_HOME=/home/appuser/.cache/huggingface \
     ULTRALYTICS_CACHE=/home/appuser/.cache/ultralytics \
     YOLO_CONFIG_DIR=/home/appuser/.config/Ultralytics
 
+RUN mkdir -p $HF_HOME $TORCH_HOME $ULTRALYTICS_CACHE $YOLO_CONFIG_DIR
+
 EXPOSE 8021
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8021"]

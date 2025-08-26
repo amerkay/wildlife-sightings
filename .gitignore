@@ -25,3 +25,6 @@ logs
 supabase-docker/volumes/
 
 cache/
+
+# Docker / Traefik
+letsencrypt/

@@ -1,0 +1,47 @@
+services:
+  traefik:
+    command:
+      - "--api.dashboard=false" # Disable dashboard in production
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-ERROR}"
+    ports:
+      - "80:80"
+      - "443:443"
+      # Dashboard port removed in production
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt # Persistent Let's Encrypt certificates
+    environment:
+      - TRAEFIK_DASHBOARD=false
+
+  bird-audio-api:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api/audio`)"
+      - "traefik.http.routers.audio-api.entrypoints=websecure"
+      - "traefik.http.routers.audio-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.audio-api.loadbalancer.server.port=8020"
+      - "traefik.http.middlewares.audio-strip.stripprefix.prefixes=/api/audio"
+      - "traefik.http.routers.audio-api.middlewares=audio-strip"
+    environment:
+      - CORS_ALLOW_ORIGINS=https://${DOMAIN}
+
+  bird-img-api:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.image-api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api/image`)"
+      - "traefik.http.routers.image-api.entrypoints=websecure"
+      - "traefik.http.routers.image-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.image-api.loadbalancer.server.port=8021"
+      - "traefik.http.middlewares.image-strip.stripprefix.prefixes=/api/image"
+      - "traefik.http.routers.image-api.middlewares=image-strip"
+    environment:
+      - CORS_ALLOW_ORIGINS=https://${DOMAIN}

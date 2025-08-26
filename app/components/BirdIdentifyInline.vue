@@ -274,6 +274,10 @@ type Normalized = {
   segments: { start: number; end: number; confidence: number }[];
 };
 
+// Get runtime config for API base URL
+const { $config } = useNuxtApp();
+const baseApiUrl = $config.public.identifyApiUrl || "http://localhost:8028";
+
 const props = withDefaults(
   defineProps<{
     audioApiBase?: string;
@@ -283,12 +287,18 @@ const props = withDefaults(
     speciesFilter?: string;
   }>(),
   {
-    audioApiBase: "http://localhost:8020",
-    imageApiBase: "http://localhost:8021",
     topK: 5,
     minConf: 0,
     speciesFilter: "",
   }
+);
+
+// Use computed properties for API bases with fallback to runtime config
+const audioApiBase = computed(
+  () => props.audioApiBase || `${baseApiUrl}/api/audio`
+);
+const imageApiBase = computed(
+  () => props.imageApiBase || `${baseApiUrl}/api/image`
 );
 const emit = defineEmits<{
   (
@@ -586,7 +596,7 @@ async function submitAudio(file: File) {
       min_conf: String(props.minConf),
       species_filter: props.speciesFilter || "",
     });
-    const res = await fetch(`${props.audioApiBase}/predict?${qs.toString()}`, {
+    const res = await fetch(`${audioApiBase.value}/predict?${qs.toString()}`, {
       method: "POST",
       body: fd,
     });
@@ -613,7 +623,7 @@ async function submitImage(file: File) {
       top_k: String(props.topK),
       min_conf: String(props.minConf),
     });
-    const res = await fetch(`${props.imageApiBase}/classify?${qs.toString()}`, {
+    const res = await fetch(`${imageApiBase.value}/classify?${qs.toString()}`, {
       method: "POST",
       body: fd,
     });

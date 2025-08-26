@@ -12,11 +12,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       mapboxAccessToken: process.env.MAPBOX_ACCESS_TOKEN,
-      osApiKey: process.env.OS_API_KEY,
       turnstileSiteKey: process.env.TURNSTILE_SITE_KEY,
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
       siteUrl: process.env.SITE_URL,
+      identifyApiUrl: process.env.IDENTIFY_API_URL,
     },
   },
 
