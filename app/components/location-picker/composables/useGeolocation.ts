@@ -38,6 +38,7 @@ export function useGeolocation() {
       setView: "untilPan",
       keepCurrentZoomLevel: false,
       showCompass: true,
+      onLocationError: () => {},
       strings: { title: "Use my current location" },
       locateOptions: {
         enableHighAccuracy: true,
