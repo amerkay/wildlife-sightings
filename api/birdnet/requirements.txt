@@ -7,3 +7,4 @@ python-multipart>=0.0.9,<0.1
 # Audio processing dependencies
 librosa>=0.10.0
 soundfile>=0.12.0
+pydub>=0.25.0

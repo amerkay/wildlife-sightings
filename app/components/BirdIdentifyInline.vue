@@ -9,9 +9,10 @@
       class="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/80 backdrop-blur-sm"
     >
       <div class="flex items-center gap-3">
-        <div
+        <!-- <div
           class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent"
-        ></div>
+        ></div> -->
+        <Icon name="lucide:loader" class="size-6 animate-spin" />
         <span class="text-lg font-medium">Analyzing...</span>
       </div>
     </div>
@@ -44,7 +45,7 @@
 
     <CardContent class="space-y-4 px-4 md:px-6">
       <!-- Tabs - only show when no file is loaded -->
-      <Tabs v-if="!previewUrl" class="w-full">
+      <Tabs v-if="!previewUrl" v-model="currentTab" class="w-full">
         <TabsList class="grid w-full grid-cols-3 h-20 gap-1">
           <TabsTrigger
             value="upload"
@@ -111,18 +112,21 @@
               v-if="!videoStream"
               class="absolute inset-0 grid place-items-center text-xs text-muted-foreground"
             >
-              Camera off
+              Camera starting...
             </div>
+
+            <!-- Camera switch button - only show when camera is active and multiple cameras available -->
+            <button
+              v-if="videoStream && availableCameras.length > 1"
+              @click="switchCamera"
+              class="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+              type="button"
+              aria-label="Switch camera"
+            >
+              <Icon name="lucide:flip-horizontal" size="20" />
+            </button>
           </div>
           <div class="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              :variant="videoStream ? 'default' : 'secondary'"
-              @click="toggleCamera"
-            >
-              {{ videoStream ? "Turn off" : "Turn on" }} camera
-            </Button>
             <Button
               type="button"
               size="sm"
@@ -295,12 +299,10 @@ type Normalized = {
 
 // Get runtime config for API base URL
 const { $config } = useNuxtApp();
-const baseApiUrl = $config.public.identifyApiUrl || "http://localhost:8028";
+const baseApiUrl = $config.public.identifyApiUrl;
 
 const props = withDefaults(
   defineProps<{
-    audioApiBase?: string;
-    imageApiBase?: string;
     topK?: number;
     minConf?: number;
     speciesFilter?: string;
@@ -313,12 +315,8 @@ const props = withDefaults(
 );
 
 // Use computed properties for API bases with fallback to runtime config
-const audioApiBase = computed(
-  () => props.audioApiBase || `${baseApiUrl}/api/audio`
-);
-const imageApiBase = computed(
-  () => props.imageApiBase || `${baseApiUrl}/api/image`
-);
+const audioApiBase = computed(() => `${baseApiUrl}/api/audio`);
+const imageApiBase = computed(() => `${baseApiUrl}/api/image`);
 const emit = defineEmits<{
   (
     e: "identified",
@@ -327,13 +325,22 @@ const emit = defineEmits<{
   ): void;
 }>();
 
-import { ref, shallowRef, computed, onBeforeUnmount, watchEffect } from "vue";
+import {
+  ref,
+  shallowRef,
+  computed,
+  onBeforeUnmount,
+  watchEffect,
+  nextTick,
+} from "vue";
 import {
   useDropZone,
   useFileDialog,
   useRafFn,
   useUserMedia,
   useNow,
+  useDocumentVisibility,
+  useDevicesList,
 } from "@vueuse/core";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -383,17 +390,72 @@ watchEffect(() => {
 
 /** Camera */
 const videoEl = shallowRef<HTMLVideoElement | null>(null);
+const documentVisible = useDocumentVisibility();
+
+// Get available cameras - don't request permissions on load
+const { videoInputs: availableCameras } = useDevicesList({
+  requestPermissions: false,
+});
+
+const currentCameraIndex = ref(0);
+const permissionsRequested = ref(false);
+
+const currentCameraId = computed(() => {
+  const cameras = availableCameras.value;
+  if (cameras.length === 0) return undefined;
+  return cameras[currentCameraIndex.value % cameras.length]?.deviceId;
+});
+
 const {
   stream: videoStream,
   start: startCam,
   stop: stopCam,
-} = useUserMedia({ constraints: { video: true } });
-async function toggleCamera() {
-  try {
-    if (videoStream.value) stopCam();
-    else await startCam();
-  } catch (e: any) {
-    error.value = e?.message || String(e);
+} = useUserMedia({
+  constraints: computed(() => ({
+    video: currentCameraId.value ? { deviceId: currentCameraId.value } : true,
+  })),
+});
+
+// Auto-start camera when camera tab is selected and document is visible
+const currentTab = ref("upload"); // Track current tab
+watchEffect(async () => {
+  if (currentTab.value === "camera" && documentVisible.value === "visible") {
+    // Request permissions on first camera tab activation
+    if (!permissionsRequested.value) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        // Re-enumerate devices after permission is granted
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        permissionsRequested.value = true;
+      } catch (e: any) {
+        error.value = e?.message || String(e);
+        return;
+      }
+    }
+
+    startCam().catch((e: any) => {
+      error.value = e?.message || String(e);
+    });
+  } else {
+    stopCam();
+  }
+});
+
+// Switch between available cameras
+function switchCamera() {
+  if (availableCameras.value.length <= 1) return;
+
+  currentCameraIndex.value =
+    (currentCameraIndex.value + 1) % availableCameras.value.length;
+
+  // Restart camera with new device
+  if (videoStream.value) {
+    stopCam();
+    nextTick(() => {
+      startCam().catch((e: any) => {
+        error.value = e?.message || String(e);
+      });
+    });
   }
 }
 async function capturePhoto() {
@@ -409,6 +471,10 @@ async function capturePhoto() {
   const file = new File([blob], `camera-${Date.now()}.jpg`, {
     type: "image/jpeg",
   });
+
+  // Stop camera after taking photo
+  stopCam();
+
   previewFile(file);
   await submitImage(file);
 }
@@ -567,9 +633,16 @@ function clearPreview() {
   audioNorm.value = [];
   lastType.value = null;
   error.value = "";
-}
 
-/** Helpers */
+  // Restart camera if user is still on camera tab after clearing
+  nextTick(() => {
+    if (currentTab.value === "camera" && documentVisible.value === "visible") {
+      startCam().catch((e: any) => {
+        error.value = e?.message || String(e);
+      });
+    }
+  });
+} /** Helpers */
 function prettyName(label: string) {
   const [sci, common] = label.includes("_") ? label.split("_") : [label, ""];
   return common ? `${common} (${sci})` : label;
@@ -670,5 +743,9 @@ async function submitImage(file: File) {
 
 onBeforeUnmount(() => {
   previewUrl.value && URL.revokeObjectURL(previewUrl.value);
+  // Stop camera and microphone streams
+  stopCam();
+  stopMic();
+  stopWave();
 });
 </script>

@@ -13,7 +13,7 @@
 
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.5
     container_name: traefik
     command:
       - "--api.dashboard=${TRAEFIK_DASHBOARD:-true}"

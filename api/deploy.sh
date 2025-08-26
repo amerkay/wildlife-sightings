@@ -63,7 +63,14 @@ start_prod() {
     
     # Create letsencrypt directory if it doesn't exist
     mkdir -p letsencrypt
+
+    # Build images
+    docker compose build
+
+    # Stop any running services
+    docker compose down
     
+    # Start production services
     docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
     
     echo -e "${GREEN}Production environment started!${NC}"

@@ -8,6 +8,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import librosa
 import soundfile as sf
+from pydub import AudioSegment
 
 # BirdNET 0.1.x functional API
 from birdnet import (
@@ -82,6 +83,10 @@ async def predict(
       ]
     }
     """
+    # Initialize paths for cleanup
+    tmp_path = None
+    mono_path = None
+    
     try:
         # Persist to a temp file for BirdNET
         suffix = Path(file.filename or "audio").suffix or ".wav"
@@ -90,27 +95,42 @@ async def predict(
             tmp.write(data)
             tmp_path = Path(tmp.name)
 
-        # Convert to mono if needed using librosa
+        # Convert to mono WAV using pydub (handles WebM and other formats)
         try:
-            # Load audio file and convert to mono
-            audio, sr = librosa.load(str(tmp_path), sr=None, mono=True)
-
-            # Create a new mono file for BirdNET
-            mono_suffix = ".wav"  # Always use WAV for processed audio
-            with tempfile.NamedTemporaryFile(
-                delete=False, suffix=mono_suffix
-            ) as mono_tmp:
+            # Use pydub to load and convert any audio format to mono WAV
+            audio_segment = AudioSegment.from_file(str(tmp_path))
+            
+            # Convert to mono and set sample rate to 22050 (BirdNET default)
+            audio_segment = audio_segment.set_channels(1).set_frame_rate(22050)
+            
+            # Create a new mono WAV file for BirdNET
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as mono_tmp:
                 mono_path = Path(mono_tmp.name)
-
-            # Save as mono WAV file
-            sf.write(str(mono_path), audio, sr)
-
-            # Use the mono file for BirdNET processing
+            
+            # Export as WAV
+            audio_segment.export(str(mono_path), format="wav")
+            
+            # Use the converted file for BirdNET processing
             birdnet_path = mono_path
+            
         except Exception as audio_error:
-            # If audio conversion fails, try the original file
-            print(f"Audio conversion warning: {audio_error}")
-            birdnet_path = tmp_path
+            # If pydub conversion fails, try librosa as fallback
+            try:
+                print(f"Pydub conversion failed: {audio_error}, trying librosa...")
+                audio, sr = librosa.load(str(tmp_path), sr=22050, mono=True)
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as mono_tmp:
+                    mono_path = Path(mono_tmp.name)
+                
+                sf.write(str(mono_path), audio, sr)
+                birdnet_path = mono_path
+                
+            except Exception as librosa_error:
+                print(f"Both audio conversions failed. Pydub: {audio_error}, Librosa: {librosa_error}")
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Unsupported audio format. Please use WAV, MP3, FLAC, or OGG. Error: {audio_error}"
+                )
 
         # Run BirdNET audio inference (wrap the generator in SpeciesPredictions)
         sp = SpeciesPredictions(predict_species_within_audio_file(birdnet_path))
@@ -150,12 +170,12 @@ async def predict(
     finally:
         # Clean up temporary files
         try:
-            if "tmp_path" in locals() and tmp_path.exists():
+            if tmp_path and tmp_path.exists():
                 tmp_path.unlink(missing_ok=True)
         except Exception:
             pass
         try:
-            if "mono_path" in locals() and mono_path.exists():
+            if mono_path and mono_path.exists():
                 mono_path.unlink(missing_ok=True)
         except Exception:
             pass

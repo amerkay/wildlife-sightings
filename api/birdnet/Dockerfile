@@ -1,8 +1,8 @@
 FROM python:3.11-slim
 
-# system deps for libsndfile (SoundFile) + mp3 decode
+# system deps for libsndfile (SoundFile) + mp3 decode + ffmpeg for pydub WebM support
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libsndfile1 libmpg123-0 \
+    libsndfile1 libmpg123-0 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
