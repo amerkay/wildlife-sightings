@@ -400,21 +400,13 @@ const { videoInputs: availableCameras } = useDevicesList({
 const currentCameraIndex = ref(0);
 const permissionsRequested = ref(false);
 
-const currentCameraId = computed(() => {
-  const cameras = availableCameras.value;
-  if (cameras.length === 0) return undefined;
-  return cameras[currentCameraIndex.value % cameras.length]?.deviceId;
-});
-
 const {
   stream: videoStream,
   start: startCam,
   stop: stopCam,
 } = useUserMedia({
   constraints: computed(() => ({
-    video: currentCameraId.value
-      ? { deviceId: currentCameraId.value }
-      : { facingMode: "environment" }, // Prefer back camera
+    video: { facingMode: "environment" }, // Prefer back camera
   })),
 });
 
