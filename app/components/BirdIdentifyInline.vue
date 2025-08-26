@@ -412,7 +412,9 @@ const {
   stop: stopCam,
 } = useUserMedia({
   constraints: computed(() => ({
-    video: currentCameraId.value ? { deviceId: currentCameraId.value } : true,
+    video: currentCameraId.value 
+      ? { deviceId: currentCameraId.value } 
+      : { facingMode: 'environment' }, // Prefer back camera
   })),
 });
 
