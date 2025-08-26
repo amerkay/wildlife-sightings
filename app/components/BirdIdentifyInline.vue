@@ -374,7 +374,7 @@ const { isOverDropZone: isOver } = useDropZone(dropEl, {
 });
 const { files, open: openFileDialog } = useFileDialog({
   multiple: false,
-  accept: "image/*,audio/*",
+  accept: "image/*,audio/*,.ogg,.wav,.mp3,.m4a,.aac,.flac,.webm,.opus",
 });
 
 let lastProcessedFile: File | null = null;
@@ -649,9 +649,23 @@ function prettyName(label: string) {
 }
 function handleFile(file: File) {
   previewFile(file);
-  if (file.type.startsWith("image/")) submitImage(file);
-  else if (file.type.startsWith("audio/")) submitAudio(file);
-  else error.value = "Unsupported file type. Please use image/* or audio/*";
+
+  // Enhanced file type detection: check MIME type and file extension
+  const isImage =
+    file.type.startsWith("image/") ||
+    /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.name);
+
+  const isAudio =
+    file.type.startsWith("audio/") ||
+    /\.(mp3|wav|ogg|m4a|aac|flac|webm|opus)$/i.test(file.name);
+
+  if (isImage) {
+    submitImage(file);
+  } else if (isAudio) {
+    submitAudio(file);
+  } else {
+    error.value = "Unsupported file type. Please use image/* or audio/*";
+  }
 }
 
 /** Results */
