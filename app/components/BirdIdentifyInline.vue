@@ -393,24 +393,15 @@ watchEffect(() => {
 const videoEl = shallowRef<HTMLVideoElement | null>(null);
 const documentVisible = useDocumentVisibility();
 
-const currentCamera = shallowRef<string>();
+const facingMode = ref<"environment" | "user">("environment");
 const { videoInputs: availableCameras } = useDevicesList({
   requestPermissions: false,
-  onUpdated() {
-    if (!availableCameras.value.find((i) => i.deviceId === currentCamera.value))
-      currentCamera.value = availableCameras.value[0]?.deviceId;
-  },
 });
-
 const permissionsRequested = ref(false);
 
 const { stream: videoStream, enabled: cameraEnabled } = useUserMedia({
   constraints: reactive({
-    video: computed(() =>
-      currentCamera.value
-        ? { deviceId: currentCamera.value }
-        : { facingMode: "environment" }
-    ),
+    video: computed(() => ({ facingMode: facingMode.value })),
   }),
 });
 
@@ -418,9 +409,8 @@ const currentTab = ref(undefined);
 
 // Control camera based on tab and document visibility
 watchEffect(() => {
-  const shouldEnable =
+  cameraEnabled.value =
     currentTab.value === "camera" && documentVisible.value === "visible";
-  cameraEnabled.value = shouldEnable;
 });
 
 // Request permissions when first switching to camera tab
@@ -428,16 +418,7 @@ watchEffect(async () => {
   if (currentTab.value === "camera" && !permissionsRequested.value) {
     try {
       await navigator.mediaDevices.getUserMedia({ video: true });
-      const devices = await navigator.mediaDevices.enumerateDevices();
       permissionsRequested.value = true;
-      // Only set camera if still on camera tab after async operation
-      if (
-        currentTab.value === "camera" &&
-        !currentCamera.value &&
-        availableCameras.value.length > 0
-      ) {
-        currentCamera.value = availableCameras.value[0]?.deviceId;
-      }
     } catch (e: any) {
       error.value = e?.message || String(e);
     }
@@ -451,15 +432,10 @@ watchEffect(() => {
   }
 });
 
-// Switch between available cameras
+// Switch between front and back cameras
 function switchCamera() {
-  if (availableCameras.value.length <= 1) return;
-
-  const currentIndex = availableCameras.value.findIndex(
-    (c) => c.deviceId === currentCamera.value
-  );
-  const nextIndex = (currentIndex + 1) % availableCameras.value.length;
-  currentCamera.value = availableCameras.value[nextIndex]?.deviceId;
+  facingMode.value =
+    facingMode.value === "environment" ? "user" : "environment";
 }
 async function capturePhoto() {
   if (!videoEl.value) return;
