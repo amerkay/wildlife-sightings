@@ -63,7 +63,7 @@ const hasActions = computed(() => {
 <template>
   <div v-if="!hasActions" class="w-8" />
   <DropdownMenu v-else>
-    <DropdownMenuTrigger as-child>
+    <DropdownMenuTrigger as-child @click.stop>
       <Button variant="ghost" class="h-8 w-8 p-0" :disabled="disabled">
         <span class="sr-only">Open menu</span>
         <MoreHorizontal class="h-4 w-4" />
