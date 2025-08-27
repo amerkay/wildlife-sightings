@@ -27,7 +27,7 @@ const props = withDefaults(
     defaultLat: 53.4808,
     defaultLng: -2.2426,
     required: false,
-    isRequestGeoOnLoad: true,
+    isRequestGeoOnLoad: false,
   }
 );
 
