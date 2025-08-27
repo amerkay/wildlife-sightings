@@ -230,7 +230,7 @@
       >
         <h3 class="text-sm font-semibold">Birds detected (image)</h3>
         <div class="rounded-xl border p-3">
-          <div class="text-xs text-muted-foreground">Top-k</div>
+          <div class="text-xs text-muted-foreground">Top matches</div>
           <ul class="mt-2 space-y-1">
             <li
               v-for="p in imgRaw.predictions[0]?.topk?.filter(
@@ -239,7 +239,7 @@
               :key="p.id"
               class="flex items-center justify-between"
             >
-              <span class="font-medium">{{ p.label }}</span>
+              <span class="font-medium">{{ prettyName(p.label) }}</span>
               <span class="tabular-nums"
                 >{{ (p.confidence * 100).toFixed(1) }}%</span
               >
@@ -597,6 +597,15 @@ function clearPreview() {
   });
 } /** Helpers */
 function prettyName(label: string) {
+  // Handle specific owl species that might only have Latin names
+  if (label === "Tyto alba") {
+    return "Barn Owl (Tyto alba)";
+  }
+  if (label === "Athene noctua") {
+    return "Little Owl (Athene noctua)";
+  }
+
+  // Original logic for labels with underscores
   const [sci, common] = label.includes("_") ? label.split("_") : [label, ""];
   return common ? `${common} (${sci})` : label;
 }

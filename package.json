@@ -12,7 +12,11 @@
     "supabase:start": "pnpm dlx supabase start",
     "supabase:stop": "pnpm dlx supabase stop",
     "supabase:serve-functions": "pnpm dlx supabase functions serve",
-    "supabase:generate-types": "pnpm dlx supabase gen types typescript --local --schema public > types/database.types.ts"
+    "supabase:generate-types": "pnpm dlx supabase gen types typescript --local --schema public > types/database.types.ts",
+    "api:docker-up": "cd api && docker compose up --build -d",
+    "api:docker-down": "cd api && docker compose down",
+    "dev-up": "pnpm supabase:start && pnpm api:docker-up",
+    "dev-down": "pnpm api:docker-down && pnpm supabase:stop"
   },
   "dependencies": {
     "@babel/runtime": "^7.12.1",
