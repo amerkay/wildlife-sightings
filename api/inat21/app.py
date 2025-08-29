@@ -22,17 +22,21 @@ APP_NAME = "birdimg-fastapi-yolo-classifier"
 MODEL_ID = os.getenv("MODEL_ID", "timm/convnext_large_mlp.laion2b_ft_augreg_inat21")
 TOP_K_DEFAULT = int(os.getenv("TOP_K", "5"))
 MIN_CONF_DEFAULT = float(os.getenv("MIN_CONF", "0.0"))
-TORCH_NUM_THREADS = int(os.getenv("TORCH_NUM_THREADS", "4"))
+TORCH_NUM_THREADS = int(os.getenv("TORCH_NUM_THREADS", "2"))  # t3a.medium = 2 vCPUs
+TORCH_NUM_INTEROP_THREADS = int(os.getenv("TORCH_NUM_INTEROP_THREADS", "1"))
 
 # Detector (YOLOv8 on COCO)
 # Default to a path under the user's home to avoid CWD permission issues
 DETECTOR_WEIGHTS = os.getenv(
-    "DETECTOR_WEIGHTS", str(Path.home() / "models" / "yolov8s.pt")
-)  # s = good balance; try yolov8n.pt if you need speed
+    "DETECTOR_WEIGHTS", str(Path.home() / "models" / "yolov8n.pt")
+)  # nano = fastest on CPU
 DETECTOR_CONF = float(
     os.getenv("DETECTOR_CONF", "0.25")
 )  # detection confidence threshold
 DETECTOR_IOU = float(os.getenv("DETECTOR_IOU", "0.5"))  # NMS IoU threshold
+DETECTOR_IMGSZ = int(
+    os.getenv("DETECTOR_IMGSZ", "384")
+)  # inference image size (short side), smaller = faster
 DETECTOR_MARGIN = float(
     os.getenv("DETECTOR_MARGIN", "0.05")
 )  # % of box size to expand each side
@@ -47,6 +51,7 @@ ALLOW_ORIGINS = os.getenv("CORS_ALLOW_ORIGINS", "*")
 
 # Torch threading
 torch.set_num_threads(TORCH_NUM_THREADS)
+torch.set_num_interop_threads(TORCH_NUM_INTEROP_THREADS)
 
 app = FastAPI(title=APP_NAME, version="1.0")
 
@@ -94,13 +99,18 @@ def _load_models():
     # Load detector
     detector = YOLO(DETECTOR_WEIGHTS)
     # Find the index for COCO 'bird' class in this weights' names
-    names = (
-        detector.model.names
-        if hasattr(detector, "model")
-        else getattr(detector, "names", {})
-    )
+    names = {}
+    if (
+        hasattr(detector, "model")
+        and detector.model is not None
+        and hasattr(detector.model, "names")
+    ):
+        names = detector.model.names  # type: ignore
+    elif hasattr(detector, "names"):
+        names = detector.names
+
     inv = {v: k for k, v in names.items()} if isinstance(names, dict) else {}
-    det_bird_idx = inv.get("bird", 15)  # fallback to typical COCO index if not found
+    det_bird_idx = inv.get("bird", 15)  # fallback to typical COCO index
 
 
 @app.get("/healthz")
@@ -112,8 +122,10 @@ def healthz():
         "detector_weights": DETECTOR_WEIGHTS,
         "num_labels": int(getattr(model.config, "num_labels", 0)) if model else 0,
         "torch_threads": TORCH_NUM_THREADS,
+        "torch_interop_threads": TORCH_NUM_INTEROP_THREADS,
         "detector_conf": DETECTOR_CONF,
         "detector_iou": DETECTOR_IOU,
+        "detector_imgsz": DETECTOR_IMGSZ,
         "detector_margin": DETECTOR_MARGIN,
         "classify_all_dets": CLASSIFY_ALL_DETS,
     }
@@ -122,8 +134,17 @@ def healthz():
 def _classify_pil(
     image: Image.Image, top_k: int, min_conf: float
 ) -> List[Dict[str, Any]]:
-    with torch.no_grad():
+    # Use inference_mode() for faster eval; feed channels_last tensors
+    # for better CPU perf
+    if processor is None or model is None:
+        raise RuntimeError("Models not loaded")
+
+    with torch.inference_mode():
         inputs = processor(images=image, return_tensors="pt")
+        if "pixel_values" in inputs:
+            inputs["pixel_values"] = inputs["pixel_values"].contiguous(
+                memory_format=torch.channels_last
+            )
         outputs = model(**inputs)
         logits = outputs.logits
         probs = torch.softmax(logits, dim=-1).squeeze(0)
@@ -161,6 +182,9 @@ async def classify(
         None, ge=0.0, le=1.0, description="Override detector confidence"
     ),
     det_iou: float = Query(None, ge=0.0, le=1.0, description="Override detector IoU"),
+    det_imgsz: int = Query(
+        None, ge=160, le=1280, description="Override detector inference image size"
+    ),
     classify_all: bool = Query(None, description="Override CLASSIFY_ALL_DETS"),
     margin: float = Query(
         None, ge=0.0, le=0.5, description="Box expansion margin ratio (0..0.5)"
@@ -174,27 +198,46 @@ async def classify(
         content = await file.read()
         # Respect EXIF orientation (camera roll)
         image = Image.open(io.BytesIO(content))
-        image = ImageOps.exif_transpose(image).convert("RGB")
+        image = ImageOps.exif_transpose(image)
+        if image is not None:
+            image = image.convert("RGB")
+        else:
+            raise ValueError("Failed to process image")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid image: {e}")
 
     # Detector thresholds
     dconf = DETECTOR_CONF if det_conf is None else det_conf
     diou = DETECTOR_IOU if det_iou is None else det_iou
+    dimgsz = DETECTOR_IMGSZ if det_imgsz is None else det_imgsz
     dmargin = DETECTOR_MARGIN if margin is None else margin
     multi = CLASSIFY_ALL_DETS if classify_all is None else bool(classify_all)
 
     # Run detection
     try:
+        if detector is None:
+            raise RuntimeError("Detector not loaded")
         # Ultralytics accepts numpy arrays in RGB
         np_img = np.array(image)
-        results = detector.predict(source=np_img, conf=dconf, iou=diou, verbose=False)
+        # Use smaller imgsz, filter to bird class in predictor,
+        # and cap max_det when not multi
+        # NOTE: 'classes' filters outputs; helpful to prune non-bird results early.
+        results = detector.predict(
+            source=np_img,
+            conf=dconf,
+            iou=diou,
+            imgsz=dimgsz,
+            classes=[det_bird_idx] if det_bird_idx >= 0 else None,
+            max_det=10 if multi else 1,
+            device="cpu",
+            verbose=False,
+        )
         r = results[0]
         boxes = []
         if r and r.boxes is not None and len(r.boxes) > 0:
-            xyxy = r.boxes.xyxy.cpu().numpy().astype(int)
-            confs = r.boxes.conf.cpu().numpy().tolist()
-            clss = r.boxes.cls.cpu().numpy().astype(int).tolist()
+            xyxy = r.boxes.xyxy.cpu().numpy().astype(int)  # type: ignore
+            confs = r.boxes.conf.cpu().numpy().tolist()  # type: ignore
+            clss = r.boxes.cls.cpu().numpy().astype(int).tolist()  # type: ignore
             for (x1, y1, x2, y2), cnf, cls in zip(xyxy, confs, clss):
                 if cls == det_bird_idx:  # only keep 'bird'
                     boxes.append(
@@ -252,6 +295,7 @@ async def classify(
             "weights": DETECTOR_WEIGHTS,
             "conf": dconf,
             "iou": diou,
+            "imgsz": dimgsz,
             "margin": dmargin,
             "classify_all": multi,
         },

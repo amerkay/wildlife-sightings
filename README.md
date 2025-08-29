@@ -1,5 +1,79 @@
 # Nuxt Minimal Starter
 
+---
+
+```sh
+rsync -av --exclude '.venv/' --exclude '.env' \
+  /home/kay/devel/barn-owl-trust/wildlife-sightings/api/ \
+  aws-wildamer-api:/home/ubuntu/wildamer-api-docker/
+```
+
+Learn from this getting started guide:
+https://docs.vendure.io/guides/getting-started/installation/
+
+---
+
+## Creating API dev python .venv
+
+Perfect use case for `uv` 👍
+Here’s how you can create a **Python 3.11 virtual environment** and install requirements from both files:
+
+---
+
+Install `uv`: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+### 1. Install Python 3.11 with `uv`
+
+If you don’t already have it:
+
+```bash
+uv python install 3.11
+```
+
+---
+
+### 2. Create a `.venv` with Python 3.11
+
+Inside your project root:
+
+```bash
+uv venv --python 3.11 .venv
+```
+
+This will make a virtual environment at `./.venv`.
+
+---
+
+### 3. Install requirements from both files
+
+You can point `uv pip` at multiple `requirements.txt` files in one go:
+
+```bash
+uv pip install -r api/birdnet/requirements.txt -r api/inat21/requirements.txt
+```
+
+That installs everything into `.venv`.
+
+---
+
+### 4. Activate (if you want interactive usage)
+
+```bash
+source .venv/bin/activate
+```
+
+Now `python --version` → should show **3.11.x**, and all your requirements will be installed.
+
+---
+
+✅ Quick one-liner to do it all:
+
+```bash
+uv python install 3.11 && uv venv --python 3.11 .venv && uv pip install -r api/birdnet/requirements.txt -r api/inat21/requirements.txt
+```
+
+---
+
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
 ## How to run the project in dev mode

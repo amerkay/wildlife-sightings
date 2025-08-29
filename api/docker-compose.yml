@@ -5,7 +5,7 @@
 # To test image API (via Traefik):
 # curl -v -X POST -F "file=@./api/inat21/examples/barnowl-1.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
 # curl -v -X POST -F "file=@./api/inat21/examples/barnowl-2.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
-# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-3.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
+# curl -v -X POST -F "file=@./api/inat21/examples/barnowl-7.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
 # curl -v -X POST -F "file=@./api/inat21/examples/littleowl-1.jpg" "http://localhost:8028/api/image/classify?top_k=5&min_conf=0.0" | jq
 # curl -s "http://localhost:8028/api/image/healthz" | jq  # health check
 
@@ -63,7 +63,7 @@ services:
       - MIN_CONF=${MIN_CONF:-0.0}
       - TORCH_NUM_THREADS=${TORCH_NUM_THREADS:-4}
       # Detector
-      - DETECTOR_WEIGHTS=${DETECTOR_WEIGHTS:-/home/appuser/models/yolov8s.pt}
+      - DETECTOR_WEIGHTS=${DETECTOR_WEIGHTS:-/home/appuser/models/yolov8n.pt}
       - DETECTOR_CONF=${DETECTOR_CONF:-0.25}
       - DETECTOR_IOU=${DETECTOR_IOU:-0.5}
       - DETECTOR_MARGIN=${DETECTOR_MARGIN:-0.05}
