@@ -6,6 +6,8 @@ import * as z from "zod";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
+const { $config } = useNuxtApp();
+const siteUrl = $config.public.siteUrl;
 
 watchEffect(() => {
   if (user.value) {
@@ -27,7 +29,7 @@ const isLoading = ref(false);
 
 const requestPasswordReset = async (email: string) => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/update-password`,
+    redirectTo: `${siteUrl}/auth/update-password`,
   });
   if (error) {
     displayError(error);
@@ -71,11 +73,7 @@ const onSubmit = form.handleSubmit(async (values) => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="m@example.com"
-                    v-bind="componentField"
-                  />
+                  <Input type="email" placeholder="m@example.com" v-bind="componentField" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -94,13 +92,8 @@ const onSubmit = form.handleSubmit(async (values) => {
       </Card>
     </Container>
     <div class="hidden bg-muted lg:block">
-      <img
-        src="/imgs/login-owl.jpg"
-        alt="Image"
-        width="1920"
-        height="1080"
-        class="h-full w-full object-cover dark:brightness-[0.99]"
-      />
+      <img src="/imgs/login-owl.jpg" alt="Image" width="1920" height="1080"
+        class="h-full w-full object-cover dark:brightness-[0.99]" />
     </div>
   </div>
 </template>
