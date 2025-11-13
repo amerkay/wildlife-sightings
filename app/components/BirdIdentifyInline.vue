@@ -1,13 +1,18 @@
-<!-- BirdIdentifyInlineTabs.vue -->
 <template>
-  <Card
-    class="w-full rounded-2xl border border-border bg-card text-card-foreground relative gap-0 py-4 md:py-6"
-  >
+  <Card class="w-full rounded-2xl border border-border bg-card text-card-foreground relative gap-0 py-4 md:py-6">
+    <!-- Disabled overlay -->
+    <div v-if="true"
+      class="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/50 dark:bg-background/50 pointer-events-auto cursor-not-allowed">
+      <div class="flex flex-col items-center gap-2 text-center px-4">
+        <Icon name="lucide:server-off" class="size-8 text-muted-foreground" />
+        <span class="text-lg font-medium text-foreground">Disabled</span>
+        <span class="text-sm text-muted-foreground">AI model server is down</span>
+      </div>
+    </div>
+
     <!-- Full overlay loader -->
-    <div
-      v-if="busy"
-      class="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/80 backdrop-blur-sm"
-    >
+    <div v-if="busy"
+      class="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl bg-background/80 backdrop-blur-sm">
       <div class="flex items-center gap-3">
         <!-- <div
           class="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent"
@@ -24,11 +29,7 @@
         <TooltipProvider>
           <Tooltip v-model:open="tooltipOpen">
             <TooltipTrigger as-child>
-              <button
-                @click="toggleTooltip"
-                class="text-muted-foreground cursor-help p-1 -m-1"
-                type="button"
-              >
+              <button @click="toggleTooltip" class="text-muted-foreground cursor-help p-1 -m-1" type="button">
                 <Icon name="lucide:info" size="16" />
               </button>
             </TooltipTrigger>
@@ -47,24 +48,18 @@
       <!-- Tabs - only show when no file is loaded -->
       <Tabs v-if="!previewUrl" v-model="currentTab" class="w-full">
         <TabsList class="grid w-full grid-cols-3 h-20 md:h-14 gap-1">
-          <TabsTrigger
-            value="upload"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3"
-          >
+          <TabsTrigger value="upload"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3">
             <Icon name="lucide:upload" class="size-5 md:size-4" mode="svg" />
             <span class="text-sm">Upload</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="camera"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3"
-          >
+          <TabsTrigger value="camera"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3">
             <Icon name="lucide:camera" class="size-5 md:size-4" mode="svg" />
             <span class="text-sm">Camera</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="record"
-            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3"
-          >
+          <TabsTrigger value="record"
+            class="flex flex-col items-center gap-1 p-3 bg-background/30 dark:bg-background hover:bg-background/50 dark:hover:bg-background/80 transition-colors md:flex-row md:gap-3">
             <Icon name="lucide:mic" class="size-5 md:size-4" mode="svg" />
             <span class="text-sm">Record</span>
           </TabsTrigger>
@@ -72,25 +67,19 @@
 
         <!-- Upload -->
         <TabsContent value="upload" class="mt-4">
-          <div
-            ref="dropEl"
-            :class="[
-              'relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 transition',
-              isOver
-                ? 'border-primary/70 bg-primary/5'
-                : 'border-border hover:border-primary/50',
-            ]"
-            @click="() => openFileDialog()"
-          >
+          <div ref="dropEl" :class="[
+            'relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 transition',
+            isOver
+              ? 'border-primary/70 bg-primary/5'
+              : 'border-border hover:border-primary/50',
+          ]" @click="() => openFileDialog()">
             <p class="text-sm font-medium">
               Drop image/audio or click to choose
             </p>
             <p class="mt-1 text-xs text-muted-foreground">
               Accepted: image/*, audio/*
             </p>
-            <Button variant="secondary" size="sm" class="mt-3" type="button"
-              >Choose file</Button
-            >
+            <Button variant="secondary" size="sm" class="mt-3" type="button">Choose file</Button>
             <div v-if="pickedName" class="mt-3 text-xs text-muted-foreground">
               • {{ pickedName }}
             </div>
@@ -100,29 +89,14 @@
         <!-- Camera -->
         <TabsContent value="camera" class="mt-4 space-y-3">
           <div class="relative aspect-video overflow-hidden rounded-xl border">
-            <video
-              ref="videoEl"
-              autoplay
-              playsinline
-              muted
-              class="h-full w-full object-cover"
-              :srcObject="videoStream || null"
-            />
-            <div
-              v-if="!videoStream"
-              class="absolute inset-0 grid place-items-center text-xs text-muted-foreground"
-            >
+            <video ref="videoEl" autoplay playsinline muted class="h-full w-full object-cover"
+              :srcObject="videoStream || null" />
+            <div v-if="!videoStream" class="absolute inset-0 grid place-items-center text-xs text-muted-foreground">
               Camera starting...
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              :disabled="!videoStream || busy"
-              @click="capturePhoto"
-              >Take photo</Button
-            >
+            <Button type="button" size="sm" :disabled="!videoStream || busy" @click="capturePhoto">Take photo</Button>
           </div>
         </TabsContent>
 
@@ -130,20 +104,13 @@
         <TabsContent value="record" class="mt-4 space-y-3">
           <div class="relative overflow-hidden rounded-xl border p-3">
             <canvas ref="waveEl" class="h-20 w-full"></canvas>
-            <div
-              class="absolute bottom-2 right-3 text-xs tabular-nums text-muted-foreground"
-            >
+            <div class="absolute bottom-2 right-3 text-xs tabular-nums text-muted-foreground">
               {{ elapsedLabel }}
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              :variant="isRecording ? 'destructive' : 'default'"
-              @click="toggleRecording"
-              :disabled="busy"
-            >
+            <Button type="button" size="sm" :variant="isRecording ? 'destructive' : 'default'" @click="toggleRecording"
+              :disabled="busy">
               {{ isRecording ? "Stop" : "Record" }}
             </Button>
           </div>
@@ -153,34 +120,17 @@
       <!-- Preview -->
       <div v-if="previewUrl" class="rounded-xl border p-3">
         <div class="flex flex-col gap-3 md:items-start md:flex-row-reverse">
-          <div
-            class="ml-auto flex gap-2 w-full justify-between items-center md:w-auto"
-          >
+          <div class="ml-auto flex gap-2 w-full justify-between items-center md:w-auto">
             <Badge variant="secondary">{{ currentKindLabel }}</Badge>
 
-            <Button
-              size="sm"
-              variant="outline"
-              @click="clearPreview"
-              class="size-8 p-0"
-              type="button"
-            >
+            <Button size="sm" variant="outline" @click="clearPreview" class="size-8 p-0" type="button">
               <Icon name="lucide:x" size="18" />
             </Button>
           </div>
 
-          <img
-            v-if="isImagePreview"
-            :src="previewUrl"
-            alt="preview"
-            class="w-full aspect-square rounded-lg border object-cover sm:size-32"
-          />
-          <audio
-            v-else
-            :src="previewUrl"
-            controls
-            class="h-10 w-full md:max-w-md"
-          />
+          <img v-if="isImagePreview" :src="previewUrl" alt="preview"
+            class="w-full aspect-square rounded-lg border object-cover sm:size-32" />
+          <audio v-else :src="previewUrl" controls class="h-10 w-full md:max-w-md" />
         </div>
       </div>
 
@@ -191,58 +141,39 @@
       </Alert>
 
       <!-- Results (same renderers) -->
-      <div
-        v-if="
-          lastType === 'audio' &&
-          audioNorm.filter((item) => item.confidence >= 0.2).length
-        "
-        class="space-y-3"
-      >
+      <div v-if="
+        lastType === 'audio' &&
+        audioNorm.filter((item) => item.confidence >= 0.2).length
+      " class="space-y-3">
         <h3 class="text-sm font-semibold">Birds detected (audio)</h3>
         <div class="divide-y rounded-xl border">
-          <div
-            v-for="item in audioNorm.filter((item) => item.confidence >= 0.2)"
-            :key="item.label"
-            class="flex items-center justify-between p-3"
-          >
+          <div v-for="item in audioNorm.filter((item) => item.confidence >= 0.2)" :key="item.label"
+            class="flex items-center justify-between p-3">
             <div class="flex items-center gap-3">
               <span class="size-2 rounded-full bg-primary"></span>
               <span class="font-medium">{{ prettyName(item.label) }}</span>
-              <span class="text-xs text-muted-foreground"
-                >({{ item.occurrences }}× in
-                {{ item.segments.length }} segs)</span
-              >
+              <span class="text-xs text-muted-foreground">({{ item.occurrences }}× in
+                {{ item.segments.length }} segs)</span>
             </div>
-            <span class="font-semibold tabular-nums"
-              >{{ (item.confidence * 100).toFixed(1) }}%</span
-            >
+            <span class="font-semibold tabular-nums">{{ (item.confidence * 100).toFixed(1) }}%</span>
           </div>
         </div>
       </div>
 
-      <div
-        v-if="
-          lastType === 'image' &&
-          imgRaw?.predictions?.[0]?.topk?.filter((p) => p.confidence >= 0.2)
-            .length
-        "
-        class="space-y-3"
-      >
+      <div v-if="
+        lastType === 'image' &&
+        imgRaw?.predictions?.[0]?.topk?.filter((p) => p.confidence >= 0.2)
+          .length
+      " class="space-y-3">
         <h3 class="text-sm font-semibold">Birds detected (image)</h3>
         <div class="rounded-xl border p-3">
           <div class="text-xs text-muted-foreground">Top matches</div>
           <ul class="mt-2 space-y-1">
-            <li
-              v-for="p in imgRaw.predictions[0]?.topk?.filter(
-                (p) => p.confidence >= 0.2
-              ) || []"
-              :key="p.id"
-              class="flex items-center justify-between"
-            >
+            <li v-for="p in imgRaw.predictions[0]?.topk?.filter(
+              (p) => p.confidence >= 0.2
+            ) || []" :key="p.id" class="flex items-center justify-between">
               <span class="font-medium">{{ prettyName(p.label) }}</span>
-              <span class="tabular-nums"
-                >{{ (p.confidence * 100).toFixed(1) }}%</span
-              >
+              <span class="tabular-nums">{{ (p.confidence * 100).toFixed(1) }}%</span>
             </li>
           </ul>
         </div>

@@ -4,11 +4,7 @@ import "vue-sonner/style.css"; // vue-sonner v2 requires this import
 </script>
 
 <template>
-  <Toaster
-    class="pointer-events-auto"
-    richColors
-    :theme="$colorMode.value === 'dark' ? 'dark' : 'light'"
-  />
+  <Toaster class="pointer-events-auto" richColors :theme="$colorMode.value === 'dark' ? 'dark' : 'light'" />
 
   <div>
     <NuxtRouteAnnouncer />
